@@ -1,917 +1,493 @@
-Planificateur Menus Santé
-
 
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planificateur Menus Santé - Semaine Équilibrée</title>
-    <style>
-        :root {
-            --color-bg-primary: #fcfcf9;
-            --color-bg-secondary: #fffffe;
-            --color-text-primary: #13343b;
-            --color-text-secondary: #626c7c;
-            --color-accent: #218d8d;
-            --color-accent-hover: #1d747c;
-            --color-border: rgba(94, 82, 64, 0.2);
-            --color-card-bg: #ffffff;
-            --color-success: #218d8d;
-            --color-warning: #e68161;
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
-            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.06);
-            --radius-base: 8px;
-            --radius-lg: 12px;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --color-bg-primary: #1f2121;
-                --color-bg-secondary: #262828;
-                --color-text-primary: #f5f5f5;
-                --color-text-secondary: #a7a9a9;
-                --color-accent: #32b8c6;
-                --color-accent-hover: #2da6b2;
-                --color-border: rgba(119, 124, 124, 0.3);
-                --color-card-bg: #2e3131;
-            }
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--color-bg-primary);
-            color: var(--color-text-primary);
-            line-height: 1.6;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            padding: 40px 20px;
-            background: var(--color-card-bg);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            margin-bottom: 30px;
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            color: var(--color-accent);
-            margin-bottom: 10px;
-        }
-
-        header p {
-            color: var(--color-text-secondary);
-            font-size: 1.1rem;
-        }
-
-        .nav-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .nav-tabs button {
-            padding: 12px 24px;
-            background: var(--color-card-bg);
-            border: 2px solid var(--color-border);
-            border-radius: var(--radius-base);
-            color: var(--color-text-primary);
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .nav-tabs button:hover {
-            border-color: var(--color-accent);
-            transform: translateY(-2px);
-        }
-
-        .nav-tabs button.active {
-            background: var(--color-accent);
-            color: white;
-            border-color: var(--color-accent);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .week-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .day-card {
-            background: var(--color-card-bg);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--color-border);
-        }
-
-        .day-card h3 {
-            color: var(--color-accent);
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--color-accent);
-        }
-
-        .meal {
-            margin-bottom: 15px;
-            padding: 12px;
-            background: var(--color-bg-primary);
-            border-radius: var(--radius-base);
-        }
-
-        .meal-label {
-            font-weight: 600;
-            color: var(--color-accent);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
-
-        .meal-content {
-            color: var(--color-text-primary);
-            line-height: 1.5;
-        }
-
-        .recipe-card {
-            background: var(--color-card-bg);
-            border-radius: var(--radius-lg);
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--color-border);
-        }
-
-        .recipe-card h3 {
-            color: var(--color-accent);
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-        }
-
-        .recipe-meta {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .recipe-meta span {
-            padding: 8px 16px;
-            background: var(--color-bg-primary);
-            border-radius: var(--radius-base);
-            font-size: 0.9rem;
-            color: var(--color-text-secondary);
-        }
-
-        .recipe-meta span strong {
-            color: var(--color-accent);
-        }
-
-        .ingredients, .steps {
-            margin-bottom: 25px;
-        }
-
-        .ingredients h4, .steps h4 {
-            color: var(--color-text-primary);
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-        }
-
-        .ingredients ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .ingredients li {
-            padding: 8px 0;
-            padding-left: 25px;
-            position: relative;
-            color: var(--color-text-primary);
-        }
-
-        .ingredients li:before {
-            content: "•";
-            position: absolute;
-            left: 10px;
-            color: var(--color-accent);
-            font-weight: bold;
-        }
-
-        .steps ol {
-            padding-left: 20px;
-        }
-
-        .steps li {
-            margin-bottom: 12px;
-            color: var(--color-text-primary);
-        }
-
-        .shopping-list {
-            background: var(--color-card-bg);
-            border-radius: var(--radius-lg);
-            padding: 30px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--color-border);
-        }
-
-        .shopping-category {
-            margin-bottom: 25px;
-        }
-
-        .shopping-category h4 {
-            color: var(--color-accent);
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--color-accent);
-        }
-
-        .shopping-category ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .shopping-category li {
-            padding: 10px 15px;
-            margin-bottom: 8px;
-            background: var(--color-bg-primary);
-            border-radius: var(--radius-base);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--color-text-primary);
-        }
-
-        .shopping-category li span:first-child {
-            font-weight: 500;
-        }
-
-        .shopping-category li span.recipe-ref {
-            font-size: 0.85rem;
-            color: var(--color-text-secondary);
-            font-style: italic;
-        }
-
-        .btn-print {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            padding: 15px 25px;
-            background: var(--color-accent);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(33, 141, 141, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .btn-print:hover {
-            background: var(--color-accent-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(33, 141, 141, 0.4);
-        }
-
-        @media print {
-            body {
-                background: white;
-                color: black;
-            }
-            .nav-tabs, .btn-print {
-                display: none;
-            }
-            .tab-content {
-                display: block !important;
-            }
-            .recipe-card, .day-card, .shopping-list {
-                page-break-inside: avoid;
-                box-shadow: none;
-                border: 1px solid #ddd;
-            }
-        }
-
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 1.8rem;
-            }
-            .week-grid {
-                grid-template-columns: 1fr;
-            }
-            .nav-tabs {
-                flex-direction: column;
-            }
-            .btn-print {
-                bottom: 15px;
-                right: 15px;
-                padding: 12px 20px;
-                font-size: 0.9rem;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planificateur Menus Santé — 14-20 fév 2026</title>
+<style>
+:root{--bg:#f6f5f1;--bg2:#fff;--txt:#1a2a2a;--txt2:#5f6b7a;--acc:#1a8a7d;--acc2:#14706a;--accL:rgba(26,138,125,.1);--border:rgba(0,0,0,.09);--card:#fff;--sh:0 2px 8px rgba(0,0,0,.05);--sh2:0 4px 14px rgba(0,0,0,.08);--r:10px;--r2:14px}
+@media(prefers-color-scheme:dark){:root{--bg:#141919;--bg2:#1c2222;--txt:#e4eded;--txt2:#8a9a9a;--acc:#2dd4bf;--acc2:#5eead4;--accL:rgba(45,212,191,.12);--border:rgba(255,255,255,.08);--card:#1c2222}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6}
+.wrap{max-width:1140px;margin:0 auto;padding:14px}
+header{text-align:center;padding:28px 16px;background:var(--card);border-radius:var(--r2);box-shadow:var(--sh2);margin-bottom:20px;border:1px solid var(--border)}
+header h1{font-size:1.7rem;color:var(--acc)}
+header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
+.wk{display:inline-block;margin-top:8px;padding:5px 14px;background:var(--acc);color:#fff;border-radius:20px;font-size:.8rem;font-weight:600}
+.tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;justify-content:center}
+.tabs button{padding:9px 18px;background:var(--card);border:2px solid var(--border);border-radius:var(--r);color:var(--txt);font-size:.9rem;font-weight:600;cursor:pointer;transition:.2s}
+.tabs button:hover{border-color:var(--acc);color:var(--acc)}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.pnl{display:none}.pnl.on{display:block;animation:fu .25s ease}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;margin-bottom:20px}
+.day{background:var(--card);border-radius:var(--r2);padding:16px;box-shadow:var(--sh);border:1px solid var(--border)}
+.day h3{color:var(--acc);font-size:1.15rem;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid var(--acc)}
+.meal{margin-bottom:8px;padding:8px 10px;background:var(--bg);border-radius:var(--r);border-left:3px solid var(--acc)}
+.ml{font-weight:700;color:var(--acc);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.mc{color:var(--txt);font-size:.85rem;line-height:1.45}
+.swap-row{display:flex;gap:4px;margin-top:8px;align-items:center;flex-wrap:wrap;opacity:.4;transition:.2s}
+.swap-row:hover{opacity:1}
+.swap-row select{padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:.7rem;background:var(--card);color:var(--txt2);flex:1;min-width:0}
+.swap-row button{padding:3px 8px;background:var(--bg);color:var(--txt2);border:1px solid var(--border);border-radius:4px;font-size:.68rem;cursor:pointer;white-space:nowrap}
+.swap-row button:hover{background:var(--acc);color:#fff;border-color:var(--acc)}
+.recipe{background:var(--card);border-radius:var(--r2);margin-bottom:20px;box-shadow:var(--sh);border:1px solid var(--border);padding:22px}
+.recipe-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px}
+.recipe-top h3{color:var(--acc);font-size:1.3rem;flex:1}
+.recipe-top .r-ico{font-size:2.2rem;line-height:1;flex-shrink:0}
+.recipe-link{display:inline-block;margin-bottom:14px;font-size:.78rem;color:var(--acc);text-decoration:none;padding:3px 10px;background:var(--accL);border-radius:6px;word-break:break-all}
+.recipe-link:hover{text-decoration:underline}
+.rmeta{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.rmeta span{padding:4px 10px;background:var(--bg);border-radius:var(--r);font-size:.76rem;color:var(--txt2)}
+.rmeta span b{color:var(--acc)}
+.recipe h4{color:var(--txt);margin:14px 0 8px;font-size:.95rem;border-bottom:1px solid var(--border);padding-bottom:5px}
+.recipe ul{list-style:none;padding:0}
+.recipe ul li{padding:4px 0 4px 18px;position:relative;font-size:.84rem}
+.recipe ul li::before{content:"•";position:absolute;left:3px;color:var(--acc);font-weight:700}
+.recipe ol{padding-left:20px}
+.recipe ol li{margin-bottom:8px;font-size:.84rem}
+.ntag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:600;margin:1px}
+.nt1{background:#dcfce7;color:#166534}.nt2{background:#dbeafe;color:#1e40af}.nt3{background:#fef3c7;color:#92400e}
+@media(prefers-color-scheme:dark){.nt1{background:#064e3b;color:#6ee7b7}.nt2{background:#1e3a5f;color:#93c5fd}.nt3{background:#451a03;color:#fcd34d}}
+.shop{background:var(--card);border-radius:var(--r2);padding:22px;box-shadow:var(--sh);border:1px solid var(--border)}
+.shop h2{color:var(--acc);margin-bottom:6px;font-size:1.4rem}
+.shop-sub{color:var(--txt2);font-size:.82rem;margin-bottom:16px}
+.rayon-nav{display:none;flex-wrap:wrap;gap:5px;margin-bottom:16px;padding:10px;background:var(--bg);border-radius:var(--r);border:1px solid var(--border)}
+.rayon-nav.open{display:flex}
+.rayon-nav span{padding:5px 10px;font-size:.75rem;color:var(--txt);text-decoration:none;border-radius:6px;background:var(--card);border:1px solid var(--border);white-space:nowrap;cursor:pointer}
+.rayon-nav span:hover{background:var(--accL);color:var(--acc);border-color:var(--acc)}
+.toggle-rayons{display:inline-block;padding:6px 14px;font-size:.78rem;color:var(--acc);background:var(--accL);border:1px solid var(--acc);border-radius:6px;cursor:pointer;margin-bottom:10px;font-weight:600}
+.toggle-rayons:hover{background:var(--acc);color:#fff}
+.scat{margin-bottom:20px;scroll-margin-top:10px}
+.scat h4{color:var(--acc);font-size:1rem;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--acc);position:sticky;top:0;background:var(--card);z-index:2;padding-top:6px}
+.sitem{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;margin-bottom:5px;background:var(--bg);border-radius:var(--r);cursor:pointer;transition:.15s}
+.sitem:hover{box-shadow:var(--sh)}
+.sitem input[type=checkbox]{width:17px;height:17px;accent-color:var(--acc);cursor:pointer;flex-shrink:0;margin-top:2px}
+.sitem .sn{font-weight:500;flex:1;font-size:.84rem;min-width:0}
+.sitem .sr{font-size:.72rem;color:var(--txt2);font-style:italic;text-align:right;max-width:55%;line-height:1.3}
+.caddie{margin-top:26px;padding:18px;background:var(--bg);border-radius:var(--r2);border:2px dashed var(--acc)}
+.caddie h3{color:var(--acc);margin-bottom:12px;font-size:1.1rem}
+.caddie-empty{color:var(--txt2);font-style:italic;font-size:.85rem}
+.add-area{margin-top:22px;padding:18px;background:var(--bg);border-radius:var(--r2);border:1px solid var(--border)}
+.add-area h4{color:var(--acc);margin-bottom:10px;font-size:.95rem}
+.add-row{display:flex;gap:6px;flex-wrap:wrap}
+.add-row input,.add-row select{padding:8px 10px;border:2px solid var(--border);border-radius:var(--r);font-size:.84rem;background:var(--card);color:var(--txt)}
+.add-row input{flex:1;min-width:100px}
+.add-row input:focus,.add-row select:focus{outline:none;border-color:var(--acc)}
+.add-row button{padding:8px 16px;background:var(--acc);color:#fff;border:none;border-radius:var(--r);font-size:.84rem;font-weight:600;cursor:pointer}
+.ctr{text-align:center;padding:10px;background:var(--bg);border-radius:var(--r);font-size:.84rem;color:var(--txt2);margin-bottom:16px}
+.ctr b{color:var(--acc);font-size:1rem}
+.ph{font-size:.8rem;color:var(--txt2);padding:6px 10px;font-style:italic}
+.btn-print{position:fixed;bottom:20px;right:20px;padding:10px 18px;background:var(--acc);color:#fff;border:none;border-radius:30px;font-size:.85rem;font-weight:600;cursor:pointer;box-shadow:var(--sh2);z-index:100;transition:.2s}
+.btn-print:hover{transform:translateY(-2px);background:var(--acc2)}
+@media print{.tabs,.btn-print,.add-area,.caddie,.swap-row,.recipe-link,.toggle-rayons,.rayon-nav{display:none!important}.pnl{display:block!important}.sitem input{display:none}.wrap{padding:0}header,.day,.recipe,.shop{box-shadow:none;border:1px solid #ddd;break-inside:avoid}}
+@media(max-width:700px){header h1{font-size:1.3rem}.grid{grid-template-columns:1fr}.tabs{flex-direction:column}.tabs button{width:100%}.sitem{flex-wrap:wrap}.sitem .sr{max-width:100%;text-align:left}}
+@media(orientation:landscape) and (max-height:500px){.grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.wrap{padding:8px}}
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🍽️ Planificateur Menus Santé</h1>
-            <p>Semaine équilibrée, gourmande et anti-cholestérol - Spécial IG bas</p>
-        </header>
+<div class="wrap">
+<header>
+<h1>🍽️ Planificateur Menus Santé</h1>
+<p>Équilibré • Anti-cholestérol • IG bas • Gourmand</p>
+<div class="wk">📅 Samedi 14 → Vendredi 20 février 2026</div>
+</header>
+<div class="tabs">
+<button class="on" onclick="tab('apercu',this)">📅 Semaine</button>
+<button onclick="tab('recettes',this)">👨‍🍳 Recettes</button>
+<button onclick="tab('courses',this)">🛒 Liste de courses</button>
+</div>
 
-        <div class="nav-tabs">
-            <button class="active" data-tab="apercu">📅 Aperçu Semaine</button>
-            <button data-tab="recettes">👨‍🍳 Recettes Détaillées</button>
-            <button data-tab="courses">🛒 Liste de Courses</button>
-        </div>
+<!-- ===== APERÇU ===== -->
+<div id="apercu" class="pnl on">
+<div class="grid" id="weekgrid"></div>
+<div class="ctr">
+<span class="ntag nt1">IG bas</span> <span class="ntag nt2">Anti-cholestérol</span> <span class="ntag nt3">Fibres &amp; oméga-3</span><br><br>
+Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison février</b>
+</div>
+</div>
 
-        <div id="apercu" class="tab-content active">
-            <div class="week-grid">
-                <div class="day-card">
-                    <h3>Samedi</h3>
-                    <div class="meal">
-                        <div class="meal-label">Petit-déjeuner</div>
-                        <div class="meal-content">Eau citronnée • Fromage blanc + miel • Pain de seigle grillé • 1 pomme • Amandes</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Déjeuner (collation)</div>
-                        <div class="meal-content">Salade d'endives et noix • Œuf dur</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Dîner</div>
-                        <div class="meal-content">Tajine de poulet aux légumes d'hiver et pois chiches • Boulgour • Mâche</div>
-                    </div>
-                </div>
+<!-- ===== RECETTES ===== -->
+<div id="recettes" class="pnl">
 
-                <div class="day-card">
-                    <h3>Dimanche</h3>
-                    <div class="meal">
-                        <div class="meal-label">Petit-déjeuner</div>
-                        <div class="meal-content">Eau citronnée • 1 pomme • 5-6 amandes</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Déjeuner (collation)</div>
-                        <div class="meal-content">Bâtonnets carottes et céleri • Houmous maison</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Dîner</div>
-                        <div class="meal-content">Poulet rôti au citron et romarin • Purée de céleri-rave et panais • Riz basmati</div>
-                    </div>
-                </div>
+<div class="recipe">
+<div class="recipe-top"><h3>Tajine de poulet, légumes d'hiver et pois chiches</h3><div class="r-ico">🥘</div></div>
+<a class="recipe-link" href="https://lacerisesurlemaillot.fr/poulet-au-four-facon-tajine/" target="_blank" rel="noopener">🔗 Recette similaire sur LaCeriseSurLeMaillot.fr (IG bas)</a>
+<div class="rmeta"><span><b>Prépa :</b> 20 min</span><span><b>Cuisson :</b> 35 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Sam. 14</span></div>
+<h4>Ingrédients</h4>
+<ul>
+<li>400g cuisses ou blancs de poulet fermier en morceaux</li>
+<li>1 boîte pois chiches égouttés (240g)</li>
+<li>3 carottes en rondelles • 2 navets en quartiers • ½ butternut en cubes</li>
+<li>1 oignon émincé • 2 gousses d'ail</li>
+<li>1 boîte tomates concassées (400g) • 300ml bouillon de volaille</li>
+<li>1 c.c. chaque : curcuma, cumin, paprika, gingembre + pincée cannelle</li>
+<li>2 c.s. huile d'olive • Coriandre fraîche • 150g boulgour</li>
+</ul>
+<h4>Préparation</h4>
+<ol>
+<li>Chauffer l'huile dans une cocotte, dorer le poulet 5 min. Réserver.</li>
+<li>Revenir oignon + ail 3 min. Ajouter toutes les épices 1 min.</li>
+<li>Ajouter carottes, navets, butternut, tomates et bouillon.</li>
+<li>Remettre poulet + pois chiches. Couvrir, mijoter 30 min feu doux.</li>
+<li>Cuire le boulgour 10 min. Parsemer de coriandre, servir.</li>
+</ol>
+</div>
 
-                <div class="day-card">
-                    <h3>Lundi</h3>
-                    <div class="meal">
-                        <div class="meal-label">Petit-déjeuner</div>
-                        <div class="meal-content">Eau citronnée • Fromage blanc 3% + miel • 1 poire • Noix</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Déjeuner (collation)</div>
-                        <div class="meal-content">Endives • Œuf dur • Radis • Huile de colza</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Dîner</div>
-                        <div class="meal-content">Curry de lentilles corail aux légumes d'hiver • Quinoa • Mâche</div>
-                    </div>
-                </div>
+<div class="recipe">
+<div class="recipe-top"><h3>Poulet rôti citron-romarin, purée céleri-panais</h3><div class="r-ico">🍗</div></div>
+<a class="recipe-link" href="https://www.santemagazine.fr/alimentation/regime-alimentaire/regime-anti-cholesterol/une-semaine-de-menus-anticholesterol-173890" target="_blank" rel="noopener">🔗 Menus anti-cholestérol sur SantéMagazine.fr</a>
+<div class="rmeta"><span><b>Prépa :</b> 15 min</span><span><b>Cuisson :</b> 30 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Dim. 15</span></div>
+<h4>Ingrédients</h4>
+<ul>
+<li>400g blancs de poulet • 2 citrons (jus + zestes) • 2 branches romarin</li>
+<li>2 c.s. huile d'olive • 2 gousses d'ail • Sel, poivre</li>
+<li><b>Purée :</b> 1 céleri-rave (≈400g) • 2 panais • 1 c.s. crème légère 15% • Muscade</li>
+<li>200g riz basmati</li>
+</ul>
+<h4>Préparation</h4>
+<ol>
+<li>Four 180°C. Mélanger jus citron, huile, ail, romarin. Mariner 10 min.</li>
+<li>Enfourner 25-30 min. Cuire céleri-rave + panais vapeur 20 min.</li>
+<li>Écraser avec crème, muscade. Cuire riz 12 min. Servir avec jus de cuisson.</li>
+</ol>
+</div>
 
-                <div class="day-card">
-                    <h3>Mercredi</h3>
-                    <div class="meal">
-                        <div class="meal-label">Petit-déjeuner</div>
-                        <div class="meal-content">Eau citronnée • 2 œufs à la coque • Pain de seigle + noisette de beurre • 1 orange</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Déjeuner (collation)</div>
-                        <div class="meal-content">Smoothie vert (épinards, banane, lait d'amande, graines de lin)</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Dîner</div>
-                        <div class="meal-content">Dinde sautée aux champignons • Brocolis vapeur • Pommes de terre vapeur</div>
-                    </div>
-                </div>
+<div class="recipe">
+<div class="recipe-top"><h3>Curry de lentilles corail aux légumes d'hiver</h3><div class="r-ico">🍛</div></div>
+<a class="recipe-link" href="https://cuisinerigbas.com/dhal-lentilles-corail/" target="_blank" rel="noopener">🔗 Recette dahl IG bas sur CuisinerIGbas.com</a>
+<div class="rmeta"><span><b>Prépa :</b> 10 min</span><span><b>Cuisson :</b> 25 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Lun. 17</span></div>
+<h4>Ingrédients</h4>
+<ul>
+<li>200g lentilles corail • 200ml lait de coco light</li>
+<li>2 carottes en rondelles • 1 navet en dés • 1 oignon • 2 gousses d'ail</li>
+<li>2 c.c. curry • 1 c.c. cumin • 400ml bouillon légumes • 2 c.s. huile colza</li>
+<li>Coriandre fraîche • 150g quinoa</li>
+</ul>
+<h4>Préparation</h4>
+<ol>
+<li>Rincer lentilles. Revenir oignon + ail dans huile colza 3 min.</li>
+<li>Ajouter curry + cumin 1 min. Puis carottes, navet, lentilles, bouillon.</li>
+<li>Mijoter 20 min feu doux. Cuire quinoa 12 min.</li>
+<li>Ajouter lait de coco, réchauffer 2 min. Servir sur quinoa + coriandre.</li>
+</ol>
+</div>
 
-                <div class="day-card">
-                    <h3>Jeudi</h3>
-                    <div class="meal">
-                        <div class="meal-label">Petit-déjeuner</div>
-                        <div class="meal-content">Eau citronnée • Fromage blanc 0% + graines de courge • 1 kiwi • Noisettes</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Déjeuner (collation)</div>
-                        <div class="meal-content">Salade de fruits de saison • Yaourt nature • Graines de lin</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Dîner</div>
-                        <div class="meal-content">Poisson pané maison au four • Riz basmati</div>
-                    </div>
-                </div>
+<div class="recipe">
+<div class="recipe-top"><h3>Soupe de légumes + Omelette champignons-chèvre</h3><div class="r-ico">🥣</div></div>
+<a class="recipe-link" href="https://www.primevere.com/idees-recettes/plats/" target="_blank" rel="noopener">🔗 Plats allégés sur Primevère.com</a>
+<div class="rmeta"><span><b>Prépa :</b> 15 min</span><span><b>Cuisson :</b> 30 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Mar. 18</span></div>
+<h4>Ingrédients</h4>
+<ul>
+<li><b>Soupe :</b> 2 poireaux • 2 carottes • 1 navet • 1 branche céleri • 2 PDT • 1L bouillon légumes • 1 c.s. huile olive • Herbes de Provence</li>
+<li><b>Omelette :</b> 4 œufs • 150g champignons • 30g chèvre • 1 c.s. huile olive • Persil</li>
+<li>Pain de seigle</li>
+</ul>
+<h4>Préparation</h4>
+<ol>
+<li>Revenir poireaux 3 min, ajouter légumes + bouillon, mijoter 25 min.</li>
+<li>Sauter champignons 5 min, verser œufs battus, cuire 3-4 min.</li>
+<li>Parsemer chèvre, plier, cuire 1 min. Servir soupe puis omelette + pain.</li>
+</ol>
+</div>
 
-                <div class="day-card">
-                    <h3>Vendredi</h3>
-                    <div class="meal">
-                        <div class="meal-label">Petit-déjeuner</div>
-                        <div class="meal-content">Eau citronnée • Omelette aux herbes • Pain aux céréales • 1 clémentine</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Déjeuner (collation)</div>
-                        <div class="meal-content">Bâtonnets céleri et poivron • Tzatziki maison</div>
-                    </div>
-                    <div class="meal">
-                        <div class="meal-label">Dîner</div>
-                        <div class="meal-content">Salade composée de pommes de terre, bettraves, œufs durs, thon et vinaigrette à l'huile de colza</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="recipe">
+<div class="recipe-top"><h3>Dinde sautée aux champignons, brocolis vapeur</h3><div class="r-ico">🦃</div></div>
+<a class="recipe-link" href="https://jow.fr/fr/recipes/escalope-de-dinde-a-la-creme-de-champignons-et-puree-maison-8v44i1zqjxs002yd0d3n" target="_blank" rel="noopener">🔗 Recette similaire sur Jow.fr</a>
+<div class="rmeta"><span><b>Prépa :</b> 15 min</span><span><b>Cuisson :</b> 20 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Mer. 19</span></div>
+<h4>Ingrédients</h4>
+<ul>
+<li>400g escalopes dinde en lanières • 300g champignons • 1 échalote</li>
+<li>2 c.s. crème légère 15% • 2 c.s. huile olive • Persil</li>
+<li>400g brocolis • 4 pommes de terre moyennes</li>
+</ul>
+<h4>Préparation</h4>
+<ol>
+<li>Cuire pommes de terre vapeur 20 min + brocolis 12 min.</li>
+<li>Dorer dinde 5 min feu vif. Réserver. Revenir échalote + champignons 8 min.</li>
+<li>Remettre dinde, crème, réchauffer 3 min. Parsemer persil.</li>
+</ol>
+</div>
 
-        <div id="recettes" class="tab-content">
-            <div class="recipe-card">
-                <h3>🍗 Poulet rôti au citron et romarin</h3>
-                <div class="recipe-meta">
-                    <span><strong>Préparation :</strong> 15 min</span>
-                    <span><strong>Cuisson :</strong> 30 min</span>
-                    <span><strong>Personnes :</strong> 2</span>
-                    <span><strong>Jour :</strong> Dimanche dîner</span>
-                </div>
-                <div class="ingredients">
-                    <h4>Ingrédients</h4>
-                    <ul>
-                        <li>2 blancs de poulet fermier (environ 400g)</li>
-                        <li>2 citrons (jus et zestes)</li>
-                        <li>2 branches de romarin frais</li>
-                        <li>2 cuillères à soupe d'huile d'olive</li>
-                        <li>2 gousses d'ail émincées</li>
-                        <li>Sel et poivre</li>
-                        <li>Pour la purée : 1 céleri-rave (environ 400g), 2 panais, 1 cuillère à soupe de crème légère 15%, noix de muscade</li>
-                        <li>200g de riz basmati</li>
-                    </ul>
-                </div>
-                <div class="steps">
-                    <h4>Préparation</h4>
-                    <ol>
-                        <li>Préchauffer le four à 180°C. Dans un bol, mélanger le jus de citron, l'huile d'olive, l'ail émincé et le romarin haché.</li>
-                        <li>Placer les blancs de poulet dans un plat, verser la marinade dessus et laisser reposer 10 minutes.</li>
-                        <li>Enfourner pour 25-30 minutes jusqu'à ce que le poulet soit bien doré.</li>
-                        <li>Pendant ce temps, éplucher et couper le céleri-rave et les panais en cubes. Les cuire à la vapeur 20 minutes.</li>
-                        <li>Écraser les légumes cuits avec la crème légère, saler, poivrer, ajouter une pincée de muscade.</li>
-                        <li>Cuire le riz basmati selon les instructions (environ 12 minutes).</li>
-                        <li>Servir le poulet tranché avec la purée et le riz, arroser du jus de cuisson.</li>
-                    </ol>
-                </div>
-            </div>
+<div class="recipe">
+<div class="recipe-top"><h3>Poisson pané maison au four, riz et salade</h3><div class="r-ico">🐟</div></div>
+<a class="recipe-link" href="https://www.cuisineaz.com/diaporamas/15-recettes-a-ig-bas-a-deguster-toute-l-annee-3913/interne/1.aspx" target="_blank" rel="noopener">🔗 Recettes IG bas sur CuisineAZ.com</a>
+<div class="rmeta"><span><b>Prépa :</b> 15 min</span><span><b>Cuisson :</b> 20 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Jeu. 20</span></div>
+<h4>Ingrédients</h4>
+<ul>
+<li>2 filets cabillaud/colin (≈400g) • 80g chapelure complète • 1 œuf</li>
+<li>2 c.s. farine blé complet • 1 c.c. paprika • Zeste 1 citron • Thym, persil</li>
+<li>2 c.s. huile olive • 200g riz basmati • Mâche + vinaigrette colza</li>
+</ul>
+<h4>Préparation</h4>
+<ol>
+<li>Four 200°C. Paner : farine → œuf battu → chapelure assaisonnée.</li>
+<li>Plaque + papier cuisson, filet d'huile. Enfourner 18-20 min.</li>
+<li>Cuire riz 12 min. Servir avec mâche, vinaigrette colza et citron.</li>
+</ol>
+</div>
 
-            <div class="recipe-card">
-                <h3>🍛 Curry de lentilles corail aux légumes d'hiver</h3>
-                <div class="recipe-meta">
-                    <span><strong>Préparation :</strong> 10 min</span>
-                    <span><strong>Cuisson :</strong> 25 min</span>
-                    <span><strong>Personnes :</strong> 2</span>
-                    <span><strong>Jour :</strong> Lundi dîner</span>
-                </div>
-                <div class="ingredients">
-                    <h4>Ingrédients</h4>
-                    <ul>
-                        <li>200g de lentilles corail</li>
-                        <li>1 boîte de lait de coco light (200ml)</li>
-                        <li>2 carottes coupées en rondelles</li>
-                        <li>1 navet en dés</li>
-                        <li>1 oignon émincé</li>
-                        <li>2 gousses d'ail hachées</li>
-                        <li>2 cuillères à café de curry en poudre</li>
-                        <li>1 cuillère à café de cumin</li>
-                        <li>400ml de bouillon de légumes</li>
-                        <li>2 cuillères à soupe d'huile de colza</li>
-                        <li>Sel, poivre, coriandre fraîche</li>
-                        <li>150g de quinoa</li>
-                    </ul>
-                </div>
-                <div class="steps">
-                    <h4>Préparation</h4>
-                    <ol>
-                        <li>Rincer les lentilles corail à l'eau froide et égoutter.</li>
-                        <li>Dans une grande casserole, faire revenir l'oignon et l'ail dans l'huile de colza pendant 3 minutes.</li>
-                        <li>Ajouter le curry et le cumin, faire griller les épices 1 minute en remuant.</li>
-                        <li>Ajouter les carottes, le navet, les lentilles et le bouillon. Porter à ébullition puis réduire le feu.</li>
-                        <li>Laisser mijoter 20 minutes à feu doux jusqu'à ce que les lentilles soient fondantes.</li>
-                        <li>Pendant ce temps, cuire le quinoa dans de l'eau bouillante salée (12-15 minutes).</li>
-                        <li>Ajouter le lait de coco dans le curry, mélanger et réchauffer 2 minutes. Ajuster l'assaisonnement.</li>
-                        <li>Servir le curry sur un lit de quinoa, parsemer de coriandre fraîche ciselée.</li>
-                    </ol>
-                </div>
-            </div>
+<div class="recipe">
+<div class="recipe-top"><h3>Salade composée pommes de terre, betteraves, thon</h3><div class="r-ico">🥗</div></div>
+<a class="recipe-link" href="https://www.marieclaire.fr/cuisine/18-recettes-anti-cholesterol-saines-et-gourmandes,1453308.asp" target="_blank" rel="noopener">🔗 Recettes anti-cholestérol sur MarieClaire.fr</a>
+<div class="rmeta"><span><b>Prépa :</b> 15 min</span><span><b>Cuisson :</b> 20 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Ven. 20</span></div>
+<h4>Ingrédients</h4>
+<ul>
+<li>500g pommes de terre Charlotte • 200g betteraves cuites • 4 œufs</li>
+<li>1 boîte thon naturel (240g) • 2 tomates • ½ oignon rouge • Mâche</li>
+<li>10 olives noires (facult.)</li>
+<li><b>Vinaigrette :</b> 3 c.s. huile colza • 1 c.s. vinaigre cidre • 1 c.c. moutarde • Persil, ciboulette</li>
+</ul>
+<h4>Préparation</h4>
+<ol>
+<li>Pommes de terre vapeur 20 min. Tiédir, couper en rondelles.</li>
+<li>Œufs durs 10 min, refroidir, couper en quartiers.</li>
+<li>Vinaigrette : moutarde + vinaigre + sel, fouetter avec huile colza + herbes.</li>
+<li>Disposer mâche, PDT, betteraves, œufs, thon, tomates, oignon. Arroser.</li>
+</ol>
+</div>
+</div>
 
-            <div class="recipe-card">
-                <h3>🦃 Dinde sautée aux champignons</h3>
-                <div class="recipe-meta">
-                    <span><strong>Préparation :</strong> 15 min</span>
-                    <span><strong>Cuisson :</strong> 20 min</span>
-                    <span><strong>Personnes :</strong> 2</span>
-                    <span><strong>Jour :</strong> Mercredi dîner</span>
-                </div>
-                <div class="ingredients">
-                    <h4>Ingrédients</h4>
-                    <ul>
-                        <li>400g d'escalopes de dinde coupées en lanières</li>
-                        <li>300g de champignons de Paris émincés</li>
-                        <li>1 échalote hachée</li>
-                        <li>2 cuillères à soupe de crème légère 15%</li>
-                        <li>2 cuillères à soupe d'huile d'olive</li>
-                        <li>1 verre de vin blanc sec (facultatif)</li>
-                        <li>Persil frais ciselé</li>
-                        <li>Sel, poivre</li>
-                        <li>400g de brocolis frais</li>
-                        <li>4 pommes de terre moyennes</li>
-                    </ul>
-                </div>
-                <div class="steps">
-                    <h4>Préparation</h4>
-                    <ol>
-                        <li>Laver les pommes de terre et les cuire à la vapeur avec leur peau pendant 20 minutes. Cuire également les brocolis à la vapeur 12 minutes.</li>
-                        <li>Dans une grande poêle, faire chauffer l'huile d'olive et faire dorer les lanières de dinde 5 minutes à feu vif. Réserver.</li>
-                        <li>Dans la même poêle, faire revenir l'échalote 2 minutes puis ajouter les champignons.</li>
-                        <li>Laisser cuire les champignons jusqu'à évaporation de leur eau (environ 8 minutes).</li>
-                        <li>Déglacer avec le vin blanc (ou 50ml de bouillon), laisser réduire 2 minutes.</li>
-                        <li>Remettre la dinde dans la poêle, ajouter la crème légère, bien mélanger et réchauffer 3 minutes.</li>
-                        <li>Parsemer de persil ciselé. Servir avec les brocolis et les pommes de terre vapeur.</li>
-                    </ol>
-                </div>
-            </div>
+<!-- ===== COURSES ===== -->
+<div id="courses" class="pnl">
+<div class="shop">
+<h2>🛒 Liste de courses</h2>
+<p class="shop-sub">Semaine du 14 au 20 février 2026 — Pour 2 personnes</p>
+<div class="ctr" id="compteur"></div>
 
-            <div class="recipe-card">
-                <h3>🐟 Poisson pané maison au four</h3>
-                <div class="recipe-meta">
-                    <span><strong>Préparation :</strong> 15 min</span>
-                    <span><strong>Cuisson :</strong> 20 min</span>
-                    <span><strong>Personnes :</strong> 2</span>
-                    <span><strong>Jour :</strong> Jeudi dîner</span>
-                </div>
-                <div class="ingredients">
-                    <h4>Ingrédients</h4>
-                    <ul>
-                        <li>2 filets de poisson blanc (cabillaud ou colin, environ 400g)</li>
-                        <li>80g de chapelure complète ou flocons d'avoine mixés</li>
-                        <li>1 œuf</li>
-                        <li>2 cuillères à soupe de farine de blé complet</li>
-                        <li>1 cuillère à café de paprika</li>
-                        <li>Zeste de 1 citron</li>
-                        <li>Herbes séchées (thym, persil)</li>
-                        <li>2 cuillères à soupe d'huile d'olive</li>
-                        <li>Sel, poivre</li>
-                        <li>200g de riz basmati</li>
-                        <li>1 citron pour servir</li>
-                    </ul>
-                </div>
-                <div class="steps">
-                    <h4>Préparation</h4>
-                    <ol>
-                        <li>Préchauffer le four à 200°C. Préparer 3 assiettes : farine dans la première, œuf battu dans la deuxième, chapelure mélangée avec paprika, zeste de citron, herbes, sel et poivre dans la troisième.</li>
-                        <li>Sécher les filets de poisson avec du papier absorbant. Les passer successivement dans la farine, l'œuf battu, puis la chapelure en pressant bien.</li>
-                        <li>Déposer sur une plaque recouverte de papier cuisson, arroser d'un filet d'huile d'olive. Enfourner 18-20 minutes jusqu'à ce que le poisson soit doré et croustillant.</li>
-                        <li>Cuire le riz basmati selon les instructions (environ 12 minutes).</li>
-                        <li>Servir le poisson pané avec le riz, accompagné de quartiers de citron.</li>
-                    </ol>
-                </div>
-            </div>
+<div class="toggle-rayons" onclick="document.getElementById('rnav').classList.toggle('open')">📍 Navigation par rayon ▾</div>
+<div class="rayon-nav" id="rnav">
+<span onclick="sTo('cat-legumes')">🥬 Légumes</span>
+<span onclick="sTo('cat-fruits')">🍎 Fruits</span>
+<span onclick="sTo('cat-viandes')">🥩 Viandes</span>
+<span onclick="sTo('cat-laitier')">🥚 Laitier</span>
+<span onclick="sTo('cat-feculents')">🌾 Féculents</span>
+<span onclick="sTo('cat-boulangerie')">🍞 Boulangerie</span>
+<span onclick="sTo('cat-epicerie')">🫙 Épicerie</span>
+<span onclick="sTo('cat-herbes')">🌿 Herbes</span>
+<span onclick="sTo('cat-oleagineux')">🥜 Oléagineux</span>
+<span onclick="sTo('cat-traiteur')">🫕 Traiteur</span>
+<span onclick="sTo('cat-hygiene')">🧹 Hygiène</span>
+<span onclick="sTo('cat-sante')">💊 Santé</span>
+<span onclick="sTo('cat-corps')">🧴 Corps</span>
+<span onclick="sTo('cat-divers')">🏷️ Divers</span>
+</div>
 
-            <div class="recipe-card">
-                <h3>🥗 Salade composée de pommes de terre</h3>
-                <div class="recipe-meta">
-                    <span><strong>Préparation :</strong> 15 min</span>
-                    <span><strong>Cuisson :</strong> 20 min</span>
-                    <span><strong>Personnes :</strong> 2</span>
-                    <span><strong>Jour :</strong> Vendredi dîner</span>
-                </div>
-                <div class="ingredients">
-                    <h4>Ingrédients</h4>
-                    <ul>
-                        <li>500g de pommes de terre (Charlotte ou Nicola)</li>
-                        
-                        <li>4 œufs</li>
-                        <li>1 boîte de thon au naturel (240g égouttés)</li>
-                        <li>2 tomates coupées en quartiers</li>
-                        <li>1/2 oignon rouge émincé finement</li>
-                        <li>10 olives noires (facultatif)</li>
-                        <li>1 petite laitue ou mâche</li>
-                        <li><strong>Vinaigrette :</strong></li>
-                        <li>3 cuillères à soupe d'huile de colza</li>
-                        <li>1 cuillère à soupe de vinaigre de cidre</li>
-                        <li>1 cuillère à café de moutarde</li>
-                        <li>Sel, poivre, herbes fraîches (persil, ciboulette)</li>
-                    </ul>
-                </div>
-                <div class="steps">
-                    <h4>Préparation</h4>
-                    <ol>
-                        <li>Laver les pommes de terre et les cuire à la vapeur avec leur peau pendant 20 minutes jusqu'à ce qu'elles soient tendres. Laisser tiédir puis couper en rondelles.</li>
-                        <li>Cuire les œufs durs (10 minutes dans l'eau bouillante), refroidir sous l'eau froide, écaler et couper en quartiers.</li>
-                        <li>Préparer la vinaigrette : dans un bol, mélanger la moutarde, le vinaigre, sel et poivre. Ajouter l'huile de colza en fouettant. Ajouter les herbes fraîches ciselées.</li>
-                        <li>Dans un grand saladier, disposer les feuilles de salade, les pommes de terre encore tièdes, les bettraves, les quartiers d'œufs, le thon émietté, les tomates et l'oignon rouge.</li>
-                        <li>Arroser de vinaigrette juste avant de servir et mélanger délicatement. Ajouter les olives si souhaité.</li>
-                    </ol>
-                </div>
-            </div>
+<div id="liste-principale">
 
-            <div class="recipe-card">
-                <h3>🥘 Tajine de poulet aux légumes d'hiver et pois chiches</h3>
-                <div class="recipe-meta">
-                    <span><strong>Préparation :</strong> 20 min</span>
-                    <span><strong>Cuisson :</strong> 35 min</span>
-                    <span><strong>Personnes :</strong> 2</span>
-                    <span><strong>Jour :</strong> Samedi dîner</span>
-                </div>
-                <div class="ingredients">
-                    <h4>Ingrédients</h4>
-                    <ul>
-                        <li>2 cuisses de poulet fermier (ou 2 blancs coupés en gros morceaux)</li>
-                        <li>1 boîte de pois chiches égouttés (240g)</li>
-                        <li>3 carottes coupées en rondelles</li>
-                        <li>2 navets en quartiers</li>
-                        <li>1/2 butternut en cubes</li>
-                        <li>1 oignon émincé</li>
-                        <li>2 tomates concassées (conserve)</li>
-                        <li>2 gousses d'ail hachées</li>
-                        <li>1 cuillère à café de curcuma, cumin, paprika, gingembre</li>
-                        <li>1 pincée de cannelle</li>
-                        <li>2 cuillères à soupe d'huile d'olive</li>
-                        <li>300ml de bouillon de volaille</li>
-                        <li>Coriandre fraîche, citron confit (facultatif)</li>
-                        <li>150g de boulgour</li>
-                    </ul>
-                </div>
-                <div class="steps">
-                    <h4>Préparation</h4>
-                    <ol>
-                        <li>Dans une cocotte ou tajine, faire chauffer l'huile d'olive et faire dorer les morceaux de poulet sur toutes les faces (5 min). Réserver.</li>
-                        <li>Dans la même cocotte, faire revenir l'oignon et l'ail 3 minutes.</li>
-                        <li>Ajouter toutes les épices (curcuma, cumin, paprika, gingembre, cannelle) et faire griller 1 minute en remuant.</li>
-                        <li>Ajouter les carottes, les navets, le butternut, les tomates concassées et le bouillon. Mélanger.</li>
-                        <li>Remettre le poulet dans la cocotte, ajouter les pois chiches. Porter à ébullition puis couvrir et laisser mijoter 30 minutes à feu doux.</li>
-                        <li>Pendant ce temps, cuire le boulgour selon les instructions (10 minutes dans de l'eau bouillante).</li>
-                        <li>Rectifier l'assaisonnement, parsemer de coriandre fraîche ciselée. Servir avec le boulgour et des quartiers de citron.</li>
-                    </ol>
-                </div>
-            </div>
+<div class="scat" id="cat-legumes"><h4>🥬 Légumes frais</h4><div class="si" data-cat="legumes">
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">6 carottes</span><span class="sr">Sam. tajine • Lun. curry • Mar. soupe</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 céleri-rave (≈400g)</span><span class="sr">Dim. purée céleri-panais</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">2 panais</span><span class="sr">Dim. purée céleri-panais</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">3 navets</span><span class="sr">Sam. tajine • Lun. curry • Mar. soupe</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">½ butternut (≈400g)</span><span class="sr">Sam. tajine</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">450g champignons de Paris</span><span class="sr">Mar. omelette • Mer. dinde</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">400g brocolis</span><span class="sr">Mer. dinde champignons</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">2 poireaux</span><span class="sr">Mar. soupe légumes</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 branche céleri</span><span class="sr">Mar. soupe légumes</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">2 endives</span><span class="sr">Dim. collation endives-noix</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 concombre</span><span class="sr">Sam. collation crudités-houmous</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 botte radis</span><span class="sr">Lun. collation nordique</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 poivron</span><span class="sr">Mer. collation crudités-tzatziki</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">3 sachets mâche/laitue</span><span class="sr">Sam. tajine • Lun. curry • Jeu. poisson • Ven. salade</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">5 oignons + ½ oignon rouge</span><span class="sr">Sam. tajine • Lun. curry • Mar. soupe • Ven. salade</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 échalote</span><span class="sr">Mer. dinde champignons</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 tête d'ail</span><span class="sr">Sam. tajine • Dim. poulet • Lun. curry • Mar. soupe</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">3 tomates</span><span class="sr">Ven. salade composée</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 barquette tomates cerises</span><span class="sr">Dim. collation endives-noix</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">200g betteraves cuites</span><span class="sr">Ven. salade + collation houmous betterave</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">100g épinards frais</span><span class="sr">Mar. collation smoothie vert</span></label>
+</div></div>
 
-            <div class="recipe-card">
-                <h3>🥣 Soupe de légumes maison et omelette aux champignons</h3>
-                <div class="recipe-meta">
-                    <span><strong>Préparation :</strong> 15 min</span>
-                    <span><strong>Cuisson :</strong> 30 min</span>
-                    <span><strong>Personnes :</strong> 2</span>
-                    <span><strong>Jour :</strong> Mardi dîner</span>
-                </div>
-                <div class="ingredients">
-                    <h4>Ingrédients</h4>
-                    <ul>
-                        <li><strong>Pour la soupe :</strong></li>
-                        <li>2 poireaux émincés</li>
-                        <li>2 carottes en rondelles</li>
-                        <li>1 navet en dés</li>
-                        <li>1 branche de céleri émincée</li>
-                        <li>2 pommes de terre moyennes en cubes</li>
-                        <li>1 litre de bouillon de légumes</li>
-                        <li>1 cuillère à soupe d'huile d'olive</li>
-                        <li>Sel, poivre, herbes de Provence</li>
-                        <li><strong>Pour l'omelette :</strong></li>
-                        <li>4 œufs</li>
-                        <li>150g de champignons de Paris émincés</li>
-                        <li>30g de fromage de chèvre émietté</li>
-                        <li>1 cuillère à soupe d'huile d'olive</li>
-                        <li>Persil frais, sel, poivre</li>
-                        <li>Pain de seigle</li>
-                    </ul>
-                </div>
-                <div class="steps">
-                    <h4>Préparation</h4>
-                    <ol>
-                        <li>Dans une grande casserole, faire chauffer l'huile d'olive et faire revenir les poireaux 3 minutes.</li>
-                        <li>Ajouter tous les légumes (carottes, navet, céleri, pommes de terre) et le bouillon. Porter à ébullition.</li>
-                        <li>Laisser mijoter 25 minutes jusqu'à ce que les légumes soient tendres. Assaisonner avec sel, poivre et herbes de Provence.</li>
-                        <li>Pour l'omelette : dans une poêle, faire sauter les champignons émincés dans l'huile d'olive jusqu'à évaporation de leur eau (5 min).</li>
-                        <li>Battre les œufs avec sel et poivre. Verser dans la poêle avec les champignons.</li>
-                        <li>Cuire à feu moyen 3-4 minutes. Parsemer de fromage de chèvre émietté sur la moitié de l'omelette.</li>
-                        <li>Plier l'omelette en deux et poursuivre la cuisson 1 minute. Parsemer de persil frais.</li>
-                        <li>Servir la soupe en entrée, puis l'omelette avec des tranches de pain de seigle grillé.</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
+<div class="scat" id="cat-fruits"><h4>🍎 Fruits</h4><div class="si" data-cat="fruits">
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">3 pommes</span><span class="sr">Sam.+Mar. petits-déj</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 poire</span><span class="sr">Lun. petit-déj</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">2 oranges</span><span class="sr">Dim.+Ven. petits-déj</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 kiwi</span><span class="sr">Jeu. petit-déj</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">2 clémentines</span><span class="sr">Mer. petit-déj</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 banane</span><span class="sr">Mar. collation smoothie vert</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Fruits de saison variés</span><span class="sr">Jeu. collation salade de fruits</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">5 citrons</span><span class="sr">Quotidien eau citronnée • Dim. poulet • Jeu. poisson</span></label>
+</div></div>
 
-        <div id="courses" class="tab-content">
-            <div class="shopping-list">
-                <h2 style="color: var(--color-accent); margin-bottom: 30px; font-size: 2rem;">🛒 Liste de courses pour 2 personnes - 1 semaine</h2>
-                
-                <div class="shopping-category">
-                    <h4>🥬 Légumes frais de saison (février)</h4>
-                    <ul>
-                        <li><span>6 carottes</span><span class="recipe-ref">Dimanche (collation + purée), Lundi (curry), Samedi (tajine), Mardi (soupe)</span></li>
-                        <li><span>1 céleri-rave (400g)</span><span class="recipe-ref">Dimanche (purée céleri-panais)</span></li>
-                        <li><span>2 panais</span><span class="recipe-ref">Dimanche (purée céleri-panais)</span></li>
-                        <li><span>3 navets</span><span class="recipe-ref">Lundi (curry), Samedi (tajine), Mardi (soupe)</span></li>
-                        <li><span>1/2 butternut (environ 400g)</span><span class="recipe-ref">Samedi (tajine)</span></li>
-                        <li><span>300g de champignons de Paris</span><span class="recipe-ref">Mercredi (dinde), Mardi (omelette)</span></li>
-                        <li><span>400g de brocolis</span><span class="recipe-ref">Mercredi (accompagnement dinde)</span></li>
-                        <li><span>2 poireaux</span><span class="recipe-ref">Mardi (soupe)</span></li>
-                        <li><span>3 branches de céleri branche</span><span class="recipe-ref">Dimanche (collation), Vendredi (collation), Mardi (soupe)</span></li>
-                        <li><span>2 endives</span><span class="recipe-ref">Samedi (collation)</span></li>
-                        <li><span>3 bottes de mâche ou laitue</span><span class="recipe-ref">Lundi (accompagnement), Samedi (accompagnement), Vendredi (salade)</span></li>
-                        <li><span>5 oignons (+ 1/2 oignon rouge)</span><span class="recipe-ref">Dimanche, Lundi, Mercredi, Samedi, Mardi + Vendredi (salade)</span></li>
-                        <li><span>2 échalotes</span><span class="recipe-ref">Mercredi (dinde)</span></li>
-                        <li><span>1 tête d'ail (8 gousses)</span><span class="recipe-ref">Multiple recettes</span></li>
-                        <li><span>1 boîte de tomates concassées (400g)</span><span class="recipe-ref">Samedi (tajine)</span></li>
-                        <li><span>3 tomates fraîches</span><span class="recipe-ref">Vendredi (salade composée)</span></li>
-                    </ul>
-                </div>
+<div class="scat" id="cat-viandes"><h4>🥩 Viandes, Volailles & Poissons</h4><div class="si" data-cat="viandes">
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">400g cuisses/blancs poulet</span><span class="sr">Sam. tajine poulet pois chiches</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">400g blancs poulet</span><span class="sr">Dim. poulet rôti citron-romarin</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">400g escalopes dinde</span><span class="sr">Mer. dinde sautée champignons</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">400g filets cabillaud/colin</span><span class="sr">Jeu. poisson pané maison</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 boîte thon naturel (240g)</span><span class="sr">Ven. salade composée</span></label>
+</div></div>
 
-                <div class="shopping-category">
-                    <h4>🥗 Crudités de saison</h4>
-                    <ul>
-                        <li><span>Betteraves cuites (200g)</span><span class="recipe-ref">Mardi (houmous de betterave)</span></li>
-                        <li><span>Chou rouge (1/4)</span><span class="recipe-ref">Mardi (crudités variées)</span></li>
-                    </ul>
-                </div>
+<div class="scat" id="cat-laitier"><h4>🥚 Œufs & Produits laitiers</h4><div class="si" data-cat="laitier">
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">15 œufs</span><span class="sr">Dim.+Mer.+Ven. pdj • Lun. collation • Mar. omelette • Jeu. panure • Ven. salade</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">500g fromage blanc 0/3%</span><span class="sr">Sam.+Lun.+Jeu. petits-déj</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">2 yaourts nature</span><span class="sr">Mar. petit-déj • Jeu. collation salade fruits</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">100ml crème légère 15%</span><span class="sr">Dim. purée céleri • Mer. dinde champignons</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">30g fromage de chèvre</span><span class="sr">Mar. omelette champignons-chèvre</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">100g beurre demi-sel</span><span class="sr">Dim.+Mer. petits-déj (modéré)</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">200ml lait d'amande</span><span class="sr">Mar. collation smoothie vert</span></label>
+</div></div>
 
-                <div class="shopping-category">
-                    <h4>🍎 Fruits frais</h4>
-                    <ul>
-                        <li><span>3 pommes</span><span class="recipe-ref">Lundi, Samedi petits-déjeuners</span></li>
-                        <li><span>2 poires</span><span class="recipe-ref">Mardi petit-déjeuner</span></li>
-                        <li><span>2 oranges</span><span class="recipe-ref">Mercredi, Dimanche petits-déjeuners</span></li>
-                        <li><span>2 kiwis</span><span class="recipe-ref">Jeudi petit-déjeuner</span></li>
-                        <li><span>3 clémentines</span><span class="recipe-ref">Vendredi petit-déjeuner</span></li>
-                        <li><span>1 banane</span><span class="recipe-ref">Mercredi collation smoothie</span></li>
-                        <li><span>Fruits de saison variés</span><span class="recipe-ref">Jeudi collation salade</span></li>
-                        <li><span>5 citrons</span><span class="recipe-ref">Multiple recettes + eau citronnée</span></li>
-                    </ul>
-                </div>
+<div class="scat" id="cat-feculents"><h4>🌾 Féculents & Légumineuses</h4><div class="si" data-cat="feculents">
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">400g riz basmati</span><span class="sr">Dim. poulet rôti • Jeu. poisson pané</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">150g quinoa</span><span class="sr">Lun. curry lentilles</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">150g boulgour</span><span class="sr">Sam. tajine poulet</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">200g lentilles corail</span><span class="sr">Lun. curry lentilles</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 boîte pois chiches (400g)</span><span class="sr">Sam. tajine poulet</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">80g chapelure complète</span><span class="sr">Jeu. poisson pané maison</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Farine blé complet (2 c.s.)</span><span class="sr">Jeu. poisson pané maison</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1kg pommes de terre Charlotte</span><span class="sr">Mar. soupe • Mer. dinde • Ven. salade</span></label>
+</div></div>
 
-                <div class="shopping-category">
-                    <h4>🍖 Viandes, Volailles &amp; Poissons</h4>
-                    <ul>
-                        <li><span>600g de blancs de poulet</span><span class="recipe-ref">Dimanche, Samedi</span></li>
-                        <li><span>400g d'escalopes de dinde</span><span class="recipe-ref">Mercredi</span></li>
-                        <li><span>400g de filets de poisson blanc (cabillaud ou colin)</span><span class="recipe-ref">Jeudi</span></li>
-                        <li><span>1 boîte de thon au naturel (240g égouttés)</span><span class="recipe-ref">Vendredi (salade)</span></li>
-                    </ul>
-                </div>
+<div class="scat" id="cat-boulangerie"><h4>🍞 Boulangerie</h4><div class="si" data-cat="boulangerie">
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 pain de seigle tranché</span><span class="sr">Sam.+Dim. petits-déj • Mar. omelette</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 pain aux céréales</span><span class="sr">Mer. petit-déj</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 pain complet</span><span class="sr">Ven. petit-déj</span></label>
+</div></div>
 
-                <div class="shopping-category">
-                    <h4>🥚 Œufs &amp; Produits laitiers</h4>
-                    <ul>
-                        <li><span>15 œufs</span><span class="recipe-ref">Petits-déjeuners, collations, omelette, salade, panure</span></li>
-                        <li><span>500g de fromage blanc 0% ou 3%</span><span class="recipe-ref">Petits-déjeuners</span></li>
-                        <li><span>2 yaourts nature</span><span class="recipe-ref">Jeudi collation</span></li>
-                        <li><span>100ml de crème légère 15%</span><span class="recipe-ref">Mercredi (dinde)</span></li>
-                        <li><span>30g de fromage de chèvre</span><span class="recipe-ref">Mardi (omelette)</span></li>
-                        <li><span>100g de beurre demi-sel</span><span class="recipe-ref">Petits-déjeuners (usage modéré)</span></li>
-                    </ul>
-                </div>
+<div class="scat" id="cat-epicerie"><h4>🫙 Épicerie & Condiments</h4><div class="si" data-cat="epicerie">
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Huile d'olive</span><span class="sr">Sam. tajine • Dim. poulet • Mar. soupe+omelette • Mer. dinde • Jeu. poisson</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Huile de colza</span><span class="sr">Lun. curry+collation • Jeu.+Ven. vinaigrettes</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 boîte lait coco light</span><span class="sr">Lun. curry lentilles</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 boîte tomates concassées</span><span class="sr">Sam. tajine poulet</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Épices : curry, cumin, paprika, curcuma, gingembre, cannelle</span><span class="sr">Sam. tajine • Lun. curry • Jeu. poisson</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Herbes de Provence</span><span class="sr">Mar. soupe légumes</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Miel</span><span class="sr">Sam.+Lun. petits-déj</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Moutarde de Dijon</span><span class="sr">Ven. vinaigrette salade composée</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Vinaigre de cidre</span><span class="sr">Ven. vinaigrette salade composée</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Bouillon légumes (cubes)</span><span class="sr">Lun. curry • Mar. soupe</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Bouillon volaille (cubes)</span><span class="sr">Sam. tajine poulet</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">10 olives noires (facult.)</span><span class="sr">Ven. salade composée</span></label>
+</div></div>
 
-                <div class="shopping-category">
-                    <h4>🌾 Féculents &amp; Légumineuses</h4>
-                    <ul>
-                        <li><span>400g de riz basmati</span><span class="recipe-ref">Dimanche (poulet rôti), Jeudi (poisson pané)</span></li>
-                        <li><span>200g de riz complet</span><span class="recipe-ref">Mercredi (dinde)</span></li>
-                        <li><span>150g de quinoa</span><span class="recipe-ref">Lundi (curry de lentilles)</span></li>
-                        <li><span>150g de boulgour</span><span class="recipe-ref">Samedi (tajine)</span></li>
-                        <li><span>200g de lentilles corail</span><span class="recipe-ref">Lundi (curry)</span></li>
-                        <li><span>1 boîte de pois chiches (400g)</span><span class="recipe-ref">Samedi (tajine)</span></li>
-                        <li><span>80g de chapelure complète ou flocons d'avoine</span><span class="recipe-ref">Jeudi (panure poisson)</span></li>
-                        <li><span>2 cuillères à soupe de farine de blé complet</span><span class="recipe-ref">Jeudi (panure poisson)</span></li>
-                        <li><span>1kg de pommes de terre (Charlotte ou Nicola de préférence)</span><span class="recipe-ref">Mercredi (2), Dimanche (2 dans purée), Mardi (2), Vendredi (500g salade)</span></li>
-                    </ul>
-                </div>
+<div class="scat" id="cat-herbes"><h4>🌿 Herbes fraîches</h4><div class="si" data-cat="herbes">
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">2 branches romarin</span><span class="sr">Dim. poulet rôti citron-romarin</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 bouquet persil</span><span class="sr">Mar. omelette • Mer. dinde • Ven. vinaigrette</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 bouquet coriandre</span><span class="sr">Sam. tajine • Lun. curry</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">1 bouquet ciboulette</span><span class="sr">Ven. vinaigrette salade composée</span></label>
+</div></div>
 
-                <div class="shopping-category">
-                    <h4>🍞 Pain &amp; Boulangerie</h4>
-                    <ul>
-                        <li><span>1 pain de seigle (tranché)</span><span class="recipe-ref">Petits-déjeuners, Mardi</span></li>
-                        <li><span>1 pain aux céréales</span><span class="recipe-ref">Vendredi petit-déjeuner</span></li>
-                        <li><span>1 pain complet</span><span class="recipe-ref">Samedi, Mardi</span></li>
-                    </ul>
-                </div>
+<div class="scat" id="cat-oleagineux"><h4>🥜 Oléagineux & Graines</h4><div class="si" data-cat="oleagineux">
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">200g amandes</span><span class="sr">Sam.+Jeu. petits-déj</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">200g noix</span><span class="sr">Lun. petit-déj • Dim. collation endives-noix</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">100g noisettes</span><span class="sr">Mar. petit-déj</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">50g graines de courge</span><span class="sr">Lun. petit-déj • Jeu. collation</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">50g graines de lin moulues</span><span class="sr">Mar. smoothie • Jeu. petit-déj</span></label>
+</div></div>
 
-                <div class="shopping-category">
-                    <h4>🫙 Épicerie &amp; Condiments</h4>
-                    <ul>
-                        <li><span>Huile d'olive (500ml)</span><span class="recipe-ref">Cuissons multiples</span></li>
-                        <li><span>Huile de colza (250ml)</span><span class="recipe-ref">Assaisonnements, collations, vinaigrette</span></li>
-                        <li><span>1 boîte de lait de coco light</span><span class="recipe-ref">Lundi (curry)</span></li>
-                        <li><span>200ml de lait d'amande</span><span class="recipe-ref">Mercredi smoothie</span></li>
-                        <li><span>Curry en poudre</span><span class="recipe-ref">Lundi, Samedi</span></li>
-                        <li><span>Cumin en poudre</span><span class="recipe-ref">Lundi, Samedi</span></li>
-                        <li><span>Paprika</span><span class="recipe-ref">Samedi</span></li>
-                        <li><span>Curcuma</span><span class="recipe-ref">Samedi</span></li>
-                        <li><span>Gingembre moulu</span><span class="recipe-ref">Samedi</span></li>
-                        <li><span>Cannelle</span><span class="recipe-ref">Samedi</span></li>
-                        <li><span>Herbes de Provence</span><span class="recipe-ref">Mardi (soupe)</span></li>
-                        <li><span>Miel (pot)</span><span class="recipe-ref">Petits-déjeuners</span></li>
-                        <li><span>Moutarde de Dijon</span><span class="recipe-ref">Vendredi (vinaigrette)</span></li>
-                        <li><span>Vinaigre de cidre</span><span class="recipe-ref">Vendredi (vinaigrette)</span></li>
-                        <li><span>Bouillon de légumes (cubes ou poudre)</span><span class="recipe-ref">Multiple recettes</span></li>
-                        <li><span>Bouillon de volaille (cubes ou poudre)</span><span class="recipe-ref">Vendredi, Samedi</span></li>
-                        <li><span>1 bouteille de vin blanc sec (facultatif)</span><span class="recipe-ref">Mercredi</span></li>
-                    </ul>
-                </div>
+<div class="scat" id="cat-traiteur"><h4>🫕 Fait maison / Traiteur</h4><div class="si" data-cat="traiteur">
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Houmous (maison ou pot)</span><span class="sr">Sam. collation crudités</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Houmous de betterave</span><span class="sr">Ven. collation crudités</span></label>
+<label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Tzatziki (maison ou pot)</span><span class="sr">Mer. collation crudités</span></label>
+</div></div>
 
-                <div class="shopping-category">
-                    <h4>🌿 Herbes fraîches</h4>
-                    <ul>
-                        <li><span>2 bouquets de romarin frais</span><span class="recipe-ref">Dimanche (poulet rôti)</span></li>
-                        <li><span>2 bouquets de persil frais</span><span class="recipe-ref">Mercredi (dinde), Mardi (omelette), Vendredi (salade)</span></li>
-                        <li><span>1 bouquet de coriandre fraîche</span><span class="recipe-ref">Lundi (curry), Samedi (tajine)</span></li>
-                        <li><span>1 bouquet de ciboulette</span><span class="recipe-ref">Vendredi (salade)</span></li>
-                        <li><span>Épinards frais (100g)</span><span class="recipe-ref">Mercredi smoothie</span></li>
-                    </ul>
-                </div>
+<div class="scat" id="cat-hygiene"><h4>🧹 Hygiène maison</h4><div class="si" data-cat="hygiene"></div>
+<p class="ph">Ajoutez ci-dessous : lessive, liquide vaisselle, éponges…</p></div>
 
-                <div class="shopping-category">
-                    <h4>🥜 Oléagineux &amp; Graines</h4>
-                    <ul>
-                        <li><span>200g d'amandes</span><span class="recipe-ref">Petits-déjeuners</span></li>
-                        <li><span>200g de noix</span><span class="recipe-ref">Petits-déjeuners</span></li>
-                        <li><span>100g de noisettes</span><span class="recipe-ref">Petits-déjeuners</span></li>
-                        <li><span>50g de graines de courge</span><span class="recipe-ref">Jeudi petit-déjeuner</span></li>
-                        <li><span>50g de graines de lin moulues</span><span class="recipe-ref">Mercredi smoothie, Jeudi collation</span></li>
-                    </ul>
-                </div>
+<div class="scat" id="cat-sante"><h4>💊 Santé / Pharmacie</h4><div class="si" data-cat="sante"></div>
+<p class="ph">Ajoutez ci-dessous : pansements, vitamines…</p></div>
 
-                <div class="shopping-category">
-                    <h4>🥫 Conserves &amp; Fait maison</h4>
-                    <ul>
-                        <li><span>Houmous maison ou 1 pot</span><span class="recipe-ref">Dimanche collation</span></li>
-                        <li><span>Houmous de betterave (fait maison)</span><span class="recipe-ref">Mardi collation</span></li>
-                        <li><span>Tzatziki maison ou 1 pot</span><span class="recipe-ref">Vendredi collation</span></li>
-                        <li><span>10 olives noires (facultatif)</span><span class="recipe-ref">Vendredi (salade)</span></li>
-                    </ul>
-                </div>
+<div class="scat" id="cat-corps"><h4>🧴 Soin du corps</h4><div class="si" data-cat="corps"></div>
+<p class="ph">Ajoutez ci-dessous : shampoing, savon, crème…</p></div>
 
-                <p style="margin-top: 30px; padding: 20px; background: var(--color-bg-primary); border-radius: var(--radius-base); color: var(--color-text-primary);">
-                    <strong>💡 Conseil d'organisation :</strong> Faites vos courses en une seule fois pour toute la semaine. Tous les légumes proposés sont de saison en février (légumes racines, endives, mâche, brocolis, bettraves). Préparez le houmous de betterave le mardi pour avoir vos collations prêtes. Pensez à sortir les viandes et poissons du congélateur la veille si besoin. La semaine commence le samedi.
-                </p>
-            </div>
-        </div>
+<div class="scat" id="cat-divers"><h4>🏷️ Divers</h4><div class="si" data-cat="divers"></div>
+<p class="ph">Ajoutez ci-dessous : piles, ampoules…</p></div>
 
-        <button class="btn-print" onclick="window.print()">🖨️ Imprimer</button>
-    </div>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const buttons = document.querySelectorAll('.nav-tabs button');
-            
-            buttons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const tabName = this.getAttribute('data-tab');
-                    
-                    // Retirer la classe active de tous les onglets
-                    document.querySelectorAll('.tab-content').forEach(tab => {
-                        tab.classList.remove('active');
-                    });
-                    
-                    // Retirer la classe active de tous les boutons
-                    document.querySelectorAll('.nav-tabs button').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
-                    
-                    // Activer l'onglet et le bouton cliqué
-                    document.getElementById(tabName).classList.add('active');
-                    this.classList.add('active');
-                });
-            });
-        });
-    </script>
+<div class="caddie"><h3>✅ Dans le caddie</h3>
+<div id="caddie"><p class="caddie-empty">Cochez les produits pour les ajouter ici.</p></div></div>
+
+<div class="add-area"><h4>➕ Ajouter un produit</h4>
+<div class="add-row">
+<input type="text" id="add-nom" placeholder="Nom du produit" onkeydown="if(event.key==='Enter')ajP()">
+<select id="add-rayon">
+<option value="legumes">🥬 Légumes</option><option value="fruits">🍎 Fruits</option>
+<option value="viandes">🥩 Viandes</option><option value="laitier">🥚 Laitier</option>
+<option value="feculents">🌾 Féculents</option><option value="boulangerie">🍞 Boulangerie</option>
+<option value="epicerie">🫙 Épicerie</option><option value="herbes">🌿 Herbes</option>
+<option value="oleagineux">🥜 Oléagineux</option><option value="traiteur">🫕 Traiteur</option>
+<option value="hygiene">🧹 Hygiène</option><option value="sante">💊 Santé</option>
+<option value="corps">🧴 Corps</option><option value="divers" selected>🏷️ Divers</option>
+</select>
+<button onclick="ajP()">Ajouter</button>
+</div></div>
+
+<p style="margin-top:20px;padding:14px;background:var(--bg);border-radius:var(--r);font-size:.8rem;color:var(--txt2)">
+<b>💡</b> Cochez → produit dans le caddie. Décochez dans le caddie → retour liste. Cliquez « Navigation par rayon » pour sauter à une catégorie.
+</p>
+</div>
+</div>
+
+<button class="btn-print" onclick="window.print()">🖨️ Imprimer</button>
+</div>
+
+<script>
+var J=[
+{id:0,nom:"Samedi 14",pdj:"Eau citronnée • Fromage blanc 3% + miel • 1 pomme • 6 amandes",col:"Bâtonnets carottes et concombre • Houmous",din:"Tajine de poulet, légumes d'hiver et pois chiches • Boulgour • Mâche",dn:"Tajine poulet"},
+{id:1,nom:"Dimanche 15",pdj:"Eau citronnée • 2 œufs à la coque • Pain seigle + beurre • 1 orange",col:"Salade d'endives aux noix • Tomates cerises",din:"Poulet rôti citron-romarin • Purée céleri-panais • Riz basmati",dn:"Poulet rôti"},
+{id:2,nom:"Lundi 17",pdj:"Eau citronnée • Fromage blanc 0% + graines courge • 1 poire • Noix",col:"Radis • Œuf dur • Bâtonnets céleri • Huile colza",din:"Curry lentilles corail légumes d'hiver • Quinoa • Mâche",dn:"Curry lentilles"},
+{id:3,nom:"Mardi 18",pdj:"Eau citronnée • 1 pomme • Noisettes • 1 yaourt nature",col:"Smoothie vert (épinards, banane, lait amande, graines lin)",din:"Soupe légumes • Omelette champignons-chèvre • Pain seigle",dn:"Soupe+Omelette"},
+{id:4,nom:"Mercredi 19",pdj:"Eau citronnée • Omelette herbes • Pain céréales • 1 clémentine",col:"Bâtonnets céleri et poivron • Tzatziki",din:"Dinde sautée champignons • Brocolis vapeur • PDT vapeur",dn:"Dinde champignons"},
+{id:5,nom:"Jeudi 20",pdj:"Eau citronnée • Fromage blanc 3% + graines lin • 1 kiwi • Amandes",col:"Salade de fruits • Yaourt nature • Graines courge",din:"Poisson pané maison au four • Riz basmati • Salade verte colza",dn:"Poisson pané"},
+{id:6,nom:"Vendredi 20",pdj:"Eau citronnée • 2 œufs brouillés • Pain complet + huile olive • 1 orange",col:"Bâtonnets carottes • Houmous de betterave",din:"Salade composée : PDT, betteraves, œufs, thon, vinaigrette colza",dn:"Salade composée"}
+];
+function rW(){
+var g=document.getElementById('weekgrid');g.innerHTML='';
+J.forEach(function(j,i){
+var o='';J.forEach(function(j2,i2){if(i2!==i)o+='<option value="'+i2+'">'+j2.nom+' — '+j2.dn+'</option>';});
+g.innerHTML+='<div class="day"><h3>'+j.nom+'</h3>'+
+'<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+j.pdj+'</div></div>'+
+'<div class="meal"><div class="ml">🥗 Collation midi</div><div class="mc">'+j.col+'</div></div>'+
+'<div class="meal"><div class="ml">🍽️ Dîner</div><div class="mc">'+j.din+'</div></div>'+
+'<div class="swap-row"><select>'+o+'</select><button onclick="sw('+i+',this)">↔ échanger dîner</button></div></div>';
+});
+}
+function sw(f,b){var s=b.previousElementSibling;var t=parseInt(s.value);
+var d=J[f].din,n=J[f].dn;J[f].din=J[t].din;J[f].dn=J[t].dn;J[t].din=d;J[t].dn=n;rW();}
+rW();
+
+function tab(id,btn){
+document.querySelectorAll('.pnl').forEach(function(p){p.classList.remove('on')});
+document.querySelectorAll('.tabs button').forEach(function(b){b.classList.remove('on')});
+document.getElementById(id).classList.add('on');btn.classList.add('on');
+}
+function sTo(id){var e=document.getElementById(id);if(e)e.scrollIntoView({behavior:'smooth',block:'start'});}
+
+function mC(){
+var r=0,h=0;
+document.querySelectorAll('#liste-principale .sitem').forEach(function(e){r++;if(e.style.display==='none')h++;});
+var c=document.querySelectorAll('#caddie .sitem').length;
+document.getElementById('compteur').innerHTML='<b>'+(r-h)+'</b> produit'+((r-h)>1?'s':'')+' à acheter — <b>'+c+'</b> dans le caddie';
+}
+function bascule(cb){
+var it=cb.closest('.sitem');var cd=document.getElementById('caddie');
+if(cb.checked){
+var em=cd.querySelector('.caddie-empty');if(em)em.remove();
+var cl=it.cloneNode(true);cl.querySelector('input').checked=true;
+cl.querySelector('input').onchange=function(){deb(this)};
+cd.appendChild(cl);it.style.display='none';
+}mC();
+}
+function deb(cb){
+var it=cb.closest('.sitem');var nm=it.querySelector('.sn').textContent;
+document.querySelectorAll('#liste-principale .sitem').forEach(function(o){
+if(o.querySelector('.sn').textContent===nm&&o.style.display==='none'){o.style.display='';o.querySelector('input').checked=false;}
+});it.remove();
+var cd=document.getElementById('caddie');
+if(!cd.querySelector('.sitem'))cd.innerHTML='<p class="caddie-empty">Cochez les produits pour les ajouter ici.</p>';
+mC();
+}
+function ajP(){
+var n=document.getElementById('add-nom').value.trim();var r=document.getElementById('add-rayon').value;
+if(!n)return;var c=document.querySelector('.si[data-cat="'+r+'"]');if(!c)return;
+var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
+var l=document.createElement('label');l.className='sitem';
+l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+n+'</span><span class="sr">Ajouté manuellement</span>';
+c.appendChild(l);document.getElementById('add-nom').value='';mC();
+}
+mC();
+</script>
 </body>
 </html>
