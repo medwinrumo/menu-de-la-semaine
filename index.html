@@ -26,7 +26,7 @@
             :root {
                 --color-bg-primary: #1f2121;
                 --color-bg-secondary: #262828;
-                --color-text-primary: #f5f5f9;
+                --color-text-primary: #f5f5f5;
                 --color-text-secondary: #a7a9a9;
                 --color-accent: #32b8c6;
                 --color-accent-hover: #2da6b2;
@@ -356,18 +356,533 @@
 
         <div id="apercu" class="tab-content active">
             <div class="week-grid">
-                <!-- Les 6 cartes de jours avec les menus -->
-                <!-- Samedi, Dimanche, Lundi, Mercredi, Jeudi, Vendredi -->
+                <div class="day-card">
+                    <h3>Samedi</h3>
+                    <div class="meal">
+                        <div class="meal-label">Petit-déjeuner</div>
+                        <div class="meal-content">Eau citronnée • Fromage blanc + miel • Pain de seigle grillé • 1 pomme • Amandes</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Déjeuner (collation)</div>
+                        <div class="meal-content">Salade d'endives et noix • Œuf dur</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Dîner</div>
+                        <div class="meal-content">Tajine de poulet aux légumes d'hiver et pois chiches • Boulgour • Mâche</div>
+                    </div>
+                </div>
+
+                <div class="day-card">
+                    <h3>Dimanche</h3>
+                    <div class="meal">
+                        <div class="meal-label">Petit-déjeuner</div>
+                        <div class="meal-content">Eau citronnée • 1 pomme • 5-6 amandes</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Déjeuner (collation)</div>
+                        <div class="meal-content">Bâtonnets carottes et céleri • Houmous maison</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Dîner</div>
+                        <div class="meal-content">Poulet rôti au citron et romarin • Purée de céleri-rave et panais • Riz basmati</div>
+                    </div>
+                </div>
+
+                <div class="day-card">
+                    <h3>Lundi</h3>
+                    <div class="meal">
+                        <div class="meal-label">Petit-déjeuner</div>
+                        <div class="meal-content">Eau citronnée • Fromage blanc 3% + miel • 1 poire • Noix</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Déjeuner (collation)</div>
+                        <div class="meal-content">Endives • Œuf dur • Radis • Huile de colza</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Dîner</div>
+                        <div class="meal-content">Curry de lentilles corail aux légumes d'hiver • Quinoa • Mâche</div>
+                    </div>
+                </div>
+
+                <div class="day-card">
+                    <h3>Mercredi</h3>
+                    <div class="meal">
+                        <div class="meal-label">Petit-déjeuner</div>
+                        <div class="meal-content">Eau citronnée • 2 œufs à la coque • Pain de seigle + noisette de beurre • 1 orange</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Déjeuner (collation)</div>
+                        <div class="meal-content">Smoothie vert (épinards, banane, lait d'amande, graines de lin)</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Dîner</div>
+                        <div class="meal-content">Dinde sautée aux champignons • Brocolis vapeur • Pommes de terre vapeur</div>
+                    </div>
+                </div>
+
+                <div class="day-card">
+                    <h3>Jeudi</h3>
+                    <div class="meal">
+                        <div class="meal-label">Petit-déjeuner</div>
+                        <div class="meal-content">Eau citronnée • Fromage blanc 0% + graines de courge • 1 kiwi • Noisettes</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Déjeuner (collation)</div>
+                        <div class="meal-content">Salade de fruits de saison • Yaourt nature • Graines de lin</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Dîner</div>
+                        <div class="meal-content">Poisson pané maison au four • Chou-fleur rôti • Riz basmati</div>
+                    </div>
+                </div>
+
+                <div class="day-card">
+                    <h3>Vendredi</h3>
+                    <div class="meal">
+                        <div class="meal-label">Petit-déjeuner</div>
+                        <div class="meal-content">Eau citronnée • Omelette aux herbes • Pain aux céréales • 1 clémentine</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Déjeuner (collation)</div>
+                        <div class="meal-content">Bâtonnets céleri et poivron • Tzatziki maison</div>
+                    </div>
+                    <div class="meal">
+                        <div class="meal-label">Dîner</div>
+                        <div class="meal-content">Salade composée de pommes de terre, betteraves, œufs durs, thon et vinaigrette à l'huile de colza</div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div id="recettes" class="tab-content">
-            <!-- 7 recettes détaillées avec ingrédients et étapes -->
+            <div class="recipe-card">
+                <h3>🍗 Poulet rôti au citron et romarin</h3>
+                <div class="recipe-meta">
+                    <span><strong>Préparation :</strong> 15 min</span>
+                    <span><strong>Cuisson :</strong> 30 min</span>
+                    <span><strong>Personnes :</strong> 2</span>
+                    <span><strong>Jour :</strong> Dimanche dîner</span>
+                </div>
+                <div class="ingredients">
+                    <h4>Ingrédients</h4>
+                    <ul>
+                        <li>2 blancs de poulet fermier (environ 400g)</li>
+                        <li>2 citrons (jus et zestes)</li>
+                        <li>2 branches de romarin frais</li>
+                        <li>2 cuillères à soupe d'huile d'olive</li>
+                        <li>2 gousses d'ail émincées</li>
+                        <li>Sel et poivre</li>
+                        <li>Pour la purée : 1 céleri-rave (environ 400g), 2 panais, 1 cuillère à soupe de crème légère 15%, noix de muscade</li>
+                        <li>200g de riz basmati</li>
+                    </ul>
+                </div>
+                <div class="steps">
+                    <h4>Préparation</h4>
+                    <ol>
+                        <li>Préchauffer le four à 180°C. Dans un bol, mélanger le jus de citron, l'huile d'olive, l'ail émincé et le romarin haché.</li>
+                        <li>Placer les blancs de poulet dans un plat, verser la marinade dessus et laisser reposer 10 minutes.</li>
+                        <li>Enfourner pour 25-30 minutes jusqu'à ce que le poulet soit bien doré.</li>
+                        <li>Pendant ce temps, éplucher et couper le céleri-rave et les panais en cubes. Les cuire à la vapeur 20 minutes.</li>
+                        <li>Écraser les légumes cuits avec la crème légère, saler, poivrer, ajouter une pincée de muscade.</li>
+                        <li>Cuire le riz basmati selon les instructions (environ 12 minutes).</li>
+                        <li>Servir le poulet tranché avec la purée et le riz, arroser du jus de cuisson.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card">
+                <h3>🍛 Curry de lentilles corail aux légumes d'hiver</h3>
+                <div class="recipe-meta">
+                    <span><strong>Préparation :</strong> 10 min</span>
+                    <span><strong>Cuisson :</strong> 25 min</span>
+                    <span><strong>Personnes :</strong> 2</span>
+                    <span><strong>Jour :</strong> Lundi dîner</span>
+                </div>
+                <div class="ingredients">
+                    <h4>Ingrédients</h4>
+                    <ul>
+                        <li>200g de lentilles corail</li>
+                        <li>1 boîte de lait de coco light (200ml)</li>
+                        <li>2 carottes coupées en rondelles</li>
+                        <li>1 navet en dés</li>
+                        <li>1 oignon émincé</li>
+                        <li>2 gousses d'ail hachées</li>
+                        <li>2 cuillères à café de curry en poudre</li>
+                        <li>1 cuillère à café de cumin</li>
+                        <li>400ml de bouillon de légumes</li>
+                        <li>2 cuillères à soupe d'huile de colza</li>
+                        <li>Sel, poivre, coriandre fraîche</li>
+                        <li>150g de quinoa</li>
+                    </ul>
+                </div>
+                <div class="steps">
+                    <h4>Préparation</h4>
+                    <ol>
+                        <li>Rincer les lentilles corail à l'eau froide et égoutter.</li>
+                        <li>Dans une grande casserole, faire revenir l'oignon et l'ail dans l'huile de colza pendant 3 minutes.</li>
+                        <li>Ajouter le curry et le cumin, faire griller les épices 1 minute en remuant.</li>
+                        <li>Ajouter les carottes, le navet, les lentilles et le bouillon. Porter à ébullition puis réduire le feu.</li>
+                        <li>Laisser mijoter 20 minutes à feu doux jusqu'à ce que les lentilles soient fondantes.</li>
+                        <li>Pendant ce temps, cuire le quinoa dans de l'eau bouillante salée (12-15 minutes).</li>
+                        <li>Ajouter le lait de coco dans le curry, mélanger et réchauffer 2 minutes. Ajuster l'assaisonnement.</li>
+                        <li>Servir le curry sur un lit de quinoa, parsemer de coriandre fraîche ciselée.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card">
+                <h3>🦃 Dinde sautée aux champignons</h3>
+                <div class="recipe-meta">
+                    <span><strong>Préparation :</strong> 15 min</span>
+                    <span><strong>Cuisson :</strong> 20 min</span>
+                    <span><strong>Personnes :</strong> 2</span>
+                    <span><strong>Jour :</strong> Mercredi dîner</span>
+                </div>
+                <div class="ingredients">
+                    <h4>Ingrédients</h4>
+                    <ul>
+                        <li>400g d'escalopes de dinde coupées en lanières</li>
+                        <li>300g de champignons de Paris émincés</li>
+                        <li>1 échalote hachée</li>
+                        <li>2 cuillères à soupe de crème légère 15%</li>
+                        <li>2 cuillères à soupe d'huile d'olive</li>
+                        <li>1 verre de vin blanc sec (facultatif)</li>
+                        <li>Persil frais ciselé</li>
+                        <li>Sel, poivre</li>
+                        <li>400g de brocolis frais</li>
+                        <li>4 pommes de terre moyennes</li>
+                    </ul>
+                </div>
+                <div class="steps">
+                    <h4>Préparation</h4>
+                    <ol>
+                        <li>Laver les pommes de terre et les cuire à la vapeur avec leur peau pendant 20 minutes. Cuire également les brocolis à la vapeur 12 minutes.</li>
+                        <li>Dans une grande poêle, faire chauffer l'huile d'olive et faire dorer les lanières de dinde 5 minutes à feu vif. Réserver.</li>
+                        <li>Dans la même poêle, faire revenir l'échalote 2 minutes puis ajouter les champignons.</li>
+                        <li>Laisser cuire les champignons jusqu'à évaporation de leur eau (environ 8 minutes).</li>
+                        <li>Déglacer avec le vin blanc (ou 50ml de bouillon), laisser réduire 2 minutes.</li>
+                        <li>Remettre la dinde dans la poêle, ajouter la crème légère, bien mélanger et réchauffer 3 minutes.</li>
+                        <li>Parsemer de persil ciselé. Servir avec les brocolis et les pommes de terre vapeur.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card">
+                <h3>🐟 Poisson pané maison au four</h3>
+                <div class="recipe-meta">
+                    <span><strong>Préparation :</strong> 15 min</span>
+                    <span><strong>Cuisson :</strong> 20 min</span>
+                    <span><strong>Personnes :</strong> 2</span>
+                    <span><strong>Jour :</strong> Jeudi dîner</span>
+                </div>
+                <div class="ingredients">
+                    <h4>Ingrédients</h4>
+                    <ul>
+                        <li>2 filets de poisson blanc (cabillaud ou colin, environ 400g)</li>
+                        <li>80g de chapelure complète ou flocons d'avoine mixés</li>
+                        <li>1 œuf</li>
+                        <li>2 cuillères à soupe de farine de blé complet</li>
+                        <li>1 cuillère à café de paprika</li>
+                        <li>Zeste de 1 citron</li>
+                        <li>Herbes séchées (thym, persil)</li>
+                        <li>2 cuillères à soupe d'huile d'olive</li>
+                        <li>Sel, poivre</li>
+                        <li>1 chou-fleur (environ 500g)</li>
+                        <li>1 cuillère à café de cumin</li>
+                        <li>200g de riz basmati</li>
+                        <li>1 citron pour servir</li>
+                    </ul>
+                </div>
+                <div class="steps">
+                    <h4>Préparation</h4>
+                    <ol>
+                        <li>Préchauffer le four à 200°C. Préparer 3 assiettes : farine dans la première, œuf battu dans la deuxième, chapelure mélangée avec paprika, zeste de citron, herbes, sel et poivre dans la troisième.</li>
+                        <li>Sécher les filets de poisson avec du papier absorbant. Les passer successivement dans la farine, l'œuf battu, puis la chapelure en pressant bien.</li>
+                        <li>Déposer sur une plaque recouverte de papier cuisson, arroser d'un filet d'huile d'olive. Enfourner 18-20 minutes jusqu'à ce que le poisson soit doré et croustillant.</li>
+                        <li>Pendant ce temps, détailler le chou-fleur en bouquets. Les disposer sur une plaque, arroser d'huile d'olive, saupoudrer de cumin, sel et poivre. Enfourner 20-25 minutes jusqu'à ce qu'ils soient dorés et tendres. Cuire le riz basmati selon les instructions (environ 12 minutes).</li>
+                        <li>Servir le poisson pané avec le chou-fleur rôti et le riz, accompagné de quartiers de citron.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card">
+                <h3>🥗 Salade composée de pommes de terre</h3>
+                <div class="recipe-meta">
+                    <span><strong>Préparation :</strong> 15 min</span>
+                    <span><strong>Cuisson :</strong> 20 min</span>
+                    <span><strong>Personnes :</strong> 2</span>
+                    <span><strong>Jour :</strong> Vendredi dîner</span>
+                </div>
+                <div class="ingredients">
+                    <h4>Ingrédients</h4>
+                    <ul>
+                        <li>500g de pommes de terre (Charlotte ou Nicola)</li>
+                        <li>400g de betteraves cuites (3-4 betteraves moyennes)</li>
+                        <li>4 œufs</li>
+                        <li>1 boîte de thon au naturel (240g égouttés)</li>
+                        <li>1/2 oignon rouge émincé finement</li>
+                        <li>10 olives noires (facultatif)</li>
+                        <li>1 petite laitue ou mâche</li>
+                        <li>2 cuillères à soupe de noix concassées</li>
+                        <li><strong>Vinaigrette :</strong></li>
+                        <li>3 cuillères à soupe d'huile de colza</li>
+                        <li>1 cuillère à soupe de vinaigre de cidre</li>
+                        <li>1 cuillère à café de moutarde</li>
+                        <li>Sel, poivre, herbes fraîches (persil, ciboulette)</li>
+                    </ul>
+                </div>
+                <div class="steps">
+                    <h4>Préparation</h4>
+                    <ol>
+                        <li>Laver les pommes de terre et les cuire à la vapeur avec leur peau pendant 20 minutes jusqu'à ce qu'elles soient tendres. Laisser tiédir puis couper en rondelles.</li>
+                        <li>Cuire les œufs durs (10 minutes dans l'eau bouillante), refroidir sous l'eau froide, écaler et couper en quartiers.</li>
+                        <li>Couper les betteraves cuites en cubes ou en quartiers.</li>
+                        <li>Préparer la vinaigrette : dans un bol, mélanger la moutarde, le vinaigre, sel et poivre. Ajouter l'huile de colza en fouettant. Ajouter les herbes fraîches ciselées.</li>
+                        <li>Dans un grand saladier, disposer les feuilles de salade, les pommes de terre encore tièdes, les betteraves, les quartiers d'œufs, le thon émietté, l'oignon rouge et les noix concassées.</li>
+                        <li>Arroser de vinaigrette juste avant de servir et mélanger délicatement. Ajouter les olives si souhaité.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card">
+                <h3>🥘 Tajine de poulet aux légumes d'hiver et pois chiches</h3>
+                <div class="recipe-meta">
+                    <span><strong>Préparation :</strong> 20 min</span>
+                    <span><strong>Cuisson :</strong> 35 min</span>
+                    <span><strong>Personnes :</strong> 2</span>
+                    <span><strong>Jour :</strong> Samedi dîner</span>
+                </div>
+                <div class="ingredients">
+                    <h4>Ingrédients</h4>
+                    <ul>
+                        <li>2 cuisses de poulet fermier (ou 2 blancs coupés en gros morceaux)</li>
+                        <li>1 boîte de pois chiches égouttés (240g)</li>
+                        <li>3 carottes coupées en rondelles</li>
+                        <li>2 navets en quartiers</li>
+                        <li>1/2 butternut en cubes</li>
+                        <li>1 oignon émincé</li>
+                        <li>2 tomates concassées (conserve)</li>
+                        <li>2 gousses d'ail hachées</li>
+                        <li>1 cuillère à café de curcuma, cumin, paprika, gingembre</li>
+                        <li>1 pincée de cannelle</li>
+                        <li>2 cuillères à soupe d'huile d'olive</li>
+                        <li>300ml de bouillon de volaille</li>
+                        <li>Coriandre fraîche, citron confit (facultatif)</li>
+                        <li>150g de boulgour</li>
+                    </ul>
+                </div>
+                <div class="steps">
+                    <h4>Préparation</h4>
+                    <ol>
+                        <li>Dans une cocotte ou tajine, faire chauffer l'huile d'olive et faire dorer les morceaux de poulet sur toutes les faces (5 min). Réserver.</li>
+                        <li>Dans la même cocotte, faire revenir l'oignon et l'ail 3 minutes.</li>
+                        <li>Ajouter toutes les épices (curcuma, cumin, paprika, gingembre, cannelle) et faire griller 1 minute en remuant.</li>
+                        <li>Ajouter les carottes, les navets, le butternut, les tomates concassées et le bouillon. Mélanger.</li>
+                        <li>Remettre le poulet dans la cocotte, ajouter les pois chiches. Porter à ébullition puis couvrir et laisser mijoter 30 minutes à feu doux.</li>
+                        <li>Pendant ce temps, cuire le boulgour selon les instructions (10 minutes dans de l'eau bouillante).</li>
+                        <li>Rectifier l'assaisonnement, parsemer de coriandre fraîche ciselée. Servir avec le boulgour et des quartiers de citron.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card">
+                <h3>🥣 Soupe de légumes maison et omelette aux champignons</h3>
+                <div class="recipe-meta">
+                    <span><strong>Préparation :</strong> 15 min</span>
+                    <span><strong>Cuisson :</strong> 30 min</span>
+                    <span><strong>Personnes :</strong> 2</span>
+                    <span><strong>Jour :</strong> Mardi dîner</span>
+                </div>
+                <div class="ingredients">
+                    <h4>Ingrédients</h4>
+                    <ul>
+                        <li><strong>Pour la soupe :</strong></li>
+                        <li>2 poireaux émincés</li>
+                        <li>2 carottes en rondelles</li>
+                        <li>1 navet en dés</li>
+                        <li>1 branche de céleri émincée</li>
+                        <li>2 pommes de terre moyennes en cubes</li>
+                        <li>1 litre de bouillon de légumes</li>
+                        <li>1 cuillère à soupe d'huile d'olive</li>
+                        <li>Sel, poivre, herbes de Provence</li>
+                        <li><strong>Pour l'omelette :</strong></li>
+                        <li>4 œufs</li>
+                        <li>150g de champignons de Paris émincés</li>
+                        <li>30g de fromage de chèvre émietté</li>
+                        <li>1 cuillère à soupe d'huile d'olive</li>
+                        <li>Persil frais, sel, poivre</li>
+                        <li>Pain de seigle</li>
+                    </ul>
+                </div>
+                <div class="steps">
+                    <h4>Préparation</h4>
+                    <ol>
+                        <li>Dans une grande casserole, faire chauffer l'huile d'olive et faire revenir les poireaux 3 minutes.</li>
+                        <li>Ajouter tous les légumes (carottes, navet, céleri, pommes de terre) et le bouillon. Porter à ébullition.</li>
+                        <li>Laisser mijoter 25 minutes jusqu'à ce que les légumes soient tendres. Assaisonner avec sel, poivre et herbes de Provence.</li>
+                        <li>Pour l'omelette : dans une poêle, faire sauter les champignons émincés dans l'huile d'olive jusqu'à évaporation de leur eau (5 min).</li>
+                        <li>Battre les œufs avec sel et poivre. Verser dans la poêle avec les champignons.</li>
+                        <li>Cuire à feu moyen 3-4 minutes. Parsemer de fromage de chèvre émietté sur la moitié de l'omelette.</li>
+                        <li>Plier l'omelette en deux et poursuivre la cuisson 1 minute. Parsemer de persil frais.</li>
+                        <li>Servir la soupe en entrée, puis l'omelette avec des tranches de pain de seigle grillé.</li>
+                    </ol>
+                </div>
+            </div>
         </div>
 
         <div id="courses" class="tab-content">
             <div class="shopping-list">
-                <!-- Liste de courses complète par catégories -->
+                <h2 style="color: var(--color-accent); margin-bottom: 30px; font-size: 2rem;">🛒 Liste de courses pour 2 personnes - 1 semaine</h2>
+                
+                <div class="shopping-category">
+                    <h4>🥬 Légumes frais de saison (février)</h4>
+                    <ul>
+                        <li><span>6 carottes</span><span class="recipe-ref">Dimanche (collation + purée), Lundi (curry), Samedi (tajine), Mardi (soupe)</span></li>
+                        <li><span>1 céleri-rave (400g)</span><span class="recipe-ref">Dimanche (purée céleri-panais)</span></li>
+                        <li><span>2 panais</span><span class="recipe-ref">Dimanche (purée céleri-panais)</span></li>
+                        <li><span>3 navets</span><span class="recipe-ref">Lundi (curry), Samedi (tajine), Mardi (soupe)</span></li>
+                        <li><span>1/2 butternut (environ 400g)</span><span class="recipe-ref">Samedi (tajine)</span></li>
+                        <li><span>300g de champignons de Paris</span><span class="recipe-ref">Mercredi (dinde), Mardi (omelette)</span></li>
+                        <li><span>400g de brocolis</span><span class="recipe-ref">Mercredi (accompagnement dinde)</span></li>
+                        <li><span>1 chou-fleur (environ 500g)</span><span class="recipe-ref">Jeudi (poisson pané rôti)</span></li>
+                        <li><span>2 poireaux</span><span class="recipe-ref">Mardi (soupe)</span></li>
+                        <li><span>3 branches de céleri branche</span><span class="recipe-ref">Dimanche (collation), Vendredi (collation), Mardi (soupe)</span></li>
+                        <li><span>2 endives</span><span class="recipe-ref">Samedi (collation)</span></li>
+                        <li><span>3 bottes de mâche ou laitue</span><span class="recipe-ref">Lundi (accompagnement), Samedi (accompagnement), Vendredi (salade)</span></li>
+                        <li><span>5 oignons (+ 1/2 oignon rouge)</span><span class="recipe-ref">Dimanche, Lundi, Mercredi, Samedi, Mardi + Vendredi (salade)</span></li>
+                        <li><span>2 échalotes</span><span class="recipe-ref">Mercredi (dinde)</span></li>
+                        <li><span>1 tête d'ail (8 gousses)</span><span class="recipe-ref">Multiple recettes</span></li>
+                        <li><span>1 boîte de tomates concassées (400g)</span><span class="recipe-ref">Samedi (tajine)</span></li>
+                        <li><span>600g de betteraves cuites</span><span class="recipe-ref">Mardi (houmous de betterave), Vendredi (salade composée - 400g)</span></li>
+                    </ul>
+                </div>
+
+                <div class="shopping-category">
+                    <h4>🥗 Crudités de saison</h4>
+                    <ul>
+                        <li><span>1 botte de radis roses</span><span class="recipe-ref">Lundi (collation endives/radis/œuf dur)</span></li>
+                        <li><span>Chou rouge (1/4)</span><span class="recipe-ref">Mardi (crudités variées)</span></li>
+                    </ul>
+                </div>
+
+                <div class="shopping-category">
+                    <h4>🍎 Fruits frais</h4>
+                    <ul>
+                        <li><span>3 pommes</span><span class="recipe-ref">Lundi, Samedi petits-déjeuners</span></li>
+                        <li><span>2 poires</span><span class="recipe-ref">Mardi petit-déjeuner</span></li>
+                        <li><span>2 oranges</span><span class="recipe-ref">Mercredi, Dimanche petits-déjeuners</span></li>
+                        <li><span>2 kiwis</span><span class="recipe-ref">Jeudi petit-déjeuner</span></li>
+                        <li><span>3 clémentines</span><span class="recipe-ref">Vendredi petit-déjeuner</span></li>
+                        <li><span>1 banane</span><span class="recipe-ref">Mercredi collation smoothie</span></li>
+                        <li><span>Fruits de saison variés</span><span class="recipe-ref">Jeudi collation salade</span></li>
+                        <li><span>5 citrons</span><span class="recipe-ref">Multiple recettes + eau citronnée</span></li>
+                    </ul>
+                </div>
+
+                <div class="shopping-category">
+                    <h4>🍖 Viandes, Volailles &amp; Poissons</h4>
+                    <ul>
+                        <li><span>600g de blancs de poulet</span><span class="recipe-ref">Dimanche, Samedi</span></li>
+                        <li><span>400g d'escalopes de dinde</span><span class="recipe-ref">Mercredi</span></li>
+                        <li><span>400g de filets de poisson blanc (cabillaud ou colin)</span><span class="recipe-ref">Jeudi</span></li>
+                        <li><span>1 boîte de thon au naturel (240g égouttés)</span><span class="recipe-ref">Vendredi (salade)</span></li>
+                    </ul>
+                </div>
+
+                <div class="shopping-category">
+                    <h4>🥚 Œufs &amp; Produits laitiers</h4>
+                    <ul>
+                        <li><span>15 œufs</span><span class="recipe-ref">Petits-déjeuners, collations, omelette, salade, panure</span></li>
+                        <li><span>500g de fromage blanc 0% ou 3%</span><span class="recipe-ref">Petits-déjeuners</span></li>
+                        <li><span>2 yaourts nature</span><span class="recipe-ref">Jeudi collation</span></li>
+                        <li><span>100ml de crème légère 15%</span><span class="recipe-ref">Mercredi (dinde)</span></li>
+                        <li><span>30g de fromage de chèvre</span><span class="recipe-ref">Mardi (omelette)</span></li>
+                        <li><span>100g de beurre demi-sel</span><span class="recipe-ref">Petits-déjeuners (usage modéré)</span></li>
+                    </ul>
+                </div>
+
+                <div class="shopping-category">
+                    <h4>🌾 Féculents &amp; Légumineuses</h4>
+                    <ul>
+                        <li><span>400g de riz basmati</span><span class="recipe-ref">Dimanche (poulet rôti), Jeudi (poisson pané)</span></li>
+                        <li><span>200g de riz complet</span><span class="recipe-ref">Mercredi (dinde)</span></li>
+                        <li><span>150g de quinoa</span><span class="recipe-ref">Lundi (curry de lentilles)</span></li>
+                        <li><span>150g de boulgour</span><span class="recipe-ref">Samedi (tajine)</span></li>
+                        <li><span>200g de lentilles corail</span><span class="recipe-ref">Lundi (curry)</span></li>
+                        <li><span>1 boîte de pois chiches (400g)</span><span class="recipe-ref">Samedi (tajine)</span></li>
+                        <li><span>80g de chapelure complète ou flocons d'avoine</span><span class="recipe-ref">Jeudi (panure poisson)</span></li>
+                        <li><span>2 cuillères à soupe de farine de blé complet</span><span class="recipe-ref">Jeudi (panure poisson)</span></li>
+                        <li><span>1kg de pommes de terre (Charlotte ou Nicola de préférence)</span><span class="recipe-ref">Mercredi (2), Dimanche (2 dans purée), Mardi (2), Vendredi (500g salade)</span></li>
+                    </ul>
+                </div>
+
+                <div class="shopping-category">
+                    <h4>🍞 Pain &amp; Boulangerie</h4>
+                    <ul>
+                        <li><span>1 pain de seigle (tranché)</span><span class="recipe-ref">Petits-déjeuners, Mardi</span></li>
+                        <li><span>1 pain aux céréales</span><span class="recipe-ref">Vendredi petit-déjeuner</span></li>
+                        <li><span>1 pain complet</span><span class="recipe-ref">Samedi, Mardi</span></li>
+                    </ul>
+                </div>
+
+                <div class="shopping-category">
+                    <h4>🫙 Épicerie &amp; Condiments</h4>
+                    <ul>
+                        <li><span>Huile d'olive (500ml)</span><span class="recipe-ref">Cuissons multiples</span></li>
+                        <li><span>Huile de colza (250ml)</span><span class="recipe-ref">Assaisonnements, collations, vinaigrette</span></li>
+                        <li><span>1 boîte de lait de coco light</span><span class="recipe-ref">Lundi (curry)</span></li>
+                        <li><span>200ml de lait d'amande</span><span class="recipe-ref">Mercredi smoothie</span></li>
+                        <li><span>Curry en poudre</span><span class="recipe-ref">Lundi, Samedi</span></li>
+                        <li><span>Cumin en poudre</span><span class="recipe-ref">Lundi, Samedi, Jeudi (chou-fleur)</span></li>
+                        <li><span>Paprika</span><span class="recipe-ref">Samedi</span></li>
+                        <li><span>Curcuma</span><span class="recipe-ref">Samedi</span></li>
+                        <li><span>Gingembre moulu</span><span class="recipe-ref">Samedi</span></li>
+                        <li><span>Cannelle</span><span class="recipe-ref">Samedi</span></li>
+                        <li><span>Herbes de Provence</span><span class="recipe-ref">Mardi (soupe)</span></li>
+                        <li><span>Miel (pot)</span><span class="recipe-ref">Petits-déjeuners</span></li>
+                        <li><span>Moutarde de Dijon</span><span class="recipe-ref">Vendredi (vinaigrette)</span></li>
+                        <li><span>Vinaigre de cidre</span><span class="recipe-ref">Vendredi (vinaigrette)</span></li>
+                        <li><span>Bouillon de légumes (cubes ou poudre)</span><span class="recipe-ref">Multiple recettes</span></li>
+                        <li><span>Bouillon de volaille (cubes ou poudre)</span><span class="recipe-ref">Vendredi, Samedi</span></li>
+                        <li><span>1 bouteille de vin blanc sec (facultatif)</span><span class="recipe-ref">Mercredi</span></li>
+                    </ul>
+                </div>
+
+                <div class="shopping-category">
+                    <h4>🌿 Herbes fraîches</h4>
+                    <ul>
+                        <li><span>2 bouquets de romarin frais</span><span class="recipe-ref">Dimanche (poulet rôti)</span></li>
+                        <li><span>2 bouquets de persil frais</span><span class="recipe-ref">Mercredi (dinde), Mardi (omelette), Vendredi (salade)</span></li>
+                        <li><span>1 bouquet de coriandre fraîche</span><span class="recipe-ref">Lundi (curry), Samedi (tajine)</span></li>
+                        <li><span>1 bouquet de ciboulette</span><span class="recipe-ref">Vendredi (salade)</span></li>
+                        <li><span>Épinards frais (100g)</span><span class="recipe-ref">Mercredi smoothie</span></li>
+                    </ul>
+                </div>
+
+                <div class="shopping-category">
+                    <h4>🥜 Oléagineux &amp; Graines</h4>
+                    <ul>
+                        <li><span>200g d'amandes</span><span class="recipe-ref">Petits-déjeuners</span></li>
+                        <li><span>200g de noix</span><span class="recipe-ref">Petits-déjeuners</span></li>
+                        <li><span>100g de noisettes</span><span class="recipe-ref">Petits-déjeuners</span></li>
+                        <li><span>50g de graines de courge</span><span class="recipe-ref">Jeudi petit-déjeuner</span></li>
+                        <li><span>50g de graines de lin moulues</span><span class="recipe-ref">Mercredi smoothie, Jeudi collation</span></li>
+                    </ul>
+                </div>
+
+                <div class="shopping-category">
+                    <h4>🥫 Conserves &amp; Fait maison</h4>
+                    <ul>
+                        <li><span>Houmous maison ou 1 pot</span><span class="recipe-ref">Dimanche collation</span></li>
+                        <li><span>Houmous de betterave (fait maison)</span><span class="recipe-ref">Mardi collation</span></li>
+                        <li><span>Tzatziki maison ou 1 pot</span><span class="recipe-ref">Vendredi collation</span></li>
+                        <li><span>10 olives noires (facultatif)</span><span class="recipe-ref">Vendredi (salade)</span></li>
+                    </ul>
+                </div>
+
+                <p style="margin-top: 30px; padding: 20px; background: var(--color-bg-primary); border-radius: var(--radius-base); color: var(--color-text-primary);">
+                    <strong>💡 Conseil d'organisation :</strong> Faites vos courses en une seule fois pour toute la semaine. Tous les légumes proposés sont de saison en février (légumes racines, choux, endives, mâche, brocolis, chou-fleur, betteraves). Préparez le houmous de betterave le mardi pour avoir vos collations prêtes. Pensez à sortir les viandes et poissons du congélateur la veille si besoin. La semaine commence le samedi.
+                </p>
             </div>
         </div>
 
@@ -382,14 +897,17 @@
                 button.addEventListener('click', function() {
                     const tabName = this.getAttribute('data-tab');
                     
+                    // Retirer la classe active de tous les onglets
                     document.querySelectorAll('.tab-content').forEach(tab => {
                         tab.classList.remove('active');
                     });
                     
+                    // Retirer la classe active de tous les boutons
                     document.querySelectorAll('.nav-tabs button').forEach(btn => {
                         btn.classList.remove('active');
                     });
                     
+                    // Activer l'onglet et le bouton cliqué
                     document.getElementById(tabName).classList.add('active');
                     this.classList.add('active');
                 });
