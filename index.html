@@ -5,6 +5,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Planificateur Menus Santé — 14-20 fév 2026</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
 :root{--bg:#f6f5f1;--bg2:#fff;--txt:#1a2a2a;--txt2:#5f6b7a;--acc:#1a8a7d;--acc2:#14706a;--accL:rgba(26,138,125,.1);--border:rgba(0,0,0,.09);--card:#fff;--sh:0 2px 8px rgba(0,0,0,.05);--sh2:0 4px 14px rgba(0,0,0,.08);--r:10px;--r2:14px}
 @media(prefers-color-scheme:dark){:root{--bg:#141919;--bg2:#1c2222;--txt:#e4eded;--txt2:#8a9a9a;--acc:#2dd4bf;--acc2:#5eead4;--accL:rgba(45,212,191,.12);--border:rgba(255,255,255,.08);--card:#1c2222}}
@@ -84,6 +86,10 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 @media print{.tabs,.btn-print,.add-area,.caddie,.swap-row,.recipe-link,.toggle-rayons,.rayon-nav{display:none!important}.pnl{display:block!important}.sitem input{display:none}.wrap{padding:0}header,.day,.recipe,.shop{box-shadow:none;border:1px solid #ddd;break-inside:avoid}}
 @media(max-width:700px){header h1{font-size:1.3rem}.grid{grid-template-columns:1fr}.tabs{flex-direction:column}.tabs button{width:100%}.sitem{flex-wrap:wrap}.sitem .sr{max-width:100%;text-align:left}}
 @media(orientation:landscape) and (max-height:500px){.grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.wrap{padding:8px}}
+.meal-din{cursor:pointer;transition:.15s}.meal-din:hover{background:var(--accL);border-left-color:var(--acc2)}
+.lien-din{font-size:.62rem;font-weight:400;opacity:.55;margin-left:5px}
+.btn-back{margin-bottom:14px;padding:6px 14px;background:var(--accL);color:var(--acc);border:1px solid var(--acc);border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer}
+.btn-back:hover{background:var(--acc);color:#fff}
 </style>
 </head>
 <body>
@@ -111,7 +117,8 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 <!-- ===== RECETTES ===== -->
 <div id="recettes" class="pnl">
 
-<div class="recipe">
+<div class="recipe" id="recipe-0">
+<button class="btn-back" onclick="goMenu()">← Retour au menu</button>
 <div class="recipe-top"><h3>Tajine de poulet, légumes d'hiver et pois chiches</h3><div class="r-ico">🥘</div></div>
 <a class="recipe-link" href="https://lacerisesurlemaillot.fr/poulet-au-four-facon-tajine/" target="_blank" rel="noopener">🔗 Recette similaire sur LaCeriseSurLeMaillot.fr (IG bas)</a>
 <div class="rmeta"><span><b>Prépa :</b> 20 min</span><span><b>Cuisson :</b> 35 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Sam. 14</span></div>
@@ -135,7 +142,8 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 </ol>
 </div>
 
-<div class="recipe">
+<div class="recipe" id="recipe-1">
+<button class="btn-back" onclick="goMenu()">← Retour au menu</button>
 <div class="recipe-top"><h3>Poulet rôti citron-romarin, purée céleri-panais</h3><div class="r-ico">🍗</div></div>
 <a class="recipe-link" href="https://www.santemagazine.fr/alimentation/regime-alimentaire/regime-anti-cholesterol/une-semaine-de-menus-anticholesterol-173890" target="_blank" rel="noopener">🔗 Menus anti-cholestérol sur SantéMagazine.fr</a>
 <div class="rmeta"><span><b>Prépa :</b> 15 min</span><span><b>Cuisson :</b> 30 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Dim. 15</span></div>
@@ -154,7 +162,8 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 </ol>
 </div>
 
-<div class="recipe">
+<div class="recipe" id="recipe-2">
+<button class="btn-back" onclick="goMenu()">← Retour au menu</button>
 <div class="recipe-top"><h3>Curry de lentilles corail aux légumes d'hiver</h3><div class="r-ico">🍛</div></div>
 <a class="recipe-link" href="https://cuisinerigbas.com/dhal-lentilles-corail/" target="_blank" rel="noopener">🔗 Recette dahl IG bas sur CuisinerIGbas.com</a>
 <div class="rmeta"><span><b>Prépa :</b> 10 min</span><span><b>Cuisson :</b> 25 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Lun. 17</span></div>
@@ -174,7 +183,8 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 </ol>
 </div>
 
-<div class="recipe">
+<div class="recipe" id="recipe-3">
+<button class="btn-back" onclick="goMenu()">← Retour au menu</button>
 <div class="recipe-top"><h3>Soupe de légumes + Omelette champignons-chèvre</h3><div class="r-ico">🥣</div></div>
 <a class="recipe-link" href="https://www.primevere.com/idees-recettes/plats/" target="_blank" rel="noopener">🔗 Plats allégés sur Primevère.com</a>
 <div class="rmeta"><span><b>Prépa :</b> 15 min</span><span><b>Cuisson :</b> 30 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Mar. 18</span></div>
@@ -192,7 +202,8 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 </ol>
 </div>
 
-<div class="recipe">
+<div class="recipe" id="recipe-4">
+<button class="btn-back" onclick="goMenu()">← Retour au menu</button>
 <div class="recipe-top"><h3>Dinde sautée aux champignons, brocolis vapeur</h3><div class="r-ico">🦃</div></div>
 <a class="recipe-link" href="https://jow.fr/fr/recipes/escalope-de-dinde-a-la-creme-de-champignons-et-puree-maison-8v44i1zqjxs002yd0d3n" target="_blank" rel="noopener">🔗 Recette similaire sur Jow.fr</a>
 <div class="rmeta"><span><b>Prépa :</b> 15 min</span><span><b>Cuisson :</b> 20 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Mer. 19</span></div>
@@ -210,7 +221,8 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 </ol>
 </div>
 
-<div class="recipe">
+<div class="recipe" id="recipe-5">
+<button class="btn-back" onclick="goMenu()">← Retour au menu</button>
 <div class="recipe-top"><h3>Poisson pané maison au four, riz et salade</h3><div class="r-ico">🐟</div></div>
 <a class="recipe-link" href="https://www.cuisineaz.com/diaporamas/15-recettes-a-ig-bas-a-deguster-toute-l-annee-3913/interne/1.aspx" target="_blank" rel="noopener">🔗 Recettes IG bas sur CuisineAZ.com</a>
 <div class="rmeta"><span><b>Prépa :</b> 15 min</span><span><b>Cuisson :</b> 20 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Jeu. 20</span></div>
@@ -228,7 +240,8 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 </ol>
 </div>
 
-<div class="recipe">
+<div class="recipe" id="recipe-6">
+<button class="btn-back" onclick="goMenu()">← Retour au menu</button>
 <div class="recipe-top"><h3>Salade composée pommes de terre, betteraves, thon</h3><div class="r-ico">🥗</div></div>
 <a class="recipe-link" href="https://www.marieclaire.fr/cuisine/18-recettes-anti-cholesterol-saines-et-gourmandes,1453308.asp" target="_blank" rel="noopener">🔗 Recettes anti-cholestérol sur MarieClaire.fr</a>
 <div class="rmeta"><span><b>Prépa :</b> 15 min</span><span><b>Cuisson :</b> 20 min</span><span><b>Pour :</b> 2</span><span><b>📅</b> Ven. 20</span></div>
@@ -440,7 +453,7 @@ var o='';J.forEach(function(j2,i2){if(i2!==i)o+='<option value="'+i2+'">'+j2.nom
 g.innerHTML+='<div class="day"><h3>'+j.nom+'</h3>'+
 '<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+j.pdj+'</div></div>'+
 '<div class="meal"><div class="ml">🥗 Collation midi</div><div class="mc">'+j.col+'</div></div>'+
-'<div class="meal"><div class="ml">🍽️ Dîner</div><div class="mc">'+j.din+'</div></div>'+
+'<div class="meal meal-din" onclick="goRecette('+i+')" title="Voir la recette"><div class="ml">🍽️ Dîner<span class="lien-din">↗ voir recette</span></div><div class="mc">'+j.din+'</div></div>'+
 '<div class="swap-row"><select>'+o+'</select><button onclick="sw('+i+',this)">↔ échanger dîner</button></div></div>';
 });
 }
@@ -468,6 +481,7 @@ var em=cd.querySelector('.caddie-empty');if(em)em.remove();
 var cl=it.cloneNode(true);cl.querySelector('input').checked=true;
 cl.querySelector('input').onchange=function(){deb(this)};
 cd.appendChild(cl);it.style.display='none';
+if(db)db.ref('courses/coches/'+fbKey(it.querySelector('.sn').textContent)).set(true);
 }mC();
 }
 function deb(cb){
@@ -477,6 +491,7 @@ if(o.querySelector('.sn').textContent===nm&&o.style.display==='none'){o.style.di
 });it.remove();
 var cd=document.getElementById('caddie');
 if(!cd.querySelector('.sitem'))cd.innerHTML='<p class="caddie-empty">Cochez les produits pour les ajouter ici.</p>';
+if(db)db.ref('courses/coches/'+fbKey(nm)).remove();
 mC();
 }
 function ajP(){
@@ -485,9 +500,80 @@ if(!n)return;var c=document.querySelector('.si[data-cat="'+r+'"]');if(!c)return;
 var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
 var l=document.createElement('label');l.className='sitem';
 l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+n+'</span><span class="sr">Ajouté manuellement</span>';
-c.appendChild(l);document.getElementById('add-nom').value='';mC();
+c.appendChild(l);document.getElementById('add-nom').value='';
+if(db)db.ref('courses/ajoutes').push({nom:n,rayon:r});
+mC();
 }
 mC();
+function goRecette(idx){
+  var btn=document.querySelectorAll('.tabs button')[1];
+  tab('recettes',btn);
+  setTimeout(function(){var e=document.getElementById('recipe-'+idx);if(e)e.scrollIntoView({behavior:'smooth',block:'start'});},80);
+}
+function goMenu(){
+  var btn=document.querySelector('.tabs button');
+  tab('apercu',btn);
+}
+
+// ===== FIREBASE =====
+var db=null;
+function fbKey(nom){return nom.replace(/[.#$[\]/]/g,'-').replace(/\s+/g,'_').substring(0,60);}
+
+function appliquerDepuisFirebase(data){
+  var coches=data.coches||{};
+  var ajoutes=data.ajoutes||{};
+  // 1. Ajouter les produits manuels absents du DOM
+  Object.values(ajoutes).forEach(function(item){
+    var dansDOM=false;
+    document.querySelectorAll('.sitem .sn').forEach(function(el){if(el.textContent===item.nom)dansDOM=true;});
+    if(!dansDOM){
+      var c=document.querySelector('.si[data-cat="'+item.rayon+'"]');
+      if(c){var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
+        var l=document.createElement('label');l.className='sitem';
+        l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">Ajouté manuellement</span>';
+        c.appendChild(l);}
+    }
+  });
+  // 2. Cocher les produits présents dans Firebase mais pas dans le caddie
+  document.querySelectorAll('#liste-principale .sitem').forEach(function(it){
+    var nm=it.querySelector('.sn').textContent;
+    var coche=coches[fbKey(nm)];
+    if(coche&&it.style.display!=='none'){
+      var cd=document.getElementById('caddie');
+      var em=cd.querySelector('.caddie-empty');if(em)em.remove();
+      var cl=it.cloneNode(true);cl.querySelector('input').checked=true;
+      cl.querySelector('input').onchange=function(){deb(this);};
+      cd.appendChild(cl);it.style.display='none';
+    }else if(!coche&&it.style.display==='none'){
+      it.style.display='';it.querySelector('input').checked=false;
+    }
+  });
+  // 3. Retirer du caddie les produits supprimés de Firebase (depuis un autre appareil)
+  var toRemove=[];
+  document.querySelectorAll('#caddie .sitem').forEach(function(it){
+    var nm=it.querySelector('.sn').textContent;
+    if(!coches[fbKey(nm)])toRemove.push(it);
+  });
+  toRemove.forEach(function(it){it.remove();});
+  var cd=document.getElementById('caddie');
+  if(!cd.querySelector('.sitem'))cd.innerHTML='<p class="caddie-empty">Cochez les produits pour les ajouter ici.</p>';
+  mC();
+}
+
+var firebaseConfig={
+  apiKey:"AIzaSyBr09zcjmNN7hsKyr_832GulpGQc9xfZOo",
+  authDomain:"menu-de-la-semaine-9bed7.firebaseapp.com",
+  databaseURL:"https://menu-de-la-semaine-9bed7-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"menu-de-la-semaine-9bed7",
+  storageBucket:"menu-de-la-semaine-9bed7.firebasestorage.app",
+  messagingSenderId:"18330977147",
+  appId:"1:18330977147:web:2ef6f58c6baf85ec9e73de"
+};
+firebase.initializeApp(firebaseConfig);
+db=firebase.database();
+db.ref('courses').on('value',function(snapshot){
+  appliquerDepuisFirebase(snapshot.val()||{});
+});
 </script>
 </body>
 </html>
