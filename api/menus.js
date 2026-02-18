@@ -1,4 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
+const { getContexteSaisonnier, getInstructionsSaisonnieres, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES } = require('./_skills');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,6 +10,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const { jours, dateDebut, dateFin } = req.body;
+    const ctx = getContexteSaisonnier();
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -19,14 +21,13 @@ MISSION : Générer un programme de menus complet pour la semaine du ${dateDebut
 JOURS À COUVRIR (dans cet ordre) :
 ${jours.map((j, i) => `Jour ${i + 1} : ${j}`).join('\n')}
 
-PROFIL NUTRITIONNEL OBLIGATOIRE :
-- Index glycémique bas (IG bas)
-- Anti-cholestérol : peu de graisses saturées, pas de charcuterie
-- Préparation dîner : max 30 min | Cuisson dîner : max 45 min
-- Structure dîner : 1/2 légumes + 1/4 protéines maigres + 1/4 féculents complets
-- Légumes de saison : poireaux, carottes, navets, chou, épinards, endives, céleri, panais, betterave, brocolis
-- Huile olive ou colza uniquement (pas de beurre en excès)
-- Pour 2 personnes
+${getInstructionsSaisonnieres(ctx)}
+
+${PROFIL_SANTE}
+
+${SCHEMA_NUTRITIONNEL}
+
+${CONTRAINTES_PRATIQUES}
 
 SITES DE RÉFÉRENCE (inspire-toi de ces sources) :
 - cuisineigbas.com — IG bas, plats mijotés

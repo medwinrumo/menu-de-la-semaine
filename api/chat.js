@@ -1,4 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
+const { getContexteSaisonnier, getInstructionsSaisonnieres, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES } = require('./_skills');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,6 +10,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const { message, historique, menus } = req.body;
+    const ctx = getContexteSaisonnier();
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
     const menusTexte = menus.map(function(m) {
@@ -38,13 +40,7 @@ module.exports = async function handler(req, res) {
 - Farine de sarrasin : IG 40, sans gluten, riche en rutine (vasculaire)
 - Flocons d'avoine : IG 40, bêta-glucanes réducteurs de cholestérol
 
-**Saisonnalité des fruits et légumes en France :**
-- Janvier-Février : poireaux, carottes, navets, céleri, panais, butternut, choux, endives, mâche, betterave, pommes, poires, agrumes, kiwi
-- Mars-Avril : épinards, radis, asperges, petits pois, artichauts, fraises
-- Mai-Juin : courgettes, concombres, tomates, fraises, cerises, framboises
-- Juillet-Août : tomates, aubergines, poivrons, haricots verts, abricots, pêches, melons
-- Septembre-Octobre : courges, champignons, raisins, figues, pommes, poires
-- Novembre-Décembre : choux de Bruxelles, poireaux, topinambours, clémentines
+${getInstructionsSaisonnieres(ctx)}
 
 **Bonnes graisses et oméga-3 :**
 - Végétaux : huile de colza (oméga-3 ALA), huile de lin, noix, graines de lin moulues, graines de chia
@@ -73,14 +69,11 @@ module.exports = async function handler(req, res) {
 - Acidité (citron, vinaigre) + féculent = réduction de l'IG
 - Protéines + fibres + graisses = ralentissement absorption glucose
 
-## PROFIL SANTÉ DE L'UTILISATEUR
-- Objectif principal : réduire le cholestérol LDL de 10-15% en 3 mois
-- Objectif secondaire : améliorer la glycémie à jeun
-- Objectif poids : perdre 2-3 kg de graisse abdominale en 6 mois
-- Bilan sanguin prévu : à 3 mois et 6 mois
-- Régime actuel : transition vers alimentation IG bas + anti-cholestérol
-- Cuisson max : 30 min prépa, 45 min cuisson
-- Pour 2 personnes
+${PROFIL_SANTE}
+
+${SCHEMA_NUTRITIONNEL}
+
+${CONTRAINTES_PRATIQUES}
 
 ## MENUS DE LA SEMAINE ACTUELS
 ${menusTexte}

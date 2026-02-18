@@ -1,4 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
+const { getContexteSaisonnier, getInstructionsSaisonnieres, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES } = require('./_skills');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,6 +10,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const { jour, recetteActuelle, autresRecettes } = req.body;
+    const ctx = getContexteSaisonnier();
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -18,15 +20,13 @@ MISSION : Proposer une recette de dîner alternative pour ${jour}.
 RECETTE À REMPLACER : "${recetteActuelle}"
 MENUS DÉJÀ PLANIFIÉS CETTE SEMAINE (ne pas répéter) : ${autresRecettes ? autresRecettes.join(', ') : 'aucun'}
 
-PROFIL NUTRITIONNEL OBLIGATOIRE :
-- Index glycémique bas (IG bas)
-- Anti-cholestérol : peu de graisses saturées, pas de charcuterie
-- Préparation : max 30 min | Cuisson : max 45 min
-- Structure assiette : 1/2 légumes + 1/4 protéines maigres + 1/4 féculents complets
-- Légumes de saison (février) : poireaux, carottes, navets, chou, épinards, endives, céleri, butternut, panais
-- Matières grasses : huile olive ou colza uniquement
-- Protéines : volailles, poisson, œufs ou légumineuses (pas de viande rouge)
-- Pour 2 personnes
+${getInstructionsSaisonnieres(ctx)}
+
+${PROFIL_SANTE}
+
+${SCHEMA_NUTRITIONNEL}
+
+${CONTRAINTES_PRATIQUES}
 
 RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
 {
