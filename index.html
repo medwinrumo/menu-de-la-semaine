@@ -100,6 +100,9 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .ing-btn-cancel{padding:5px 8px;background:var(--bg);color:var(--txt2);border:1px solid var(--border);border-radius:4px;font-size:.75rem;cursor:pointer}
 .ing-changed{color:var(--acc);font-style:italic}
 .ing-hint{font-size:.72rem;color:var(--txt2);font-style:italic;margin:4px 0 8px;opacity:.7}
+.btn-gen{margin-top:12px;padding:9px 22px;background:var(--acc);color:#fff;border:none;border-radius:20px;font-size:.85rem;font-weight:600;cursor:pointer;transition:.2s;display:inline-block}
+.btn-gen:hover{background:var(--acc2);transform:translateY(-2px)}
+.btn-gen:disabled{opacity:.6;cursor:wait;transform:none}
 .btn-swap{margin-top:10px;padding:7px 14px;background:var(--bg);color:var(--txt2);border:1px solid var(--border);border-radius:var(--r);font-size:.78rem;cursor:pointer;width:100%;transition:.15s;text-align:center}
 .btn-swap:hover{background:var(--accL);color:var(--acc);border-color:var(--acc)}
 .btn-swap:disabled{opacity:.5;cursor:wait}
@@ -128,7 +131,9 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <header>
 <h1>🍽️ Planificateur Menus Santé</h1>
 <p>Équilibré • Anti-cholestérol • IG bas • Gourmand</p>
-<div class="wk">📅 Samedi 14 → Vendredi 20 février 2026</div>
+<div class="wk" id="wk-label">📅 Samedi 14 → Vendredi 20 février 2026</div>
+<br>
+<button id="btn-gen" class="btn-gen" onclick="genererSemaine()">🗓️ Générer la semaine</button>
 </header>
 <div class="tabs">
 <button class="on" onclick="tab('apercu',this)">📅 Semaine</button>
@@ -665,6 +670,119 @@ function ingAnnuler(id) {
   li.textContent = ancien;
   li.classList.add('ing-item');
   li.onclick = function() { editerIngredient(this); };
+}
+
+// ===== PHASE 7 — GÉNÉRER LA SEMAINE =====
+function genererSemaine() {
+  if (!confirm('Générer de nouveaux menus pour la semaine prochaine ?\nLes menus actuels seront remplacés.')) return;
+  var btn = document.getElementById('btn-gen');
+  btn.disabled = true;
+  btn.textContent = '⏳ Génération en cours…';
+
+  var today = new Date();
+  var day = today.getDay();
+  var daysUntilSat = ((6 - day) + 7) % 7;
+  if (daysUntilSat === 0) daysUntilSat = 7;
+
+  var joursNoms = ['Samedi','Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
+  var moisFr = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+
+  var joursDates = [];
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(today);
+    d.setDate(today.getDate() + daysUntilSat + i);
+    joursDates.push(joursNoms[i] + ' ' + d.getDate());
+  }
+  var sat = new Date(today); sat.setDate(today.getDate() + daysUntilSat);
+  var ven = new Date(sat); ven.setDate(sat.getDate() + 6);
+  var dateDebut = sat.getDate() + ' ' + moisFr[sat.getMonth()] + ' ' + sat.getFullYear();
+  var dateFin = ven.getDate() + ' ' + moisFr[ven.getMonth()] + ' ' + ven.getFullYear();
+
+  fetch('/api/menus', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({jours: joursDates, dateDebut: dateDebut, dateFin: dateFin})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    appliquerNouveauxMenus(data);
+    btn.disabled = false;
+    btn.textContent = '🗓️ Générer la semaine';
+  })
+  .catch(function() {
+    alert('Erreur lors de la génération. Réessayez.');
+    btn.disabled = false;
+    btn.textContent = '🗓️ Générer la semaine';
+  });
+}
+
+function appliquerNouveauxMenus(data) {
+  // 1. Mettre à jour le tableau J
+  data.jours.forEach(function(jour, i) {
+    if (J[i]) {
+      J[i].nom = jour.nom;
+      J[i].pdj = jour.pdj;
+      J[i].col = jour.col;
+      J[i].din = jour.din;
+      J[i].dn = jour.dn;
+    }
+  });
+
+  // 2. Mettre à jour le label de semaine
+  if (data.semaine) {
+    document.getElementById('wk-label').textContent = '📅 ' + data.semaine;
+  }
+
+  // 3. Rafraîchir le planning
+  rW();
+
+  // 4. Reconstruire la section Recettes
+  var recDiv = document.getElementById('recettes');
+  recDiv.innerHTML = '';
+  data.jours.forEach(function(jour, i) {
+    var r = jour.recette;
+    if (!r) return;
+    recDiv.innerHTML +=
+      '<div class="recipe" id="recipe-'+i+'">' +
+      '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>' +
+      '<div class="recipe-top"><h3>'+r.nom+'</h3><div class="r-ico">'+r.emoji+'</div></div>' +
+      '<div class="rmeta"><span><b>Prépa :</b> '+r.prepTime+'</span><span><b>Cuisson :</b> '+r.cookTime+'</span><span><b>Pour :</b> 2</span><span><b>📅</b> '+jour.nom+'</span></div>' +
+      '<h4>Ingrédients</h4>' +
+      '<ul>'+r.ingredients.map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
+      '<h4>Préparation</h4>' +
+      '<ol>'+r.etapes.map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>' +
+      '</div>';
+  });
+  initIngredients();
+
+  // 5. Ajouter les nouvelles courses (sans dupliquer)
+  data.jours.forEach(function(jour) {
+    if (!jour.recette || !jour.recette.coursesAAjouter) return;
+    jour.recette.coursesAAjouter.forEach(function(item) {
+      var existe = false;
+      document.querySelectorAll('#liste-principale .sitem .sn').forEach(function(el) {
+        if (el.textContent.toLowerCase() === item.nom.toLowerCase()) existe = true;
+      });
+      if (!existe) {
+        var c = document.querySelector('.si[data-cat="'+item.rayon+'"]');
+        if (c) {
+          var l = document.createElement('label');
+          l.className = 'sitem';
+          l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">'+jour.nom+'</span>';
+          c.appendChild(l);
+        }
+      }
+    });
+  });
+  mC();
+
+  // 6. Sauvegarder dans Firebase
+  if (db) {
+    data.jours.forEach(function(jour, i) {
+      db.ref('menus/'+i).set({nom:jour.nom, pdj:jour.pdj, col:jour.col, din:jour.din, dn:jour.dn});
+    });
+    if (data.semaine) db.ref('semaine').set(data.semaine);
+  }
 }
 
 // ===== PHASE 4 — AUTRE RECETTE =====
