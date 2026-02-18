@@ -1,9 +1,9 @@
 # Planificateur Menus Santé — Fichier de contexte projet
 
 ## Description du projet
-Mini-site web hébergé sur GitHub Pages.
-Application de planification de menus hebdomadaires (samedi → vendredi)
+Application web de planification de menus hebdomadaires (samedi → vendredi)
 avec liste de courses partagée en temps réel entre plusieurs appareils.
+Assistant nutritionnel (NutriCoach) intégré, génération de recettes par IA.
 Projet conçu pour un utilisateur débutant en développement.
 Toutes les instructions doivent être en français, simples et pas à pas.
 
@@ -15,172 +15,175 @@ https://github.com/medwinrumo/menu-de-la-semaine
 - URL actuelle : https://menus.medwinrumo.fr
 - URL finale souhaitée : https://menus.hebdo.fr
 - DNS géré par Squarespace (domaine Google Workspace)
+- Pour redéployer manuellement : dashboard Vercel → projet → bouton "Redeploy"
 
-## Fichiers du projet
-- index.html : application complète (HTML + CSS + JS en un seul fichier)
-- CLAUDE.md : ce fichier de contexte permanent
-
----
-
-## État actuel du projet
-
-### Ce qui existe (V3 fonctionnel)
-- Menus statiques sur 7 jours avec 3 repas/jour
-- 7 recettes détaillées avec ingrédients et étapes
-- Liste de courses organisée par rayon avec système caddie
-- Cases à cocher (produit coché → passe dans le caddie)
-- Ajout manuel de produits
-- Échange de dîners entre jours
-- Mode sombre automatique
-- Responsive mobile
-- Impression optimisée
-
-### Problèmes identifiés à résoudre
-- Liste de courses non persistante (se vide à chaque fermeture du navigateur)
-- Pas de synchronisation entre appareils (téléphone utilisateur / téléphone compagne)
-- Produits ajoutés manuellement non mémorisés dans leur rayon
-- Pas de navigation possible entre un dîner et sa recette
+## Structure des fichiers
+- `index.html` : application complète (HTML + CSS + JS en un seul fichier)
+- `CLAUDE.md` : ce fichier de contexte permanent
+- `package.json` : dépendance `@anthropic-ai/sdk ^0.39.0`
+- `api/_skills.js` : compétences centralisées de NutriCoach (calendrier saisonnier, profil santé, schéma nutritionnel, contraintes)
+- `api/recette.js` : remplacement d'une recette individuelle (claude-opus-4-6, max_tokens 1500)
+- `api/menus.js` : génération de la semaine complète (claude-sonnet-4-6, max_tokens 8000)
+- `api/chat.js` : assistant NutriCoach + actions sur les menus (claude-sonnet-4-6, max_tokens 1500)
 
 ---
 
-## Feuille de route — Phases de développement
+## État actuel du projet — Phases terminées
 
 ### Phase 1 — CLAUDE.md ✅ TERMINÉ
 Création du fichier de contexte projet.
 
-### Phase 2 — Firebase 🔴 À FAIRE
-Objectif : persistance et synchronisation temps réel.
-- Mémoriser l'état des cases cochées entre sessions
-- Synchroniser en temps réel entre tous les appareils
-- Mémoriser les produits ajoutés manuellement avec leur rayon
-- Outil : Firebase Realtime Database (gratuit, Google)
-- Hébergement : GitHub Pages
+### Phase 2 — Firebase ✅ TERMINÉ
+- Persistance et synchronisation temps réel (Firebase Realtime Database)
+- Projet Firebase : `menu-de-la-semaine-9bed7` (Europe West)
+- Listener sur `db.ref('/')` pour synchronisation complète de l'état
+- Fonctions : `bascule()`, `deb()`, `ajP()` écrivent dans Firebase
+- Fonction `appliquerDepuisFirebase(data)` : applique l'état Firebase à l'UI
+- Bug connu à tester : comportement des cases à cocher et synchronisation multi-appareils
 
-### Phase 2b — Navigation Menu → Recette 🔴 À FAIRE
-- Dans l'onglet Semaine, chaque dîner affiché est cliquable
-- Cliquer sur un dîner ouvre directement la recette dans l'onglet Recettes
-- Bouton retour "← Retour au menu" visible sur chaque recette
+### Phase 2b — Navigation Menu → Recette ✅ TERMINÉ
+- Dîners cliquables dans l'onglet Semaine (`goRecette(idx)`)
+- Bouton "← Retour au menu" sur chaque recette (`goMenu()`)
+- CSS : `.meal-din`, `.lien-din`, `.btn-back`
+
+### Phase 4 — Remplacement de recette ✅ TERMINÉ
+- Bouton "↺ Autre recette" sur chaque carte de jour
+- Modal de prévisualisation avant acceptation
+- Mise à jour de la liste de courses automatique
+- Fonctions : `changerRecette(idx, btn)`, `afficherModal()`, `fermerModal()`, `accepterRecette()`, `chercherAutre()`
+- CSS : `.btn-swap`, `.modal-overlay`, `.modal`, `.btn-accept`, `.btn-reject`
+- Variable globale : `recetteEnCours`
+
+### Phase 5 — Modification d'ingrédient ✅ TERMINÉ
+- Ingrédients cliquables dans les recettes (inline editor)
+- Pattern : IDs uniques (`ing-1`, `ing-2`...) + `ingData{}` object + inline onclick
+- Fonctions : `initIngredients()`, `ingOk(id)`, `ingAnnuler(id)`, `ingKey(e, id)`
+- CSS : `.ing-item`, `.ing-edit`, `.ing-btn-ok`, `.ing-btn-cancel`, `.ing-changed`, `.ing-hint`
+
+### Phase 6 — NutriCoach Chat ✅ TERMINÉ
+- Onglet "💬 NutriCoach" avec chat mobile-first
+- 2 rôles : réponses nutrition + actions sur les menus
+- Historique conservé : `chatHisto[]` (12 derniers échanges)
+- Actions : `remplacer_repas` (jour_idx 0-6 = Sam→Ven) et `generer_semaine`
+- Fonctions : `envoyerChat()`, `ajouterMsg()`, `afficherTyping()`, `retirerTyping()`, `executerActionChat()`
+- Enter = envoyer, Shift+Enter = nouvelle ligne
+
+### Phase 7 — Génération semaine complète ✅ TERMINÉ
+- Bouton "🗓️ Générer la semaine" dans l'en-tête
+- Calcule la prochaine semaine Samedi → Vendredi automatiquement
+- Fonctions : `genererSemaine(skipConfirm)`, `appliquerNouveauxMenus(data)`
+- `skipConfirm = true` quand appelé depuis le chat
+- Met à jour : J[], header, vue semaine, recettes, liste de courses, Firebase
+
+### Skills NutriCoach ✅ TERMINÉ
+- Fichier `api/_skills.js` centralisé
+- Calendrier saisonnier France, mois par mois (12 mois)
+- `getContexteSaisonnier()` : utilise `new Date()` côté serveur (date réelle)
+- `getInstructionsSaisonnieres(ctx)` : règle ABSOLUE — jamais hors saison
+- Injecté dans les 3 APIs : recette.js, menus.js, chat.js
+
+---
+
+## Phases restantes à développer
 
 ### Phase 3 — Refonte complète du design 🔴 À FAIRE EN DERNIER
 - Design créé dans Google Stitch puis exporté en .zip
-- Le design Stitch remplace totalement le HTML/CSS du V3
-- La logique JavaScript (Firebase, liste de courses, recettes) est conservée
-- Sera intégré EN DERNIER, quand toutes les fonctionnalités (phases 4 à 8) seront terminées
+- Le design Stitch remplace totalement le HTML/CSS
+- La logique JavaScript (Firebase, recettes, chat) est conservée
 - Éléments à prévoir dans Stitch :
-  * 3 onglets : Semaine / Recettes / Courses
+  * 4 onglets : Semaine / Recettes / Courses / NutriCoach
   * Cartes journalières cliquables (7 jours)
   * Cartes recettes avec ingrédients et étapes
-  * Liste de courses avec cases à cocher
-  * Section caddie
-  * Champ ajout produit manuel
+  * Liste de courses avec cases à cocher + section caddie
   * Zone de chat nutritionnel
 
-### Phase 4 — Remplacement de recette 🔴 À FAIRE
-- L'utilisateur sélectionne une recette qui ne lui convient pas
-- Il clique sur un bouton → Claude recherche une recette de remplacement
-- La nouvelle recette respecte le schéma nutritionnel et le profil santé
-- La nouvelle recette remplace l'ancienne dans le planning
-- La liste de courses se met à jour automatiquement
-- Utilise l'API Claude via une fonction Vercel (api/recette.js)
-
-### Phase 5 — Modification d'ingrédient 🔴 À FAIRE
-- Cliquer sur un ingrédient dans une recette pour le sélectionner
-- Saisir l'ingrédient de remplacement (ex : blancs de poulet → blancs de dinde)
-- La recette et la liste de courses se mettent à jour automatiquement
-
-### Phase 6 — Chat nutritionnel intégré 🔴 À FAIRE (à construire)
-Un assistant nutritionnel directement dans le site avec deux rôles :
-
-Rôle 1 — Répondre aux questions nutrition
-- L'utilisateur pose des questions sur sa santé, ses aliments, ses apports
-- Claude répond en tenant compte du profil santé et du schéma nutritionnel
-
-Rôle 2 — Intervenir dans la composition des menus
-- Exemples de commandes possibles dans le chat :
-  * "Cherche une recette à base de lapin pour mercredi"
-  * "Je veux moins de viande cette semaine"
-  * "Propose un dîner sans gluten pour mercredi"
-- L'utilisateur choisit un ingrédient ET un jour cible
-- Claude cherche une recette adaptée et la place dans le planning
-- La liste de courses se met à jour automatiquement
-
-### Phase 7 — Génération automatique de menus 🔴 À FAIRE (à construire)
-- Générer un nouveau menu complet pour la semaine suivante
-- Respect strict du schéma nutritionnel personnalisé
-- Préparation max 30 min, cuisson max 45 min
-- Légumes de saison
-- Variété assurée (pas la même recette deux semaines de suite)
-- S'inspire des sites de référence fournis
-
-### Phase 8 — Profil santé et compétences nutritionniste 🔴 À CONSTRUIRE
+### Phase 8 — Profil santé 🔴 À CONSTRUIRE
 - Créer et stocker le profil santé complet de l'utilisateur
-- Donner à Claude des compétences de nutritionniste pour :
-  * Mieux sélectionner les recettes adaptées au profil
-  * Répondre aux questions nutrition dans le chat
-  * Ajuster les menus selon les objectifs santé
-- Le profil santé alimentera toutes les autres fonctionnalités
+- Permettre la mise à jour du profil (objectifs, restrictions alimentaires...)
+- Le profil alimentera `_skills.js` dynamiquement
+
+---
+
+## Prochaine session — Tests à effectuer
+
+Au début de la prochaine session, effectuer des tests complets de toutes les fonctionnalités :
+
+1. **Firebase / Base de données** ← bugs signalés par l'utilisateur
+   - Synchronisation multi-appareils (ouvrir sur 2 appareils simultanément)
+   - Persistance des cases cochées après fermeture/réouverture
+   - Persistance des produits ajoutés manuellement
+   - Suppression d'un produit du caddie (`deb()`)
+   - Comportement après `genererSemaine()` : la liste de courses se remet-elle à zéro proprement ?
+
+2. **Navigation**
+   - Cliquer sur un dîner → recette correspondante s'affiche
+   - Bouton retour → retour à l'onglet Semaine
+   - Navigation entre les 4 onglets
+
+3. **Remplacement de recette (Phase 4)**
+   - Bouton "↺" sur chaque jour
+   - Modal s'affiche avec la nouvelle recette
+   - "Accepter" → recette mise à jour dans le planning
+   - "Non merci" → cherche une autre alternative
+   - La liste de courses est mise à jour
+
+4. **Modification d'ingrédient (Phase 5)**
+   - Cliquer sur un ingrédient → champ éditable apparaît
+   - Modifier + valider → ingrédient mis à jour
+   - Annuler → retour à l'original
+
+5. **Génération semaine (Phase 7)**
+   - Bouton "🗓️ Générer la semaine"
+   - 7 jours générés avec légumes de saison (février = poireaux, carottes, navets...)
+   - Liste de courses mise à jour
+   - Firebase mis à jour
+
+6. **NutriCoach Chat (Phase 6)**
+   - Question nutrition → réponse texte
+   - Commande "Change le dîner de lundi" → action remplacer_repas
+   - Commande "Génère une nouvelle semaine" → action generer_semaine
+   - Vérifier que les légumes suggérés sont de saison
 
 ---
 
 ## Schéma nutritionnel personnalisé
 
-### Axes prioritaires
-1. Améliorer la qualité des lipides (réduction graisses saturées)
-2. Stabiliser la glycémie (IG bas)
-3. Augmenter les fibres et antioxydants
-4. Hydratation progressive
-5. Oméga-3 végétaux quotidiens
-
 ### Structure des repas journaliers
-- Petit-déjeuner : léger (eau citronnée + fruit + oléagineux ou œufs + pain seigle)
-- Collation midi : cru et rapide (crudités, smoothie vert, fruits + noix)
-- Dîner : 1/2 légumes + 1/4 protéines + 1/4 féculents complets + bonnes graisses
-
-### Aliments à privilégier
-- Légumes verts à volonté, légumineuses, céréales complètes
-- Volailles (poulet, dinde), œufs (1/jour max), poisson
-- Huile olive et colza, noix, amandes, noisettes, graines de lin
-- Pain seigle, riz basmati, quinoa, boulgour, pommes de terre vapeur
-
-### Aliments à limiter
-- Graisses saturées (crème, beurre en excès, fromage gras)
-- Sucres rapides, pâtisseries industrielles
-- Charcuterie grasse (saucisson, rillettes, pâtés)
-- Alcool (max 2-3 verres de vin/semaine)
+- Petit-déjeuner : eau citronnée + fruit de saison + oléagineux + [fromage blanc 0-3% OU yaourt OU 2 œufs + pain seigle]
+- Collation midi : crudités + houmous/tzatziki OU fruits + noix OU smoothie vert
+- Dîner : 1/2 légumes + 1/4 protéines maigres + 1/4 féculents complets
 
 ### Objectifs santé
 - Réduire le cholestérol LDL de 10-15% en 3 mois
 - Améliorer la glycémie à jeun
 - Perdre 2-3 kg de graisse abdominale en 6 mois
-- Améliorer les marqueurs sanguins (bilan à 3 mois et 6 mois)
+- Bilan sanguin à 3 mois et 6 mois
 
 ---
 
 ## Sites de référence recettes
-
-1. https://cuisinerigbas.com — IG bas, plats mijotés
-2. https://www.lanutrition.fr/cuisine-et-recettes/recettes-sante/index-glycemique-bas — scientifique
-3. https://www.santemagazine.fr/alimentation/regime-alimentaire/regime-anti-cholesterol — anti-cholestérol
-4. https://www.primevere.com/idees-recettes/plats/ — plaisir adapté cholestérol
-5. https://bienvenuechezvero.fr/recettes-ig-bas-idees-menus — familial IG bas
-6. https://saines-gourmandises.fr/ig-bas-forme-et-minceur/ — terroir IG bas
-7. https://jow.fr/blog/posts/quest-ce-que-lalimentation-a-ig-bas — pédagogique
-8. https://www.cuisineaz.com — recettes IG bas toute l'année
-9. https://www.marieclaire.fr/cuisine — anti-cholestérol méditerranéen
-10. https://www.passionnutrition.com/baisser-le-cholesterol/ — diététicienne expert
+- cuisineigbas.com — IG bas, plats mijotés
+- lanutrition.fr — recettes scientifiquement validées IG bas
+- santemagazine.fr — menus anti-cholestérol
+- primevere.com — plats plaisir adaptés cholestérol
+- jow.fr — IG bas accessible
+- cuisineaz.com — recettes IG bas variées
+- marieclaire.fr/cuisine — anti-cholestérol méditerranéen
 
 ---
 
 ## Décisions techniques prises
-- Firebase Realtime Database pour persistance et synchronisation temps réel
-- Hébergement GitHub Pages
+- Firebase Realtime Database (projet `menu-de-la-semaine-9bed7`, Europe West)
+- Vercel pour les fonctions serverless (dossier `api/`)
+- Les fichiers `api/_*.js` (préfixe underscore) = utilitaires, pas des routes HTTP
 - Application single-file (tout dans index.html) jusqu'à la Phase 3
-- Après Phase 3 : structure multi-fichiers possible selon complexité
+- Anthropic SDK `@anthropic-ai/sdk ^0.39.0`
+- Variable globale `J[]` : tableau de 7 objets (un par jour, index 0=Sam → 6=Ven)
 
 ## Profil utilisateur développeur
 - Débutant complet en développement web
 - Utilise Claude Code avec son abonnement claude.ai
 - Mac avec Homebrew installé
-- GitHub connecté à Claude Code
+- GitHub + Vercel connectés, déploiement automatique
 - Toujours expliquer en français simple, pas à pas
 - Toujours expliquer POURQUOI avant de donner une commande
