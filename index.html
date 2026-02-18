@@ -566,12 +566,14 @@ function goMenu(){
 initIngredients();
 
 // ===== PHASE 5 — MODIFICATION D'INGRÉDIENT =====
+var ingCounter = 0;
+var ingData = {};
+
 function initIngredients() {
   document.querySelectorAll('.recipe ul li').forEach(function(li) {
     li.classList.add('ing-item');
     li.onclick = function() { editerIngredient(this); };
   });
-  // Ajouter le hint sur chaque recette
   document.querySelectorAll('.recipe h4').forEach(function(h4) {
     if (h4.textContent.trim() === 'Ingrédients' && !h4.nextElementSibling.classList.contains('ing-hint')) {
       var hint = document.createElement('p');
@@ -584,49 +586,47 @@ function initIngredients() {
 
 function editerIngredient(li) {
   if (li.dataset.editing) return;
-  var ancien = li.textContent.trim();
+  var id = 'ing-' + (++ingCounter);
+  li.id = id;
+  ingData[id] = li.textContent.trim();
   li.dataset.editing = '1';
-  li.dataset.ancien = ancien;
   li.classList.remove('ing-item');
   li.onclick = null;
 
-  var selectOptions = [
+  var opts = [
     ['legumes','🥬 Légumes'],['fruits','🍎 Fruits'],['viandes','🥩 Viandes'],
     ['laitier','🥚 Laitier'],['feculents','🌾 Féculents'],['epicerie','🫙 Épicerie'],
     ['herbes','🌿 Herbes'],['oleagineux','🥜 Oléagineux'],['boulangerie','🍞 Boulangerie']
   ].map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>';}).join('');
 
-  li.innerHTML = '<div class="ing-edit">'+
-    '<input type="text" placeholder="Nouvel ingrédient">'+
-    '<select>'+selectOptions+'</select>'+
-    '<button class="ing-btn-ok">✓</button>'+
-    '<button class="ing-btn-cancel">✕</button>'+
+  li.innerHTML = '<div class="ing-edit" onclick="event.stopPropagation()">'+
+    '<input id="inp-'+id+'" type="text" onkeydown="ingKey(event,\''+id+'\')">'+
+    '<select id="sel-'+id+'">'+opts+'</select>'+
+    '<button class="ing-btn-ok" onclick="ingOk(\''+id+'\');return false;">✓</button>'+
+    '<button class="ing-btn-cancel" onclick="ingAnnuler(\''+id+'\');return false;">✕</button>'+
   '</div>';
 
-  var input = li.querySelector('input');
-  input.value = ancien;
+  var input = document.getElementById('inp-'+id);
+  input.value = ingData[id];
   input.focus();
   input.select();
-
-  li.querySelector('.ing-btn-ok').onclick = function() { confirmerIngredient(li); };
-  li.querySelector('.ing-btn-cancel').onclick = function() { annulerIngredient(li); };
-  input.onkeydown = function(e) {
-    if (e.key === 'Enter') confirmerIngredient(li);
-    if (e.key === 'Escape') annulerIngredient(li);
-  };
 }
 
-function confirmerIngredient(li) {
-  var input = li.querySelector('input');
-  var select = li.querySelector('select');
-  var nouveau = input.value.trim();
-  var ancien = li.dataset.ancien;
-  var rayon = select.value;
+function ingKey(e, id) {
+  if (e.key === 'Enter') ingOk(id);
+  if (e.key === 'Escape') ingAnnuler(id);
+}
 
+function ingOk(id) {
+  var li = document.getElementById(id);
+  if (!li) return;
+  var nouveau = document.getElementById('inp-'+id).value.trim();
+  var rayon = document.getElementById('sel-'+id).value;
+  var ancien = ingData[id];
+  delete ingData[id];
   delete li.dataset.editing;
-  delete li.dataset.ancien;
 
-  if (!nouveau) { annulerIngredient(li); return; }
+  if (!nouveau) { ingAnnuler(id); return; }
 
   li.textContent = nouveau;
   li.classList.add('ing-item');
@@ -635,15 +635,15 @@ function confirmerIngredient(li) {
 
   if (nouveau === ancien) return;
 
-  // Atténuer l'ancien ingrédient dans la liste de courses
   document.querySelectorAll('#liste-principale .sitem').forEach(function(el) {
     var nm = el.querySelector('.sn').textContent.toLowerCase();
-    var motsCle = ancien.toLowerCase().split(' ').filter(function(m){return m.length > 3;});
-    var match = motsCle.some(function(m){return nm.includes(m);});
-    if (match) { el.style.opacity = '0.4'; el.title = '→ Remplacé par : ' + nouveau; }
+    var mots = ancien.toLowerCase().split(' ').filter(function(m){return m.length > 3;});
+    if (mots.some(function(m){return nm.includes(m);})) {
+      el.style.opacity = '0.4';
+      el.title = '→ Remplacé par : ' + nouveau;
+    }
   });
 
-  // Ajouter le nouvel ingrédient à la liste de courses
   var c = document.querySelector('.si[data-cat="'+rayon+'"]');
   if (c) {
     var ph = c.closest('.scat').querySelector('.ph');
@@ -657,10 +657,12 @@ function confirmerIngredient(li) {
   mC();
 }
 
-function annulerIngredient(li) {
-  var ancien = li.dataset.ancien || '';
+function ingAnnuler(id) {
+  var li = document.getElementById(id);
+  if (!li) return;
+  var ancien = ingData[id] || '';
+  delete ingData[id];
   delete li.dataset.editing;
-  delete li.dataset.ancien;
   li.textContent = ancien;
   li.classList.add('ing-item');
   li.onclick = function() { editerIngredient(this); };
