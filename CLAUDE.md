@@ -10,6 +10,12 @@ Toutes les instructions doivent être en français, simples et pas à pas.
 ## Dépôt GitHub
 https://github.com/medwinrumo/menu-de-la-semaine
 
+## Hébergement
+- Vercel (connecté au dépôt GitHub, déploiement automatique à chaque push)
+- URL actuelle : https://menus.medwinrumo.fr
+- URL finale souhaitée : https://menus.hebdo.fr
+- DNS géré par Squarespace (domaine Google Workspace)
+
 ## Fichiers du projet
 - index.html : application complète (HTML + CSS + JS en un seul fichier)
 - CLAUDE.md : ce fichier de contexte permanent
@@ -55,11 +61,11 @@ Objectif : persistance et synchronisation temps réel.
 - Cliquer sur un dîner ouvre directement la recette dans l'onglet Recettes
 - Bouton retour "← Retour au menu" visible sur chaque recette
 
-### Phase 3 — Refonte complète du design 🔴 À FAIRE
+### Phase 3 — Refonte complète du design 🔴 À FAIRE EN DERNIER
 - Design créé dans Google Stitch puis exporté en .zip
 - Le design Stitch remplace totalement le HTML/CSS du V3
 - La logique JavaScript (Firebase, liste de courses, recettes) est conservée
-- Sera intégré APRÈS que Firebase soit fonctionnel
+- Sera intégré EN DERNIER, quand toutes les fonctionnalités (phases 4 à 8) seront terminées
 - Éléments à prévoir dans Stitch :
   * 3 onglets : Semaine / Recettes / Courses
   * Cartes journalières cliquables (7 jours)
@@ -70,10 +76,12 @@ Objectif : persistance et synchronisation temps réel.
   * Zone de chat nutritionnel
 
 ### Phase 4 — Remplacement de recette 🔴 À FAIRE
-- Bouton "Cette recette ne me convient pas" sur chaque jour
-- Recherche automatique d'une recette alternative via les sites de référence
+- L'utilisateur sélectionne une recette qui ne lui convient pas
+- Il clique sur un bouton → Claude recherche une recette de remplacement
 - La nouvelle recette respecte le schéma nutritionnel et le profil santé
+- La nouvelle recette remplace l'ancienne dans le planning
 - La liste de courses se met à jour automatiquement
+- Utilise l'API Claude via une fonction Vercel (api/recette.js)
 
 ### Phase 5 — Modification d'ingrédient 🔴 À FAIRE
 - Cliquer sur un ingrédient dans une recette pour le sélectionner
@@ -89,10 +97,11 @@ Rôle 1 — Répondre aux questions nutrition
 
 Rôle 2 — Intervenir dans la composition des menus
 - Exemples de commandes possibles dans le chat :
-  * "Pour le menu de la semaine, prévois du lapin"
+  * "Cherche une recette à base de lapin pour mercredi"
   * "Je veux moins de viande cette semaine"
   * "Propose un dîner sans gluten pour mercredi"
-- Claude choisit une recette adaptée à la demande ET au profil santé
+- L'utilisateur choisit un ingrédient ET un jour cible
+- Claude cherche une recette adaptée et la place dans le planning
 - La liste de courses se met à jour automatiquement
 
 ### Phase 7 — Génération automatique de menus 🔴 À FAIRE (à construire)

@@ -90,6 +90,27 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .lien-din{font-size:.62rem;font-weight:400;opacity:.55;margin-left:5px}
 .btn-back{margin-bottom:14px;padding:6px 14px;background:var(--accL);color:var(--acc);border:1px solid var(--acc);border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer}
 .btn-back:hover{background:var(--acc);color:#fff}
+.btn-swap{margin-top:10px;padding:7px 14px;background:var(--bg);color:var(--txt2);border:1px solid var(--border);border-radius:var(--r);font-size:.78rem;cursor:pointer;width:100%;transition:.15s;text-align:center}
+.btn-swap:hover{background:var(--accL);color:var(--acc);border-color:var(--acc)}
+.btn-swap:disabled{opacity:.5;cursor:wait}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.on{display:flex}
+.modal{background:var(--card);border-radius:var(--r2);padding:24px;max-width:540px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.modal-head h2{color:var(--acc);font-size:1.2rem;flex:1}
+.modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--txt2);flex-shrink:0;margin-left:8px}
+.modal .rmeta{margin-bottom:12px}
+.modal h4{color:var(--txt);margin:12px 0 6px;font-size:.9rem;border-bottom:1px solid var(--border);padding-bottom:4px}
+.modal ul{list-style:none;padding:0}
+.modal ul li{padding:3px 0 3px 18px;position:relative;font-size:.83rem}
+.modal ul li::before{content:"•";position:absolute;left:3px;color:var(--acc);font-weight:700}
+.modal ol{padding-left:20px}
+.modal ol li{margin-bottom:6px;font-size:.83rem}
+.modal-actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.btn-accept{padding:9px 18px;background:var(--acc);color:#fff;border:none;border-radius:var(--r);font-size:.85rem;font-weight:600;cursor:pointer;flex:1}
+.btn-accept:hover{background:var(--acc2)}
+.btn-reject{padding:9px 18px;background:var(--bg);color:var(--txt2);border:1px solid var(--border);border-radius:var(--r);font-size:.85rem;cursor:pointer;flex:1}
+.btn-reject:hover{border-color:var(--acc);color:var(--acc)}
 </style>
 </head>
 <body>
@@ -433,6 +454,23 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 </div>
 </div>
 
+<div class="modal-overlay" id="recette-modal">
+<div class="modal">
+  <div class="modal-head">
+    <h2 id="modal-titre"></h2>
+    <button class="modal-close" onclick="fermerModal()">✕</button>
+  </div>
+  <div class="rmeta" id="modal-meta"></div>
+  <h4>Ingrédients</h4>
+  <ul id="modal-ingredients"></ul>
+  <h4>Préparation</h4>
+  <ol id="modal-etapes"></ol>
+  <div class="modal-actions">
+    <button class="btn-accept" onclick="accepterRecette()">✓ Adopter cette recette</button>
+    <button class="btn-reject" onclick="chercherAutre()">↺ En chercher une autre</button>
+  </div>
+</div>
+</div>
 <button class="btn-print" onclick="window.print()">🖨️ Imprimer</button>
 </div>
 
@@ -454,7 +492,8 @@ g.innerHTML+='<div class="day"><h3>'+j.nom+'</h3>'+
 '<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+j.pdj+'</div></div>'+
 '<div class="meal"><div class="ml">🥗 Collation midi</div><div class="mc">'+j.col+'</div></div>'+
 '<div class="meal meal-din" onclick="goRecette('+i+')" title="Voir la recette"><div class="ml">🍽️ Dîner<span class="lien-din">↗ voir recette</span></div><div class="mc">'+j.din+'</div></div>'+
-'<div class="swap-row"><select>'+o+'</select><button onclick="sw('+i+',this)">↔ échanger dîner</button></div></div>';
+'<div class="swap-row"><select>'+o+'</select><button onclick="sw('+i+',this)">↔ échanger dîner</button></div>'+
+'<button class="btn-swap" onclick="changerRecette('+i+',this)">↺ Autre recette</button></div>';
 });
 }
 function sw(f,b){var s=b.previousElementSibling;var t=parseInt(s.value);
@@ -515,6 +554,79 @@ function goMenu(){
   tab('apercu',btn);
 }
 
+// ===== PHASE 4 — AUTRE RECETTE =====
+var recetteEnCours = null;
+
+function changerRecette(idx, btn) {
+  btn.textContent = '⏳ Recherche en cours…';
+  btn.disabled = true;
+  var autresRecettes = J.filter(function(j,i){return i!==idx;}).map(function(j){return j.dn;});
+  fetch('/api/recette', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({jour:J[idx].nom, recetteActuelle:J[idx].dn, autresRecettes:autresRecettes})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    recetteEnCours = {idx:idx, data:data};
+    afficherModal(data);
+    btn.textContent = '↺ Autre recette';
+    btn.disabled = false;
+  })
+  .catch(function(){
+    alert('Erreur lors de la recherche. Réessayez.');
+    btn.textContent = '↺ Autre recette';
+    btn.disabled = false;
+  });
+}
+
+function afficherModal(data) {
+  document.getElementById('modal-titre').textContent = data.emoji + ' ' + data.nom;
+  document.getElementById('modal-meta').innerHTML =
+    '<span><b>Prépa :</b> '+data.prepTime+'</span><span><b>Cuisson :</b> '+data.cookTime+'</span><span><b>Pour :</b> 2</span>';
+  document.getElementById('modal-ingredients').innerHTML =
+    data.ingredients.map(function(i){return '<li>'+i+'</li>';}).join('');
+  document.getElementById('modal-etapes').innerHTML =
+    data.etapes.map(function(e){return '<li>'+e+'</li>';}).join('');
+  document.getElementById('recette-modal').classList.add('on');
+}
+
+function fermerModal() {
+  document.getElementById('recette-modal').classList.remove('on');
+  recetteEnCours = null;
+}
+
+function accepterRecette() {
+  if (!recetteEnCours) return;
+  var idx = recetteEnCours.idx;
+  var data = recetteEnCours.data;
+  J[idx].din = data.description;
+  J[idx].dn = data.nom;
+  rW();
+  if (data.coursesAAjouter) {
+    data.coursesAAjouter.forEach(function(item) {
+      var c = document.querySelector('.si[data-cat="'+item.rayon+'"]');
+      if (c) {
+        var l = document.createElement('label');
+        l.className = 'sitem';
+        l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">↺ '+J[idx].nom+'</span>';
+        c.appendChild(l);
+      }
+    });
+    mC();
+  }
+  if (db) db.ref('menus/'+idx).set({din:J[idx].din, dn:J[idx].dn});
+  fermerModal();
+}
+
+function chercherAutre() {
+  if (!recetteEnCours) return;
+  var idx = recetteEnCours.idx;
+  fermerModal();
+  var btns = document.querySelectorAll('.btn-swap');
+  if (btns[idx]) changerRecette(idx, btns[idx]);
+}
+
 // ===== FIREBASE =====
 var db=null;
 function fbKey(nom){return nom.replace(/[.#$[\]/]/g,'-').replace(/\s+/g,'_').substring(0,60);}
@@ -571,8 +683,20 @@ var firebaseConfig={
 };
 firebase.initializeApp(firebaseConfig);
 db=firebase.database();
-db.ref('courses').on('value',function(snapshot){
-  appliquerDepuisFirebase(snapshot.val()||{});
+db.ref('/').on('value',function(snapshot){
+  var data=snapshot.val()||{};
+  // Sync menus modifiés
+  if (data.menus) {
+    Object.keys(data.menus).forEach(function(i){
+      var idx=parseInt(i);
+      if(J[idx]&&(J[idx].din!==data.menus[i].din)){
+        J[idx].din=data.menus[i].din;
+        J[idx].dn=data.menus[i].dn;
+      }
+    });
+    rW();
+  }
+  appliquerDepuisFirebase(data);
 });
 </script>
 </body>
