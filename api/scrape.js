@@ -40,6 +40,15 @@ module.exports = async function handler(req, res) {
   }
 };
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function normalizeArr(x) {
+  if (!x) return [];
+  if (Array.isArray(x)) return x;
+  if (typeof x === 'string') return x.split('\n').map(s => s.trim()).filter(Boolean);
+  return Object.values(x);
+}
+
 // ── Extraction JSON-LD ──────────────────────────────────────────────────────
 
 function extractJsonLd(html) {
@@ -81,7 +90,7 @@ function formatRecipe(r, url) {
     nom: r.name || 'Recette importée',
     emoji: '🥘',
     description: r.description ? r.description.replace(/<[^>]+>/g, '').substring(0, 150) : '',
-    ingredients: r.recipeIngredient || [],
+    ingredients: normalizeArr(r.recipeIngredient),
     etapes: etapes,
     prepTime: parseDuration(r.prepTime),
     cookTime: parseDuration(r.cookTime),
