@@ -92,7 +92,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .din-btn{background:none;border:none;cursor:pointer;font-size:1.05rem;opacity:.65;padding:5px 9px;color:var(--txt2);transition:.15s;line-height:1;border-radius:6px}
 .din-btn:hover{opacity:1;color:var(--acc);background:var(--accL)}
 .din-btn:disabled{opacity:.2;cursor:wait}
-.din-handle{cursor:grab;font-size:1.15rem;opacity:.65;padding:5px 9px;user-select:none;-webkit-user-select:none;touch-action:none;-webkit-touch-callout:none;line-height:1;transition:.15s;border-radius:6px}
+.din-handle{cursor:pointer;font-size:1.15rem;opacity:.65;padding:5px 9px;user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-touch-callout:none;line-height:1;transition:.15s;border-radius:6px}
 .din-handle:hover{opacity:1;color:var(--acc);background:var(--accL)}
 .din-handle:active{cursor:grabbing}
 .day.drag-over{border-color:var(--acc)!important;background:var(--accL)!important;box-shadow:0 0 0 2px var(--acc)}
@@ -581,7 +581,7 @@ function rW(){
 var g=document.getElementById('weekgrid');g.innerHTML='';
 J.forEach(function(j,i){
 g.innerHTML+=
-'<div class="day" id="day-'+i+'" ondragover="dragOver(event,'+i+')" ondrop="dropDinner(event,'+i+')" ondragleave="dragLeave(event,'+i+')">' +
+'<div class="day" id="day-'+i+'">' +
 '<h3>'+j.nom+'</h3>'+
 '<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+j.pdj+'</div></div>'+
 '<div class="meal"><div class="ml">🥗 Collation midi</div><div class="mc">'+j.col+'</div></div>'+
@@ -590,7 +590,7 @@ g.innerHTML+=
 '<span class="din-actions" onclick="event.stopPropagation()">' +
 '<button class="din-btn" onclick="sauvegarderRecetteDiner('+i+')" title="Sauvegarder dans Mes recettes">＋</button>' +
 '<button class="din-btn" data-swap-idx="'+i+'" onclick="changerRecette('+i+',this)" title="Autre recette">↺</button>' +
-'<span class="din-handle" draggable="true" ondragstart="dragStart(event,'+i+')" ontouchstart="touchDragStart(event,'+i+')" ontouchmove="touchDragMove(event)" ontouchend="touchDragEnd(event)" title="Glisser pour intervertir">⠿</span>' +
+'<span class="din-handle" ontouchstart="event.preventDefault();selectSwap('+i+')" onclick="selectSwap('+i+')" title="Intervertir ce dîner">⠿</span>' +
 '</span></div>' +
 '<div class="mc">'+j.din+'</div>' +
 '</div>' +
@@ -1237,110 +1237,36 @@ function voirRecettePerso(i) {
   };
 }
 
-// ===== DRAG & DROP DÎNERS =====
-var dragIdx = null;
+// ===== INTERVERTIR DÎNERS (deux-taps — tous appareils) =====
 var swapInProgress = false;
-function dragStart(event, i) {
-  dragIdx = i;
-  event.dataTransfer.effectAllowed = 'move';
-}
-function dragOver(event, i) {
-  if (dragIdx === null || dragIdx === i) return;
-  event.preventDefault();
-  document.getElementById('day-'+i).classList.add('drag-over');
-}
-function dragLeave(event, i) {
-  document.getElementById('day-'+i).classList.remove('drag-over');
-}
-function dropDinner(event, i) {
-  event.preventDefault();
-  document.getElementById('day-'+i).classList.remove('drag-over');
-  if (dragIdx === null || dragIdx === i) { dragIdx = null; return; }
-  var src = dragIdx, dst = i;
-  var d = J[src].din, n = J[src].dn;
-  J[src].din = J[dst].din; J[src].dn = J[dst].dn;
-  J[dst].din = d; J[dst].dn = n;
-  dragIdx = null;
-  rW();
-  if (db) {
-    swapInProgress = true;
-    var updates = {};
-    updates['menus/'+src] = {din:J[src].din, dn:J[src].dn};
-    updates['menus/'+dst] = {din:J[dst].din, dn:J[dst].dn};
-    db.ref().update(updates).then(function(){ swapInProgress = false; })
-                            .catch(function(){ swapInProgress = false; });
-  }
-}
+var swapSelectIdx = null;
 
-// ===== TOUCH DRAG & DROP (mobile/tablette) =====
-var touchDragIdx = null;
-var touchSelectIdx = null; // mode deux-taps (téléphone)
-
-function performSwap(src, dst) {
-  var d = J[src].din, n = J[src].dn;
-  J[src].din = J[dst].din; J[src].dn = J[dst].dn;
-  J[dst].din = d; J[dst].dn = n;
-  rW();
-  if (db) {
-    swapInProgress = true;
-    var updates = {};
-    updates['menus/'+src] = {din:J[src].din, dn:J[src].dn};
-    updates['menus/'+dst] = {din:J[dst].din, dn:J[dst].dn};
-    db.ref().update(updates).then(function(){ swapInProgress = false; })
-                            .catch(function(){ swapInProgress = false; });
-  }
-  toast('✅ Dîners intervertis !');
-}
-
-function touchDragStart(event, i) {
-  event.preventDefault();
-  // Téléphone (< 600px) : mode deux-taps
-  if (window.innerWidth < 600) {
-    if (touchSelectIdx === null) {
-      // 1er tap : sélectionner ce jour
-      touchSelectIdx = i;
-      document.getElementById('day-'+i).classList.add('swap-selected');
-      toast('📌 Scrolle et tape un autre dîner pour intervertir');
-    } else if (touchSelectIdx === i) {
-      // Re-tap sur le même : annuler
-      document.getElementById('day-'+i).classList.remove('swap-selected');
-      touchSelectIdx = null;
-    } else {
-      // 2e tap sur un autre jour : swap
-      document.getElementById('day-'+touchSelectIdx).classList.remove('swap-selected');
-      performSwap(touchSelectIdx, i);
-      touchSelectIdx = null;
+function selectSwap(i) {
+  if (swapSelectIdx === null) {
+    swapSelectIdx = i;
+    document.getElementById('day-'+i).classList.add('swap-selected');
+    toast('📌 Tape ⠿ sur un autre dîner pour intervertir');
+  } else if (swapSelectIdx === i) {
+    document.getElementById('day-'+i).classList.remove('swap-selected');
+    swapSelectIdx = null;
+  } else {
+    document.getElementById('day-'+swapSelectIdx).classList.remove('swap-selected');
+    var src = swapSelectIdx, dst = i;
+    swapSelectIdx = null;
+    var d = J[src].din, n = J[src].dn;
+    J[src].din = J[dst].din; J[src].dn = J[dst].dn;
+    J[dst].din = d; J[dst].dn = n;
+    rW();
+    if (db) {
+      swapInProgress = true;
+      var updates = {};
+      updates['menus/'+src] = {din:J[src].din, dn:J[src].dn};
+      updates['menus/'+dst] = {din:J[dst].din, dn:J[dst].dn};
+      db.ref().update(updates).then(function(){ swapInProgress = false; })
+                              .catch(function(){ swapInProgress = false; });
     }
-    return;
+    toast('✅ Dîners intervertis !');
   }
-  // Tablette : mode glisser-déposer
-  touchDragIdx = i;
-  document.getElementById('day-'+i).style.opacity = '0.5';
-}
-
-function touchDragMove(event) {
-  if (touchDragIdx === null) return;
-  event.preventDefault();
-  var touch = event.touches[0];
-  document.querySelectorAll('.day.drag-over').forEach(function(d){ d.classList.remove('drag-over'); });
-  var el = document.elementFromPoint(touch.clientX, touch.clientY);
-  while (el && (!el.id || !el.id.startsWith('day-'))) el = el.parentElement;
-  if (el && el.id !== 'day-'+touchDragIdx) el.classList.add('drag-over');
-}
-
-function touchDragEnd(event) {
-  if (touchDragIdx === null) return;
-  event.preventDefault();
-  var touch = event.changedTouches[0];
-  document.getElementById('day-'+touchDragIdx).style.opacity = '';
-  document.querySelectorAll('.day.drag-over').forEach(function(d){ d.classList.remove('drag-over'); });
-  var el = document.elementFromPoint(touch.clientX, touch.clientY);
-  while (el && (!el.id || !el.id.startsWith('day-'))) el = el.parentElement;
-  if (el) {
-    var dst = parseInt(el.id.replace('day-', ''));
-    if (!isNaN(dst) && dst !== touchDragIdx) performSwap(touchDragIdx, dst);
-  }
-  touchDragIdx = null;
 }
 
 // ===== TOAST =====
