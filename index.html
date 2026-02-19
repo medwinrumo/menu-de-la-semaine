@@ -534,8 +534,8 @@ J.forEach(function(j,i){
 g.innerHTML+=
 '<div class="day" id="day-'+i+'">' +
 '<h3>'+j.nom+'</h3>'+
-(j.pdj ? '<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+j.pdj+'</div></div>' : '')+
-(j.col ? '<div class="meal"><div class="ml">🥗 Midi</div><div class="mc">'+j.col+'</div></div>' : '')+
+'<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+(j.pdj||'')+'</div></div>'+
+'<div class="meal"><div class="ml">🥗 Midi</div><div class="mc">'+(j.col||'')+'</div></div>'+
 (j.gou ? '<div class="meal meal-gou"><div class="ml">☕ Goûter<button class="btn-del-service" onclick="event.stopPropagation();supprimerGouteur('+i+')" title="Supprimer le goûter">✕</button></div><div class="mc">'+j.gou+'</div></div>' : '') +
 '<div class="meal meal-din" onclick="goRecette('+i+')">' +
 '<div class="ml din-ml">🍽️ Dîner' +
