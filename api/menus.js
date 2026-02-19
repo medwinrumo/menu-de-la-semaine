@@ -70,6 +70,7 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
         "emoji": "🥘",
         "prepTime": "20 min",
         "cookTime": "30 min",
+        "url": "https://www.cuisineaz.com/recettes/...",
         "ingredients": ["400g filet de saumon", "2 poireaux émincés", "..."],
         "etapes": ["Étape 1 détaillée.", "Étape 2 détaillée.", "Étape 3 détaillée."],
         "coursesAAjouter": [
@@ -82,6 +83,7 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
 }
 
 Génère les 7 jours en respectant exactement cette structure JSON.
+Pour chaque recette, le champ "url" doit pointer vers une recette réelle sur l'un des sites de référence fournis. Si aucune URL certaine n'est disponible pour cette recette précise, mets null.
 Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers`;
 
     const message = await client.messages.create({

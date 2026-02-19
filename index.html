@@ -88,11 +88,11 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 @media(orientation:landscape) and (max-height:500px){.grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.wrap{padding:8px}}
 .meal-din{cursor:pointer;transition:.15s}.meal-din:hover{background:var(--accL);border-left-color:var(--acc2)}
 .din-ml{display:flex;justify-content:space-between;align-items:center}
-.din-actions{display:flex;align-items:center;gap:1px;flex-shrink:0}
-.din-btn{background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.4;padding:2px 5px;color:var(--txt2);transition:.15s;line-height:1;border-radius:4px}
+.din-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.din-btn{background:none;border:none;cursor:pointer;font-size:1.05rem;opacity:.65;padding:5px 9px;color:var(--txt2);transition:.15s;line-height:1;border-radius:6px}
 .din-btn:hover{opacity:1;color:var(--acc);background:var(--accL)}
 .din-btn:disabled{opacity:.2;cursor:wait}
-.din-handle{cursor:grab;font-size:.95rem;opacity:.35;padding:2px 5px;user-select:none;line-height:1;transition:.15s;border-radius:4px}
+.din-handle{cursor:grab;font-size:1.15rem;opacity:.65;padding:5px 9px;user-select:none;line-height:1;transition:.15s;border-radius:6px}
 .din-handle:hover{opacity:1;color:var(--acc);background:var(--accL)}
 .din-handle:active{cursor:grabbing}
 .day.drag-over{border-color:var(--acc)!important;background:var(--accL)!important;box-shadow:0 0 0 2px var(--acc)}
@@ -552,6 +552,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
     <button class="modal-close" onclick="fermerModal()">✕</button>
   </div>
   <div class="rmeta" id="modal-meta"></div>
+  <div id="modal-url"></div>
   <h4>Ingrédients</h4>
   <ul id="modal-ingredients"></ul>
   <h4>Préparation</h4>
@@ -839,12 +840,26 @@ function retirerTyping(id) {
 function executerActionChat(action) {
   if (action.type === 'remplacer_repas' && action.recette) {
     var idx = action.jour_idx;
+    var r = action.recette;
     if (J[idx]) {
-      J[idx].din = action.recette.description || action.recette.nom;
-      J[idx].dn = action.recette.nom;
+      J[idx].din = r.description || r.nom;
+      J[idx].dn = r.nom;
       rW();
-      if (action.recette.coursesAAjouter) {
-        action.recette.coursesAAjouter.forEach(function(item){
+      // Mettre à jour la carte dans l'onglet Recettes
+      var recipeDiv = document.getElementById('recipe-'+idx);
+      if (recipeDiv && r.ingredients) {
+        recipeDiv.innerHTML =
+          '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>' +
+          '<div class="recipe-top"><h3>'+(r.nom)+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
+          '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+J[idx].nom+'</span></div>' +
+          (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '') +
+          '<h4>Ingrédients</h4>' +
+          '<ul>'+(r.ingredients||[]).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
+          '<h4>Préparation</h4>' +
+          '<ol>'+(r.etapes||[]).map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>';
+      }
+      if (r.coursesAAjouter) {
+        r.coursesAAjouter.forEach(function(item){
           var c = document.querySelector('.si[data-cat="'+item.rayon+'"]');
           if(c){var l=document.createElement('label');l.className='sitem';
             l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">💬 '+J[idx].nom+'</span>';
@@ -978,7 +993,8 @@ function appliquerNouveauxMenus(data) {
       '<div class="recipe" id="recipe-'+i+'">' +
       '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>' +
       '<div class="recipe-top"><h3>'+r.nom+'</h3><div class="r-ico">'+r.emoji+'</div></div>' +
-      '<div class="rmeta"><span><b>Prépa :</b> '+r.prepTime+'</span><span><b>Cuisson :</b> '+r.cookTime+'</span><span><b>Pour :</b> 2</span><span><b>📅</b> '+jour.nom+'</span></div>' +
+      '<div class="rmeta"><span><b>Prépa :</b> '+r.prepTime+'</span><span><b>Cuisson :</b> '+r.cookTime+'</span><span><b>📅</b> '+jour.nom+'</span></div>' +
+      (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '') +
       '<h4>Ingrédients</h4>' +
       '<ul>'+r.ingredients.map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
       '<h4>Préparation</h4>' +
@@ -1166,7 +1182,8 @@ function cuisinerCetteSemaine() {
         '<div class="recipe-top"><h3>'+(r.nom)+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
         '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span>' +
         '<span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span>' +
-        '<span><b>Pour :</b> 2</span><span><b>📅</b> '+J[idx].nom+'</span></div>' +
+        '<span><b>📅</b> '+J[idx].nom+'</span></div>' +
+        (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '') +
         '<h4>Ingrédients</h4>' +
         '<ul>'+(r.ingredients||[]).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
         '<h4>Préparation</h4>' +
@@ -1310,7 +1327,11 @@ function changerRecette(idx, btn, recettesRefusees) {
 function afficherModal(data) {
   document.getElementById('modal-titre').textContent = data.emoji + ' ' + data.nom;
   document.getElementById('modal-meta').innerHTML =
-    '<span><b>Prépa :</b> '+data.prepTime+'</span><span><b>Cuisson :</b> '+data.cookTime+'</span><span><b>Pour :</b> 2</span>';
+    '<span><b>Prépa :</b> '+data.prepTime+'</span><span><b>Cuisson :</b> '+data.cookTime+'</span>';
+  var urlEl = document.getElementById('modal-url');
+  urlEl.innerHTML = data.url
+    ? '<a class="recipe-link" href="'+data.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>'
+    : '';
   document.getElementById('modal-ingredients').innerHTML =
     data.ingredients.map(function(i){return '<li>'+i+'</li>';}).join('');
   document.getElementById('modal-etapes').innerHTML =

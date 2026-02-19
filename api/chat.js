@@ -42,7 +42,8 @@ ${menusTexte}
 En plus de répondre aux questions, tu peux MODIFIER les menus directement.
 
 Quand l'utilisateur te demande une modification de menu, réponds UNIQUEMENT avec ce JSON (pas de texte avant ni après) :
-{"reponse":"Explication courte de ce que tu as fait","action":{"type":"remplacer_repas","jour_idx":0,"recette":{"nom":"Nom de la recette","emoji":"🥘","prepTime":"20 min","cookTime":"30 min","description":"Description courte planning","ingredients":["ingrédient 1","ingrédient 2"],"etapes":["Étape 1","Étape 2","Étape 3"],"coursesAAjouter":[{"nom":"ingrédient","rayon":"legumes"}]}}}
+{"reponse":"Explication courte de ce que tu as fait","action":{"type":"remplacer_repas","jour_idx":0,"recette":{"nom":"Nom de la recette","emoji":"🥘","prepTime":"20 min","cookTime":"30 min","description":"Description courte planning","url":"https://www.cuisineaz.com/recettes/...","ingredients":["ingrédient 1","ingrédient 2"],"etapes":["Étape 1","Étape 2","Étape 3"],"coursesAAjouter":[{"nom":"ingrédient","rayon":"legumes"}]}}}
+Le champ "url" doit pointer vers une recette réelle sur un des sites de référence. Si aucune URL certaine, mets null.
 
 Jours disponibles (jour_idx) :
 0=Samedi, 1=Dimanche, 2=Lundi, 3=Mardi, 4=Mercredi, 5=Jeudi, 6=Vendredi

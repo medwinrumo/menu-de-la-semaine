@@ -46,6 +46,7 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
   "prepTime": "15 min",
   "cookTime": "25 min",
   "description": "Description ultra-courte style planning (ex: Saumon vapeur • Quinoa • Poireaux fondants)",
+  "url": "https://www.cuisineaz.com/recettes/...",
   "ingredients": ["400g filets de cabillaud", "3 carottes en rondelles", "2 poireaux", "..."],
   "etapes": ["Étape 1...", "Étape 2...", "Étape 3..."],
   "coursesAAjouter": [
@@ -53,6 +54,8 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
     {"nom": "Aneth frais", "rayon": "herbes"}
   ]
 }
+
+Le champ "url" doit pointer vers une recette réelle et accessible sur l'un des sites de référence fournis. Si tu n'as pas d'URL certaine pour cette recette précise, mets null.
 
 Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers
 
