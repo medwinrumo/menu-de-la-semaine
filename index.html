@@ -175,10 +175,6 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .recette-card-jour{margin-top:10px;padding:10px;background:var(--bg);border-radius:var(--r);display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}
 .recette-card-jour label{font-size:.82rem;color:var(--txt2);white-space:nowrap;line-height:2}
 .recette-card-jour select{padding:6px 10px;border:2px solid var(--acc);border-radius:var(--r);font-size:.82rem;background:var(--card);color:var(--txt);flex:1}
-.type-pills{display:flex;gap:4px;flex-wrap:wrap;width:100%}
-.type-pill{padding:4px 10px;border-radius:14px;font-size:.72rem;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--txt2);transition:.15s;white-space:nowrap;user-select:none}
-.type-pill:hover{border-color:var(--acc);color:var(--acc)}
-.type-pill.active{background:var(--acc);color:#fff;border-color:var(--acc)}
 .btn-cuisiner{display:block;width:100%;padding:13px;background:var(--acc);color:#fff;border:none;border-radius:var(--r);font-size:.95rem;font-weight:700;cursor:pointer;transition:.2s;margin-top:18px;text-align:center}
 .btn-cuisiner:hover{background:var(--acc2);transform:translateY(-2px)}
 .btn-cuisiner:disabled{opacity:.5;cursor:wait;transform:none}
@@ -248,15 +244,10 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .btn-del-service:hover{opacity:1;color:#e55}
 .meal-gou{border-bottom:1px dashed var(--border)}
 .recette-type-sel{padding:6px 10px;border:2px solid var(--acc);border-radius:var(--r);font-size:.82rem;background:var(--card);color:var(--txt)}
-.tags-edit-btn{background:none;border:none;cursor:pointer;font-size:.72rem;color:var(--txt2);padding:0 3px;opacity:.45;transition:.15s;line-height:1}
-.tags-edit-btn:hover{opacity:1;color:var(--acc)}
-.tag-picker{background:var(--card);border:1px solid var(--acc);border-radius:var(--r);padding:10px;margin-top:6px;display:flex;flex-wrap:wrap;gap:5px;box-shadow:var(--sh2)}
-.tag-picker-group{width:100%}
-.tag-picker-title{font-size:.6rem;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.05em;display:block;margin:6px 0 4px}
-.tag-picker-title:first-child{margin-top:0}
-.tag-picker-chip{padding:3px 9px;border:1px solid var(--border);border-radius:12px;font-size:.68rem;cursor:pointer;background:var(--bg);color:var(--txt2);transition:.15s}
-.tag-picker-chip:hover{border-color:var(--acc);color:var(--acc)}
-.tag-picker-chip.has{background:var(--acc);color:#fff;border-color:var(--acc)}
+.svc-menu{position:absolute;top:calc(100% + 4px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh2);z-index:600;min-width:150px;padding:4px 0;white-space:nowrap}
+.svc-menu button{display:block;width:100%;text-align:left;padding:6px 14px;background:none;border:none;font-size:.78rem;cursor:pointer;color:var(--txt)}
+.svc-menu button:hover{background:var(--accL);color:var(--acc)}
+.svc-menu button.active{font-weight:700;color:var(--acc)}
 .recette-card-img{width:100%;height:130px;object-fit:cover;border-radius:var(--r);margin-bottom:8px;display:block}
 .modal-img{width:100%;max-height:220px;object-fit:cover;border-radius:var(--r);margin-bottom:14px;display:block}
 .modal-astuces-box{margin-top:10px;padding:10px 12px;background:var(--accL);border-radius:var(--r);border-left:3px solid var(--acc)}
@@ -1237,19 +1228,8 @@ function afficherRecettesPerso(liste) {
     }).join('');
     var serviceTagsList = ['entrée','plat principal','accompagnement','dessert','goûter','soupe'];
     var serviceTag = (r.tags||[]).find(function(t){ return serviceTagsList.includes(t); });
-    var defaultType = serviceTag || 'plat principal';
     var tags = (r.tags||[]).filter(function(t){ return !serviceTagsList.includes(t); })
                            .map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
-    var typePills = [
-      {v:'plat principal', l:'🍽️ Plat'},
-      {v:'entrée',         l:'🥗 Entrée'},
-      {v:'accompagnement', l:'🥦 Accomp.'},
-      {v:'dessert',        l:'🍮 Dessert'},
-      {v:'goûter',         l:'☕ Goûter'}
-    ].map(function(o){
-      var active = o.v === defaultType ? ' active' : '';
-      return '<span class="type-pill'+active+'" data-type="'+o.v+'" onclick="setTypePill(\''+k+'\',\''+o.v+'\',this)">'+o.l+'</span>';
-    }).join('');
     return '<div class="recette-card" id="rcard-'+k+'">' +
       (r.image ? '<img class="recette-card-img" src="'+r.image+'" alt="'+r.nom+'" onerror="this.style.display=\'none\'">' : '') +
       '<div class="recette-card-header">' +
@@ -1257,16 +1237,14 @@ function afficherRecettesPerso(liste) {
         '<button class="btn-fav'+(r.favoris?' active':'')+'" id="rfav-'+k+'" onclick="toggleFavori(\''+k+'\')" title="Favori">'+(r.favoris?'★':'☆')+'</button>' +
         '<span class="recette-card-emoji">'+(r.emoji||'🥘')+'</span>' +
         '<span class="recette-card-nom" onclick="voirRecettePerso(\''+k+'\')" title="Voir la recette complète">'+(r.nom)+'</span>' +
-        '<span class="service-tag-badge" id="rsvc-'+k+'" style="'+(serviceTag?'':'display:none')+'">'+( serviceTag||'')+'</span>' +
+        '<span style="position:relative"><span class="service-tag-badge" id="rsvc-'+k+'" onclick="toggleSvcDropdown(\''+k+'\')" style="cursor:pointer">'+(serviceTag||'+ type')+' ▾</span></span>' +
         '<button class="btn-del-recette" onclick="supprimerRecettePerso(\''+k+'\')" title="Supprimer cette recette">🗑</button>' +
       '</div>' +
       (r.description ? '<div class="recette-card-desc">'+(r.description)+'</div>' : '') +
       '<div style="padding:4px 0 2px 28px;display:flex;align-items:center;flex-wrap:wrap;gap:3px;min-height:22px" id="rtags-'+k+'">' +
-        tags + '<button class="tags-edit-btn" onclick="ouvrePickerTag(\''+k+'\')" title="Modifier les tags">✏️</button>' +
+        tags +
       '</div>' +
       '<div class="recette-card-jour" id="rjour-'+k+'" style="display:none">' +
-        '<input type="hidden" id="rtype-'+k+'" value="'+defaultType+'">' +
-        '<div class="type-pills" id="rpills-'+k+'">'+typePills+'</div>' +
         '<label>le :</label>' +
         '<select id="rsel-'+k+'"><option value="">— Jour —</option>'+opts+'</select>' +
       '</div>' +
@@ -1287,15 +1265,6 @@ function supprimerRecettePerso(k) {
   }
 }
 
-function setTypePill(k, type, el) {
-  var hidden = document.getElementById('rtype-'+k);
-  if (hidden) hidden.value = type;
-  var container = el ? el.closest('.type-pills') : document.getElementById('rpills-'+k);
-  if (container) container.querySelectorAll('.type-pill').forEach(function(p){
-    p.classList.toggle('active', p.dataset.type === type);
-  });
-}
-
 function toggleRecetteJour(k) {
   var cb = document.getElementById('rcheck-'+k);
   var jourDiv = document.getElementById('rjour-'+k);
@@ -1303,15 +1272,6 @@ function toggleRecetteJour(k) {
   if (!cb || !jourDiv || !card) return;
   jourDiv.style.display = cb.checked ? 'flex' : 'none';
   card.classList.toggle('selected', cb.checked);
-  if (cb.checked) {
-    // Rafraîchir la pill active selon les tags de la recette
-    var r = recettesPersoMap[k];
-    if (r) {
-      var svcTags = ['entrée','plat principal','accompagnement','dessert','goûter'];
-      var t = (r.tags||[]).find(function(x){ return svcTags.includes(x); }) || 'plat principal';
-      setTypePill(k, t);
-    }
-  }
 }
 
 function buildRecipeDiv(idx, r) {
@@ -1409,8 +1369,8 @@ function cuisinerCetteSemaine() {
       return;
     }
     // Type lu depuis le sélecteur de la carte (avec auto-dérivation par défaut)
-    var typeSel = document.getElementById('rtype-'+k);
-    var type = typeSel ? typeSel.value : 'plat principal';
+    var svcList = ['entrée','plat principal','accompagnement','dessert','goûter','soupe'];
+    var type = (r.tags||[]).find(function(t){ return svcList.includes(t); }) || 'plat principal';
     selectionnes.push({recette: r, jourIdx: parseInt(sel.value), type: type});
   });
   if (erreur || !selectionnes.length) {
@@ -1600,7 +1560,61 @@ function sauvegarderRecetteDiner(i) {
 var recetteEnCours = null;
 var filtresTags = new Set();
 var filtreFavoris = false;
-var tagPickerOpen = null;
+var svcDropdownOpen = null;
+
+function toggleSvcDropdown(k) {
+  if (svcDropdownOpen === k) { fermeSvcDropdown(); return; }
+  fermeSvcDropdown();
+  svcDropdownOpen = k;
+  var badge = document.getElementById('rsvc-'+k);
+  if (!badge) return;
+  var r = recettesPersoMap[k];
+  var svcList = ['entrée','plat principal','accompagnement','dessert','goûter','soupe'];
+  var current = r ? (r.tags||[]).find(function(t){ return svcList.includes(t); }) : null;
+  var options = [
+    {v:'entrée',         l:'🥗 Entrée'},
+    {v:'plat principal', l:'🍽️ Plat principal'},
+    {v:'accompagnement', l:'🥦 Accompagnement'},
+    {v:'dessert',        l:'🍮 Dessert'},
+    {v:'goûter',         l:'☕ Goûter'},
+    {v:'soupe',          l:'🥣 Soupe'}
+  ];
+  var menu = document.createElement('div');
+  menu.id = 'sdrop-'+k;
+  menu.className = 'svc-menu';
+  menu.innerHTML = options.map(function(o){
+    return '<button class="'+(o.v===current?'active':'')+'" onclick="changerService(\''+k+'\',\''+o.v+'\')">'+o.l+'</button>';
+  }).join('');
+  badge.parentNode.appendChild(menu);
+  setTimeout(function(){ document.addEventListener('click', fermeSvcOutside); }, 0);
+}
+function fermeSvcOutside(e) {
+  if (!e.target.closest('.svc-menu') && !(e.target.id && e.target.id.startsWith('rsvc-'))) {
+    fermeSvcDropdown();
+    document.removeEventListener('click', fermeSvcOutside);
+  }
+}
+function fermeSvcDropdown() {
+  if (svcDropdownOpen) {
+    var el = document.getElementById('sdrop-'+svcDropdownOpen);
+    if (el) el.remove();
+    svcDropdownOpen = null;
+  }
+  document.removeEventListener('click', fermeSvcOutside);
+}
+function changerService(k, newType) {
+  var r = recettesPersoMap[k];
+  if (!r) return;
+  var svcList = ['entrée','plat principal','accompagnement','dessert','goûter','soupe'];
+  var tags = (r.tags||[]).filter(function(t){ return !svcList.includes(t); });
+  tags.unshift(newType);
+  r.tags = tags;
+  if (r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/tags').set(tags);
+  var badge = document.getElementById('rsvc-'+k);
+  if (badge) { badge.textContent = newType+' ▾'; badge.style.display = ''; }
+  fermeSvcDropdown();
+  buildTagFilterPanel();
+}
 var TAG_TAXONOMY = [
   {cat:'Service',    tags:['entrée','plat principal','dessert','goûter','soupe']},
   {cat:'Protéine',   tags:['volaille','viande rouge','cochon','gibier','poisson','fruits de mer','œufs','légumineuses','végétarien','vegan']},
@@ -1779,22 +1793,6 @@ function filtrerRecettes() {
   afficherRecettesPerso(visible);
 }
 
-function toggleTagCard(k, tag) {
-  var r = recettesPersoMap[k];
-  if (!r) return;
-  var tags = (r.tags||[]).slice();
-  var idx = tags.indexOf(tag);
-  if (idx !== -1) tags.splice(idx, 1);
-  else tags.push(tag);
-  r.tags = tags;
-  if (r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/tags').set(tags);
-  renderCardTags(k);
-  buildTagFilterPanel();
-  var picker = document.getElementById('tpicker-'+k);
-  if (picker) picker.querySelectorAll('.tag-picker-chip').forEach(function(chip){
-    chip.classList.toggle('has', tags.includes(chip.dataset.tag));
-  });
-}
 
 function renderCardTags(k) {
   var r = recettesPersoMap[k];
@@ -1812,43 +1810,9 @@ function renderCardTags(k) {
   if (!area) return;
   var nonSvcTags = (r.tags||[]).filter(function(t){ return !serviceTagsList.includes(t); });
   var tags = nonSvcTags.map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
-  area.innerHTML = tags + '<button class="tags-edit-btn" onclick="ouvrePickerTag(\''+k+'\')" title="Modifier les tags">✏️</button>';
+  area.innerHTML = tags;
 }
 
-function ouvrePickerTag(k) {
-  if (tagPickerOpen === k) { fermePickerTag(); return; }
-  fermePickerTag();
-  tagPickerOpen = k;
-  var area = document.getElementById('rtags-'+k);
-  if (!area) return;
-  var r = recettesPersoMap[k];
-  var existing = r ? (r.tags||[]) : [];
-  var picker = document.createElement('div');
-  picker.id = 'tpicker-'+k;
-  picker.className = 'tag-picker';
-  picker.innerHTML =
-    '<div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-      '<span style="font-size:.68rem;color:var(--txt2)">Cliquez pour ajouter / retirer</span>' +
-      '<button style="background:none;border:none;cursor:pointer;font-size:.8rem;color:var(--txt2)" onclick="fermePickerTag()">✕</button>' +
-    '</div>' +
-    taxonomieActive.map(function(g){
-      return '<div class="tag-picker-group">' +
-        '<span class="tag-picker-title">'+g.cat+'</span>' +
-        g.tags.map(function(t){
-          return '<button class="tag-picker-chip'+(existing.includes(t)?' has':'')+'" data-tag="'+t+'" onclick="toggleTagCard(\''+k+'\',\''+t+'\')">'+t+'</button>';
-        }).join('') +
-      '</div>';
-    }).join('');
-  area.parentNode.insertBefore(picker, area.nextSibling);
-}
-
-function fermePickerTag() {
-  if (tagPickerOpen) {
-    var el = document.getElementById('tpicker-'+tagPickerOpen);
-    if (el) el.remove();
-    tagPickerOpen = null;
-  }
-}
 
 function recomputeDin(idx) {
   var items = J[idx].dinerItems;
