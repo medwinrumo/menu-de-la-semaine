@@ -27,7 +27,14 @@ Ta mission : classifier le contenu et extraire les données structurées.
 RÈGLE ABSOLUE : Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ni après.
 
 Si c'est une RECETTE, réponds :
-{"type":"recette","data":{"nom":"Nom de la recette","emoji":"🥘","description":"Description courte 1 ligne","ingredients":["ingrédient 1","ingrédient 2"],"etapes":["Étape 1","Étape 2"],"source":"${fileName || 'import'}"}}
+{"type":"recette","data":{"nom":"Nom de la recette","emoji":"🥘","description":"Description courte 1 ligne","prepTime":"20 min","cookTime":"30 min","ingredients":["ingrédient 1","ingrédient 2"],"etapes":["Étape 1","Étape 2"],"source":"${fileName || 'import'}","tags":["plat principal","volaille","terroir français"]}}
+
+RÈGLES POUR LES TAGS :
+- Service (1 obligatoire, choisir 1) : "entrée" | "plat principal" | "dessert" | "goûter" | "soupe"
+- Protéine/Base (0-1) : "volaille" | "viande rouge" | "cochon" | "gibier" | "poisson" | "fruits de mer" | "œufs" | "légumineuses" | "végétarien" | "vegan"
+- Style (0-2) : "terroir français" | "méditerranéen" | "maghrébin" | "asiatique" | "barbecue" | "mijoté" | "grillé" | "vapeur" | "salade" | "gratin" | "pasta / risotto"
+- Nutrition (0-2) : "healthy" | "IG bas" | "anti-cholestérol" | "léger"
+Exemple : ["plat principal","volaille","terroir français","IG bas"]
 
 Si c'est un ARTICLE NUTRITION ou du contenu informatif, réponds :
 {"type":"note_nutrition","data":{"titre":"Titre court","points_cles":["Point clé 1","Point clé 2","Point clé 3"]}}

@@ -182,6 +182,18 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .source-add input:focus{outline:none;border-color:var(--acc)}
 .btn-del-recette{background:none;border:none;cursor:pointer;font-size:.9rem;opacity:.35;transition:.15s;padding:2px 5px;flex-shrink:0;line-height:1}
 .btn-del-recette:hover{opacity:1}
+.tag-badge{display:inline-block;font-size:.62rem;padding:2px 7px;border-radius:10px;background:var(--accL);color:var(--acc);margin:2px 2px 0 0;white-space:nowrap;font-weight:500}
+.btn-fav{background:none;border:none;font-size:1rem;cursor:pointer;padding:0 2px;opacity:.3;transition:.15s;line-height:1;flex-shrink:0}
+.btn-fav.active{opacity:1}
+.mr-filtres{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.btn-fav-filter{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:var(--card);font-size:.8rem;cursor:pointer;transition:.15s}
+.btn-fav-filter.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.mr-tag-select{padding:6px 10px;border:1px solid var(--border);border-radius:20px;font-size:.8rem;background:var(--card);color:var(--txt)}
+.mr-count{font-size:.78rem;color:var(--txt2);margin-left:auto}
+.din-line{display:flex;gap:5px;align-items:baseline;font-size:.88rem}
+.din-type{font-size:.68rem;color:var(--acc);font-weight:700;min-width:38px;opacity:.85;text-transform:uppercase}
+.meal-gou{border-top:1px dashed var(--border)}
+.recette-type-sel{padding:6px 10px;border:2px solid var(--acc);border-radius:var(--r);font-size:.82rem;background:var(--card);color:var(--txt)}
 </style>
 </head>
 <body>
@@ -374,6 +386,17 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <div class="shop">
 <h2>📚 Mes recettes</h2>
 <p class="mr-sub">Recettes importées via NutriCoach • Cliquez sur un nom pour voir le détail • Cochez + choisissez un jour pour cuisiner</p>
+<div class="mr-filtres" id="mr-filtres" style="display:none">
+  <button class="btn-fav-filter" id="btn-filtre-fav"
+    onclick="filtreFavoris=!filtreFavoris;this.classList.toggle('on',filtreFavoris);filtrerRecettes()">
+    ⭐ Favoris
+  </button>
+  <select class="mr-tag-select" id="mr-tag-select"
+    onchange="filtreTag=this.value;filtrerRecettes()">
+    <option value="">Tous les tags</option>
+  </select>
+  <span class="mr-count" id="mr-count"></span>
+</div>
 <div id="mes-recettes-liste">
   <p class="mr-empty">Aucune recette importée. Allez dans l'onglet NutriCoach et utilisez le bouton 📎 pour importer une recette (texte, PDF ou photo).</p>
 </div>
@@ -635,8 +658,16 @@ g.innerHTML+=
 '<button class="din-btn" data-swap-idx="'+i+'" onclick="changerRecette('+i+',this)" title="Autre recette">↺</button>' +
 '<span class="din-handle" onclick="selectSwap('+i+')" title="Intervertir ce dîner">⠿</span>' +
 '</span></div>' +
-'<div class="mc">'+j.din+'</div>' +
+'<div class="mc">' +
+(j.dinerItems && j.dinerItems.length
+  ? j.dinerItems.map(function(it){
+      var lab=it.type==='entrée'?'Entrée':it.type==='dessert'?'Dessert':'Plat';
+      return '<div class="din-line"><span class="din-type">'+lab+'</span>'+it.nom+'</div>';
+    }).join('')
+  : j.din) +
 '</div>' +
+'</div>' +
+(j.gou ? '<div class="meal meal-gou"><div class="ml">☕ Goûter</div><div class="mc">'+j.gou+'</div></div>' : '') +
 '</div>';
 });
 }
@@ -892,6 +923,7 @@ function importerRecetteUrl() {
     btn.textContent = '📥 Importer cette recette';
     btn.disabled = false;
     if (data.error) { toast('❌ ' + data.error); return; }
+    data.favoris = false;
     if (db) {
       db.ref('recettes_perso').push(data);
     } else {
@@ -1212,6 +1244,7 @@ function importerFichier(input) {
       }
       if (data.type === 'recette' && data.data) {
         var r = data.data;
+        r.favoris = false;
         if (db) {
           db.ref('recettes_perso').push(r);
         } else {
@@ -1245,33 +1278,76 @@ function importerFichier(input) {
   }
 }
 
-function afficherRecettesPerso() {
+function afficherRecettesPerso(liste) {
   recettesPersoMap = {};
   recettesPerso.forEach(function(r) {
     recettesPersoMap[r._fbKey || ('local-'+r.nom)] = r;
   });
-  var liste = document.getElementById('mes-recettes-liste');
-  if (!liste) return;
+  var el = document.getElementById('mes-recettes-liste');
+  if (!el) return;
+
+  // Barre de filtre
+  var filtresEl = document.getElementById('mr-filtres');
+  if (filtresEl) filtresEl.style.display = recettesPerso.length > 0 ? 'flex' : 'none';
+
+  // Mettre à jour le select de tags (union de tous les tags présents)
+  var tagSelect = document.getElementById('mr-tag-select');
+  if (tagSelect) {
+    var allTags = {};
+    recettesPerso.forEach(function(r){ (r.tags||[]).forEach(function(t){ allTags[t]=true; }); });
+    var tagOpts = '<option value="">Tous les tags</option>' +
+      Object.keys(allTags).sort().map(function(t){ return '<option value="'+t+'"'+(t===filtreTag?' selected':'')+'>'+t+'</option>'; }).join('');
+    tagSelect.innerHTML = tagOpts;
+  }
+
+  var srcList = liste !== undefined ? liste : recettesPerso;
+
+  // Mettre à jour le compteur
+  var countEl = document.getElementById('mr-count');
+  if (countEl) countEl.textContent = srcList.length + ' / ' + recettesPerso.length + ' recette' + (recettesPerso.length>1?'s':'');
+
   if (!recettesPerso.length) {
-    liste.innerHTML = '<p class="mr-empty">Aucune recette importée. Allez dans l\'onglet NutriCoach et utilisez le bouton 📎 pour importer une recette (texte, PDF ou photo).</p>';
+    el.innerHTML = '<p class="mr-empty">Aucune recette importée. Allez dans l\'onglet NutriCoach et utilisez le bouton 📎 pour importer une recette (texte, PDF ou photo).</p>';
     return;
   }
-  liste.innerHTML = recettesPerso.map(function(r) {
+
+  // Trier : favoris en premier, puis alphabétique
+  var sorted = srcList.slice().sort(function(a, b) {
+    if (!!b.favoris !== !!a.favoris) return b.favoris ? 1 : -1;
+    return a.nom.localeCompare(b.nom, 'fr');
+  });
+
+  if (!sorted.length) {
+    el.innerHTML = '<p class="mr-empty">Aucune recette ne correspond au filtre.</p>';
+    return;
+  }
+
+  el.innerHTML = sorted.map(function(r) {
     var k = r._fbKey || ('local-'+r.nom);
     var opts = J.map(function(j, idx) {
       return '<option value="'+idx+'">'+j.nom+'</option>';
     }).join('');
+    var tags = (r.tags||[]).map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
     return '<div class="recette-card" id="rcard-'+k+'">' +
       '<div class="recette-card-header">' +
         '<input type="checkbox" class="recette-card-check" id="rcheck-'+k+'" onchange="toggleRecetteJour(\''+k+'\')">' +
+        '<button class="btn-fav'+(r.favoris?' active':'')+'" id="rfav-'+k+'" onclick="toggleFavori(\''+k+'\')" title="Favori">'+(r.favoris?'⭐':'☆')+'</button>' +
         '<span class="recette-card-emoji">'+(r.emoji||'🥘')+'</span>' +
         '<span class="recette-card-nom" onclick="voirRecettePerso(\''+k+'\')" title="Voir la recette complète">'+(r.nom)+'</span>' +
         '<button class="btn-del-recette" onclick="supprimerRecettePerso(\''+k+'\')" title="Supprimer cette recette">🗑</button>' +
       '</div>' +
       (r.description ? '<div class="recette-card-desc">'+(r.description)+'</div>' : '') +
+      (tags ? '<div style="padding:4px 0 2px 28px">'+tags+'</div>' : '') +
       '<div class="recette-card-jour" id="rjour-'+k+'" style="display:none">' +
-        '<label>Placer le :</label>' +
-        '<select id="rsel-'+k+'"><option value="">— Choisir un jour —</option>'+opts+'</select>' +
+        '<label>Comme :</label>' +
+        '<select class="recette-type-sel" id="rtype-'+k+'">' +
+          '<option value="plat principal">🍽️ Plat principal</option>' +
+          '<option value="entrée">🥗 Entrée</option>' +
+          '<option value="dessert">🍮 Dessert</option>' +
+          '<option value="goûter">☕ Goûter</option>' +
+        '</select>' +
+        '<label>le :</label>' +
+        '<select id="rsel-'+k+'"><option value="">— Jour —</option>'+opts+'</select>' +
       '</div>' +
       '</div>';
   }).join('');
@@ -1325,7 +1401,9 @@ function cuisinerCetteSemaine() {
       erreur = true;
       return;
     }
-    selectionnes.push({recette: r, jourIdx: parseInt(sel.value)});
+    var typeEl = document.getElementById('rtype-'+k);
+    var type = typeEl ? typeEl.value : 'plat principal';
+    selectionnes.push({recette: r, jourIdx: parseInt(sel.value), type: type});
   });
   if (erreur || !selectionnes.length) {
     if (!selectionnes.length && !erreur) toast('⚠️ Cochez au moins une recette et choisissez un jour.');
@@ -1335,15 +1413,35 @@ function cuisinerCetteSemaine() {
   selectionnes.forEach(function(item) {
     var r = item.recette;
     var idx = item.jourIdx;
-    J[idx].din = r.nom;
-    J[idx].dn = r.nom;
-    J[idx].recette = r;
+    var type = item.type;
 
-    // Mettre à jour la carte dans l'onglet Recettes
-    var recipeDiv = document.getElementById('recipe-'+idx);
-    if (recipeDiv) recipeDiv.innerHTML = buildRecipeDiv(idx, r);
+    if (type === 'goûter') {
+      J[idx].gou = r.nom;
+      J[idx].recetteGou = r;
+    } else {
+      // Initialiser dinerItems si besoin
+      if (!J[idx].dinerItems) J[idx].dinerItems = [];
+      // Remplacer ou ajouter l'entrée du même type
+      var found = false;
+      J[idx].dinerItems = J[idx].dinerItems.map(function(it) {
+        if (it.type === type) { found = true; return {type:type, nom:r.nom, recette:r}; }
+        return it;
+      });
+      if (!found) J[idx].dinerItems.push({type:type, nom:r.nom, recette:r});
+      recomputeDin(idx);
 
-    if (db) db.ref('menus/'+idx).set({din:J[idx].din, dn:J[idx].dn, recette:r});
+      // Si plat principal, mettre à jour aussi la carte Recettes
+      if (type === 'plat principal') {
+        var recipeDiv = document.getElementById('recipe-'+idx);
+        if (recipeDiv) { recipeDiv.innerHTML = buildRecipeDiv(idx, r); initIngredients(); }
+      }
+    }
+
+    if (db) db.ref('menus/'+idx).set({
+      din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
+      dinerItems: J[idx].dinerItems||null,
+      gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null
+    });
   });
 
   rW();
@@ -1458,6 +1556,35 @@ function sauvegarderRecetteDiner(i) {
 
 // ===== PHASE 4 — AUTRE RECETTE =====
 var recetteEnCours = null;
+var filtreTag = '';
+var filtreFavoris = false;
+
+function toggleFavori(k) {
+  var r = recettesPersoMap[k];
+  if (!r || !r._fbKey) return;
+  r.favoris = !r.favoris;
+  if (db) db.ref('recettes_perso/' + r._fbKey + '/favoris').set(r.favoris);
+  var btn = document.getElementById('rfav-'+k);
+  if (btn) { btn.textContent = r.favoris ? '⭐' : '☆'; btn.classList.toggle('active', r.favoris); }
+}
+
+function filtrerRecettes() {
+  var visible = recettesPerso.filter(function(r) {
+    if (filtreFavoris && !r.favoris) return false;
+    if (filtreTag && !(r.tags||[]).includes(filtreTag)) return false;
+    return true;
+  });
+  afficherRecettesPerso(visible);
+}
+
+function recomputeDin(idx) {
+  var items = J[idx].dinerItems;
+  if (!items || !items.length) return;
+  J[idx].din = items.map(function(it){ return it.nom; }).join(' • ');
+  var plat = items.find(function(it){ return it.type==='plat principal'; }) || items[0];
+  J[idx].dn = plat.nom;
+  J[idx].recette = plat.recette;
+}
 
 function changerRecette(idx, btn, recettesRefusees) {
   var origText = btn.textContent;
@@ -1516,7 +1643,7 @@ function accepterRecette() {
   J[idx].recette = data;
   rW();
   var recipeDiv = document.getElementById('recipe-'+idx);
-  if (recipeDiv) recipeDiv.innerHTML = buildRecipeDiv(idx, data);
+  if (recipeDiv) { recipeDiv.innerHTML = buildRecipeDiv(idx, data); initIngredients(); }
   if (data.coursesAAjouter) {
     data.coursesAAjouter.forEach(function(item) {
       var c = document.querySelector('.si[data-cat="'+item.rayon+'"]');
@@ -1630,13 +1757,21 @@ db.ref('/').on('value',function(snapshot){
         J[idx].dn=fbM.dn;
         needRW=true;
       }
+      // Sync nouveaux champs multi-plats + goûter
+      var newDinerItems = fbM.dinerItems||null;
+      var newGou = fbM.gou||null;
+      if(JSON.stringify(J[idx].dinerItems)!==JSON.stringify(newDinerItems)){
+        J[idx].dinerItems=newDinerItems; needRW=true;
+      }
+      if(J[idx].gou!==newGou){ J[idx].gou=newGou; needRW=true; }
+      J[idx].recetteGou=fbM.recetteGou||null;
       // Sync recette si présente et différente (comparaison par nom)
       if(fbM.recette){
         var localNom=J[idx].recette?J[idx].recette.nom:null;
         if(localNom!==fbM.recette.nom){
           J[idx].recette=fbM.recette;
           var recipeDiv=document.getElementById('recipe-'+idx);
-          if(recipeDiv) recipeDiv.innerHTML=buildRecipeDiv(idx,J[idx].recette);
+          if(recipeDiv){ recipeDiv.innerHTML=buildRecipeDiv(idx,J[idx].recette); initIngredients(); }
         }
       }
     });
