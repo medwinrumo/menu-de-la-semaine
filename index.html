@@ -183,8 +183,9 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .btn-del-recette{background:none;border:none;cursor:pointer;font-size:.9rem;opacity:.35;transition:.15s;padding:2px 5px;flex-shrink:0;line-height:1}
 .btn-del-recette:hover{opacity:1}
 .tag-badge{display:inline-block;font-size:.62rem;padding:2px 7px;border-radius:10px;background:var(--accL);color:var(--acc);margin:2px 2px 0 0;white-space:nowrap;font-weight:500}
-.btn-fav{background:none;border:none;font-size:1rem;cursor:pointer;padding:0 2px;color:var(--txt2);opacity:.35;transition:.15s;line-height:1;flex-shrink:0}
+.btn-fav{background:none;border:none;font-size:1rem;cursor:pointer;padding:0 2px;color:var(--txt2);opacity:.5;transition:.15s;line-height:1;flex-shrink:0}
 .btn-fav.active{opacity:1;color:#f59e0b}
+@media(prefers-color-scheme:dark){.btn-fav{color:#8a9a9a}.btn-fav-filter,.btn-tag-filter{color:#e4eded}}
 .mr-search-row{margin-bottom:10px}
 .mr-search-input{width:100%;padding:9px 14px;border:2px solid var(--border);border-radius:20px;font-size:.88rem;background:var(--card);color:var(--txt);box-sizing:border-box;transition:.15s}
 .mr-search-input:focus{outline:none;border-color:var(--acc)}
@@ -201,6 +202,9 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .tag-chip{padding:3px 10px;border:1px solid var(--border);border-radius:16px;font-size:.72rem;cursor:pointer;background:var(--bg);color:var(--txt2);transition:.15s;white-space:nowrap}
 .tag-chip:hover{border-color:var(--acc);color:var(--acc)}
 .tag-chip.active{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tag-chip.dim{opacity:.3;cursor:default}
+.tag-chip.dim:hover{border-color:var(--border);color:var(--txt2)}
+.chip-count{font-size:.58rem;font-weight:700;opacity:.65;margin-left:2px}
 .tag-filter-reset{width:100%;padding:6px;font-size:.75rem;color:var(--txt2);background:none;border:none;border-top:1px solid var(--border);cursor:pointer;margin-top:10px;padding-top:10px;display:block}
 .tag-filter-reset:hover{color:var(--acc)}
 .mr-count{font-size:.78rem;color:var(--txt2);white-space:nowrap;margin-left:auto}
@@ -423,7 +427,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <div class="mr-filtres" id="mr-filtres" style="display:none">
   <button class="btn-fav-filter" id="btn-filtre-fav"
     onclick="filtreFavoris=!filtreFavoris;this.classList.toggle('on',filtreFavoris);filtrerRecettes()">
-    ⭐ Favoris
+    ★ Favoris
   </button>
   <button class="btn-tag-filter" id="btn-tag-filter" onclick="toggleTagFilterPanel()">
     🏷️ Tags<span id="tag-filter-badge"></span> ▾
@@ -1380,11 +1384,22 @@ function afficherRecettesPerso(liste) {
       return '<option value="'+idx+'">'+j.nom+'</option>';
     }).join('');
     var tags = (r.tags||[]).map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
+    // Auto-derive service type from tags for the selector default
+    var serviceTags = ['entrée','plat principal','dessert','goûter','soupe'];
+    var defaultType = (r.tags||[]).find(function(t){ return serviceTags.includes(t); }) || 'plat principal';
+    var typeOpts = [
+      {v:'plat principal', l:'🍽️ Plat'},
+      {v:'entrée', l:'🥗 Entrée'},
+      {v:'dessert', l:'🍮 Dessert'},
+      {v:'goûter', l:'☕ Goûter'}
+    ].map(function(o){
+      return '<option value="'+o.v+'"'+(o.v===defaultType?' selected':'')+'>'+o.l+'</option>';
+    }).join('');
     return '<div class="recette-card" id="rcard-'+k+'">' +
       (r.image ? '<img class="recette-card-img" src="'+r.image+'" alt="'+r.nom+'" onerror="this.style.display=\'none\'">' : '') +
       '<div class="recette-card-header">' +
         '<input type="checkbox" class="recette-card-check" id="rcheck-'+k+'" onchange="toggleRecetteJour(\''+k+'\')">' +
-        '<button class="btn-fav'+(r.favoris?' active':'')+'" id="rfav-'+k+'" onclick="toggleFavori(\''+k+'\')" title="Favori">'+(r.favoris?'⭐':'☆')+'</button>' +
+        '<button class="btn-fav'+(r.favoris?' active':'')+'" id="rfav-'+k+'" onclick="toggleFavori(\''+k+'\')" title="Favori">'+(r.favoris?'★':'☆')+'</button>' +
         '<span class="recette-card-emoji">'+(r.emoji||'🥘')+'</span>' +
         '<span class="recette-card-nom" onclick="voirRecettePerso(\''+k+'\')" title="Voir la recette complète">'+(r.nom)+'</span>' +
         '<button class="btn-del-recette" onclick="supprimerRecettePerso(\''+k+'\')" title="Supprimer cette recette">🗑</button>' +
@@ -1394,8 +1409,8 @@ function afficherRecettesPerso(liste) {
         tags + '<button class="tags-edit-btn" onclick="ouvrePickerTag(\''+k+'\')" title="Modifier les tags">✏️</button>' +
       '</div>' +
       '<div class="recette-card-jour" id="rjour-'+k+'" style="display:none">' +
-        '<label>Ajouter au dîner du :</label>' +
-        '<select id="rsel-'+k+'"><option value="">— Choisir un jour —</option>'+opts+'</select>' +
+        '<select class="recette-type-sel" id="rtype-'+k+'">'+typeOpts+'</select>' +
+        '<select id="rsel-'+k+'"><option value="">— Jour —</option>'+opts+'</select>' +
       '</div>' +
       '</div>';
   }).join('');
@@ -1449,9 +1464,9 @@ function cuisinerCetteSemaine() {
       erreur = true;
       return;
     }
-    // Type dérivé automatiquement du tag service de la recette
-    var serviceTags = ['entrée','plat principal','dessert','goûter','soupe'];
-    var type = (r.tags||[]).find(function(t){ return serviceTags.includes(t); }) || 'plat principal';
+    // Type lu depuis le sélecteur de la carte (avec auto-dérivation par défaut)
+    var typeSel = document.getElementById('rtype-'+k);
+    var type = typeSel ? typeSel.value : 'plat principal';
     selectionnes.push({recette: r, jourIdx: parseInt(sel.value), type: type});
   });
   if (erreur || !selectionnes.length) {
@@ -1636,16 +1651,21 @@ function buildTagFilterPanel() {
   // Reconstruire le panneau seulement s'il est visible
   var panel = document.getElementById('tag-filter-panel');
   if (!panel || panel.style.display === 'none') return;
-  var existingTags = {};
-  recettesPerso.forEach(function(r){ (r.tags||[]).forEach(function(t){ existingTags[t]=true; }); });
+  // Compter les recettes par tag
+  var countMap = {};
+  recettesPerso.forEach(function(r){ (r.tags||[]).forEach(function(t){ countMap[t]=(countMap[t]||0)+1; }); });
   var html = TAG_TAXONOMY.map(function(g) {
-    var chips = g.tags.filter(function(t){ return !!existingTags[t]; }).map(function(t){
-      return '<button class="tag-chip'+(filtresTags.has(t)?' active':'')+'" onclick="toggleFiltreTag(\''+t+'\')">'+t+'</button>';
+    var chips = g.tags.map(function(t){
+      var cnt = countMap[t]||0;
+      var isDim = cnt === 0;
+      var isActive = filtresTags.has(t);
+      var cls = 'tag-chip' + (isActive?' active':'') + (isDim?' dim':'');
+      var onclick = isDim ? '' : ' onclick="toggleFiltreTag(\''+t+'\')"';
+      var countBadge = cnt > 0 ? '<span class="chip-count">'+cnt+'</span>' : '';
+      return '<button class="'+cls+'"'+onclick+'>'+t+countBadge+'</button>';
     }).join('');
-    if (!chips) return '';
     return '<div class="tag-filter-section"><span class="tag-filter-cat-title">'+g.cat+'</span><div class="tag-filter-chips">'+chips+'</div></div>';
   }).join('');
-  if (!html) html = '<p style="font-size:.8rem;color:var(--txt2)">Aucun tag encore — importez des recettes pour en créer.</p>';
   if (filtresTags.size > 0) html += '<button class="tag-filter-reset" onclick="resetTagFilter()">✕ Effacer tous les filtres</button>';
   panel.innerHTML = html;
 }

@@ -42,13 +42,17 @@ module.exports = async function handler(req, res) {
     const recipeJsonLd = extractJsonLd(html);
     if (recipeJsonLd) {
       const recipe = formatRecipe(recipeJsonLd, url, ogImage);
-      // Enrichissement Claude : tags + astuces + infosSante
-      const enrichment = await enrichirAvecClaude(recipe);
-      recipe.tags = enrichment.tags || [];
-      recipe.astuces = enrichment.astuces || [];
-      recipe.infosSante = enrichment.infosSante || [];
-      recipe.favoris = false;
-      return res.status(200).json(recipe);
+      // Valider que le JSON-LD contient les données essentielles
+      if (recipe.ingredients.length >= 2 && recipe.etapes.length >= 1) {
+        // Enrichissement Claude : tags + astuces + infosSante
+        const enrichment = await enrichirAvecClaude(recipe);
+        recipe.tags = enrichment.tags || [];
+        recipe.astuces = enrichment.astuces || [];
+        recipe.infosSante = enrichment.infosSante || [];
+        recipe.favoris = false;
+        return res.status(200).json(recipe);
+      }
+      // JSON-LD incomplet → fallback Claude pour extraction complète
     }
 
     // 4. Fallback : Claude Sonnet extrait tout depuis le HTML structuré
@@ -230,14 +234,21 @@ async function extractWithClaude(html, url, ogImage) {
 URL : ${url}
 Image og:image détectée : ${ogImage || 'non trouvée'}
 
+PRIORITÉ ABSOLUE (dans cet ordre) :
+1. La liste complète des INGRÉDIENTS avec quantités exactes (cherche les sections "Ingrédients", "Il vous faut", "Pour la recette")
+2. Les ÉTAPES de préparation dans l'ordre (cherche "Préparation", "Instructions", "Étapes", "Recette")
+3. Les ASTUCES, CONSEILS, "Le petit plus", "Variantes", "Notre conseil"
+4. Les INFOS SANTÉ, informations nutritionnelles
+
 Réponds UNIQUEMENT avec ce JSON valide :
-{"nom":"Nom complet","emoji":"🥘","description":"Description 1-2 phrases","prepTime":"20 min","cookTime":"30 min","ingredients":["200g de poulet","1 c.s. huile olive"],"etapes":["Étape 1 complète","Étape 2 complète"],"astuces":["Conseil pratique","Variante possible"],"infosSante":["Riche en fibres","Faible IG"],"image":"${ogImage || 'null'}","source":"${url}","url":"${url}","tags":["plat principal","volaille","terroir français"]}
+{"nom":"Nom complet","emoji":"🥘","description":"Description 1-2 phrases","prepTime":"20 min","cookTime":"30 min","ingredients":["200g de poulet","1 c.s. huile olive"],"etapes":["Étape 1 complète","Étape 2 complète"],"astuces":["Conseil pratique","Variante possible"],"infosSante":["Riche en fibres","Faible IG"],"image":"${ogImage || null}","source":"${url}","url":"${url}","tags":["plat principal","volaille","terroir français"]}
 
 RÈGLES CRITIQUES :
-- Extrais TOUS les ingrédients avec leurs quantités exactes (ne saute aucun)
-- Extrais TOUTES les étapes dans l'ordre (ne les fusionne pas en une seule)
-- Recherche les sections "Astuces", "Conseils", "Le petit plus", "Variantes", "Info santé", "À savoir", "Notre conseil"
-- Pour l'image : utilise "${ogImage || 'null'}" ou null si non disponible
+- Si tu trouves une liste "Ingrédients" : extrais CHAQUE ligne sans en sauter une seule
+- Si tu trouves une section "Préparation" ou "Instructions" : extrais CHAQUE étape séparément
+- Ne fusionne JAMAIS plusieurs étapes en une seule
+- Les tableaux "ingredients" et "etapes" ne doivent JAMAIS être vides si la page contient une recette
+- Pour l'image : utilise "${ogImage || null}" ou null si non disponible
 - Pour les tags : ${TAG_RULES}
 - Si le contenu n'est pas une recette : {"erreur":"Explication"}
 
