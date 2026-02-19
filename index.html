@@ -740,7 +740,7 @@ function sortDI(arr) {
   var sat = new Date(today); sat.setDate(today.getDate() - daysSinceSat);
   var ven = new Date(sat); ven.setDate(sat.getDate() + 6);
   var el = document.getElementById('wk-label');
-  if (el) el.textContent = '📅 ' + sat.getDate() + ' ' + moisCourt[sat.getMonth()] + ' → ' + ven.getDate() + ' ' + moisCourt[ven.getMonth()] + ' ' + ven.getFullYear();
+  if (el) el.textContent = '📅 Samedi ' + sat.getDate() + ' ' + moisCourt[sat.getMonth()] + ' → Vendredi ' + ven.getDate() + ' ' + moisCourt[ven.getMonth()] + ' ' + ven.getFullYear();
 })();
 function rW(){
 var g=document.getElementById('weekgrid');g.innerHTML='';
