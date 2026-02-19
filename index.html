@@ -348,7 +348,9 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 <span onclick="sTo('cat-herbes')">🌿 Herbes</span>
 <span onclick="sTo('cat-oleagineux')">🥜 Oléagineux</span>
 <span onclick="sTo('cat-traiteur')">🫕 Traiteur</span>
-<span onclick="sTo('cat-hygiene')">🧹 Hygiène</span>
+<span onclick="sTo('cat-boissons')">🥤 Boissons</span>
+<span onclick="sTo('cat-surgeles')">🧊 Surgelés</span>
+<span onclick="sTo('cat-entretien')">🧹 Entretien</span>
 <span onclick="sTo('cat-sante')">💊 Santé</span>
 <span onclick="sTo('cat-corps')">🧴 Corps</span>
 <span onclick="sTo('cat-divers')">🏷️ Divers</span>
@@ -462,8 +464,14 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 <label class="sitem"><input type="checkbox" onchange="bascule(this)"><span class="sn">Tzatziki (maison ou pot)</span><span class="sr">Mer. collation crudités</span></label>
 </div></div>
 
-<div class="scat" id="cat-hygiene"><h4>🧹 Hygiène maison</h4><div class="si" data-cat="hygiene"></div>
-<p class="ph">Ajoutez ci-dessous : lessive, liquide vaisselle, éponges…</p></div>
+<div class="scat" id="cat-boissons"><h4>🥤 Boissons</h4><div class="si" data-cat="boissons"></div>
+<p class="ph">Ajoutez ci-dessous : eau, jus, café, thé, lait végétal…</p></div>
+
+<div class="scat" id="cat-surgeles"><h4>🧊 Surgelés</h4><div class="si" data-cat="surgeles"></div>
+<p class="ph">Ajoutez ci-dessous : légumes surgelés, poisson surgelé…</p></div>
+
+<div class="scat" id="cat-entretien"><h4>🧹 Entretien</h4><div class="si" data-cat="entretien"></div>
+<p class="ph">Ajoutez ci-dessous : liquide vaisselle, lessive, nettoyant, éponges…</p></div>
 
 <div class="scat" id="cat-sante"><h4>💊 Santé / Pharmacie</h4><div class="si" data-cat="sante"></div>
 <p class="ph">Ajoutez ci-dessous : pansements, vitamines…</p></div>
@@ -488,7 +496,8 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 <option value="feculents">🌾 Féculents</option><option value="boulangerie">🍞 Boulangerie</option>
 <option value="epicerie">🫙 Épicerie</option><option value="herbes">🌿 Herbes</option>
 <option value="oleagineux">🥜 Oléagineux</option><option value="traiteur">🫕 Traiteur</option>
-<option value="hygiene">🧹 Hygiène</option><option value="sante">💊 Santé</option>
+<option value="boissons">🥤 Boissons</option><option value="surgeles">🧊 Surgelés</option>
+<option value="entretien">🧹 Entretien</option><option value="sante">💊 Santé</option>
 <option value="corps">🧴 Corps</option><option value="divers" selected>🏷️ Divers</option>
 </select>
 <button onclick="ajP()">Ajouter</button>

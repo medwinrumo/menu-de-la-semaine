@@ -48,7 +48,7 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
   ]
 }
 
-Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur`;
+Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers`;
 
     const message = await client.messages.create({
       model: 'claude-opus-4-6',

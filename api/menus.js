@@ -82,7 +82,7 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
 }
 
 Génère les 7 jours en respectant exactement cette structure JSON.
-Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur`;
+Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers`;
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',

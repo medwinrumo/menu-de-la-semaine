@@ -87,7 +87,7 @@ Quand l'utilisateur te demande une modification de menu, réponds UNIQUEMENT ave
 Jours disponibles (jour_idx) :
 0=Samedi, 1=Dimanche, 2=Lundi, 3=Mardi, 4=Mercredi, 5=Jeudi, 6=Vendredi
 
-Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur
+Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers
 
 Pour générer toute la semaine :
 {"reponse":"Je génère une nouvelle semaine complète...","action":{"type":"generer_semaine"}}
@@ -95,7 +95,7 @@ Pour générer toute la semaine :
 Pour ajouter des produits à la liste de courses (quand l'utilisateur dicte une liste) :
 {"reponse":"J'ajoute ces produits à votre liste de courses.","action":{"type":"ajouter_courses","produits":[{"nom":"Lait demi-écrémé","rayon":"laitier"},{"nom":"Pain de seigle","rayon":"boulangerie"}]}}
 
-Rayons disponibles pour ajouter_courses : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur
+Rayons disponibles pour ajouter_courses : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers
 
 ## RÈGLES DE RÉPONSE
 - Langue : français uniquement
