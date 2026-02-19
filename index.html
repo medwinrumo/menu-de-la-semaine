@@ -171,6 +171,15 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .btn-cuisiner:disabled{opacity:.5;cursor:wait;transform:none}
 .mr-empty{color:var(--txt2);font-style:italic;font-size:.86rem;text-align:center;padding:30px 0}
 .mr-sub{color:var(--txt2);font-size:.82rem;margin-bottom:16px}
+.source-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px}
+.source-card a{font-weight:700;font-size:.88rem;color:var(--acc);text-decoration:none;word-break:break-all}
+.source-card a:hover{text-decoration:underline}
+.source-card-desc{font-size:.78rem;color:var(--txt2);margin-top:3px;line-height:1.4}
+.source-card-body{flex:1}
+.source-section-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt2);margin:18px 0 8px}
+.source-add{display:flex;flex-direction:column;gap:8px;margin-top:18px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r)}
+.source-add input{padding:9px 12px;border:2px solid var(--border);border-radius:var(--r);font-size:.85rem;background:var(--bg);color:var(--txt);width:100%;box-sizing:border-box}
+.source-add input:focus{outline:none;border-color:var(--acc)}
 .btn-del-recette{background:none;border:none;cursor:pointer;font-size:.9rem;opacity:.35;transition:.15s;padding:2px 5px;flex-shrink:0;line-height:1}
 .btn-del-recette:hover{opacity:1}
 </style>
@@ -188,6 +197,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <button onclick="tab('recettes',this)">👨‍🍳 Recettes</button>
 <button onclick="tab('courses',this)">🛒 Courses</button>
 <button onclick="tab('mesrecettes',this)">📚 Mes recettes</button>
+<button onclick="tab('sources',this)">🔗 Sources</button>
 <button onclick="tab('chat',this)">💬 NutriCoach</button>
 </div>
 
@@ -368,6 +378,29 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
   <p class="mr-empty">Aucune recette importée. Allez dans l'onglet NutriCoach et utilisez le bouton 📎 pour importer une recette (texte, PDF ou photo).</p>
 </div>
 <button class="btn-cuisiner" id="btn-cuisiner" onclick="cuisinerCetteSemaine()">🍽️ Cuisiner cette semaine</button>
+</div>
+</div>
+
+<!-- ===== SOURCES ===== -->
+<div id="sources" class="pnl">
+<div class="shop">
+<h2>🔗 Sources de référence</h2>
+<p class="mr-sub">Sites et comptes utilisés par NutriCoach pour proposer des recettes adaptées à ton profil santé.</p>
+
+<div class="source-section-title">📌 Sites intégrés par défaut</div>
+<div id="sources-defaut"></div>
+
+<div class="source-section-title">⭐ Mes sources ajoutées</div>
+<div id="sources-perso">
+  <p class="mr-empty" id="sources-perso-empty">Aucune source ajoutée. Utilise le formulaire ci-dessous ou demande à NutriCoach d'ajouter un site via le chat.</p>
+</div>
+
+<div class="source-add">
+  <strong style="font-size:.85rem">Ajouter une source</strong>
+  <input type="url" id="source-url-input" placeholder="https://... ou @compte_instagram">
+  <input type="text" id="source-desc-input" placeholder="Description courte (spécialité, type de recettes...)">
+  <button class="btn-cuisiner" style="margin-top:4px" onclick="ajouterSourceManuelle()">＋ Ajouter à mes sources</button>
+</div>
 </div>
 </div>
 
@@ -768,6 +801,77 @@ function ingAnnuler(id) {
 
 // ===== SITES RESSOURCES =====
 var sitesExtra = [];
+
+// ===== ONGLET SOURCES =====
+var SITES_DEFAUT = [
+  { url: 'https://cuisinerigbas.com', desc: 'Cuisine IG bas quotidienne, plats mijotés, terroir adapté' },
+  { url: 'https://www.lanutrition.fr/cuisine-et-recettes/recettes-sante/index-glycemique-bas', desc: 'Recettes IG bas validées scientifiquement, légumineuses, céréales complètes' },
+  { url: 'https://www.santemagazine.fr', desc: 'Menus anti-cholestérol cuisine familiale française, huile colza/noix' },
+  { url: 'https://www.primevere.com/idees-recettes/plats/', desc: 'Plats terroir/famille allégés cholestérol (pizzas, gratins, parmentier, falafels)' },
+  { url: 'https://bienvenuechezvero.fr', desc: 'Blog IG bas familial, légumineuses, bons gras, féculents complets' },
+  { url: 'https://saines-gourmandises.fr', desc: 'Cuisine terroir gourmande IG bas, tartes salées, gratins, pains complets' },
+  { url: 'http://www.adoptelacuisineigbas.com', desc: 'Recettes quotidiennes IG bas, légumes, légumineuses, farines complètes' },
+  { url: 'https://jow.fr', desc: 'Recettes et conseils IG bas, féculents complets, association protéines/fibres/graisses' },
+  { url: 'https://www.cuisineaz.com', desc: 'Recettes anti-cholestérol et IG bas gourmandes, poulet, légumes, féculents' },
+  { url: 'https://www.marieclaire.fr/cuisine', desc: 'Recettes anti-cholestérol cuisine française et méditerranéenne' },
+  { url: 'https://www.passionnutrition.com', desc: 'Diététicienne IG bas, recettes cholestérol, association fibres+protéines+bonnes graisses' },
+  { url: 'https://www.isabellehuot.com', desc: 'Recettes santé cholestérol, petits-déjeuners protéinés, collations crues' },
+  { url: 'https://lacerisesurlemaillot.fr', desc: 'Cuisine familiale IG bas, terroir français, alternatives légères' },
+  { url: 'https://www.750g.com', desc: 'Recettes saines adaptables, large base, filtrage possible IG bas' }
+];
+
+function nomDomaine(url) {
+  try { return new URL(url).hostname.replace('www.', ''); } catch(e) { return url; }
+}
+
+function afficherSourcesDefaut() {
+  var el = document.getElementById('sources-defaut');
+  if (!el) return;
+  el.innerHTML = SITES_DEFAUT.map(function(s) {
+    return '<div class="source-card">' +
+      '<div class="source-card-body">' +
+      '<a href="'+s.url+'" target="_blank" rel="noopener">'+nomDomaine(s.url)+'</a>' +
+      '<div class="source-card-desc">'+s.desc+'</div>' +
+      '</div></div>';
+  }).join('');
+}
+
+function afficherSourcesPerso() {
+  var el = document.getElementById('sources-perso');
+  var empty = document.getElementById('sources-perso-empty');
+  if (!el) return;
+  var cards = sitesExtra.map(function(s, i) {
+    return '<div class="source-card">' +
+      '<div class="source-card-body">' +
+      '<a href="'+(s.url.startsWith('http') ? s.url : 'https://'+s.url)+'" target="_blank" rel="noopener">'+nomDomaine(s.url)+'</a>' +
+      '<div class="source-card-desc">'+(s.desc||'')+'</div>' +
+      '</div>' +
+      '<button class="btn-del-recette" onclick="supprimerSource('+i+')" title="Supprimer">🗑</button>' +
+      '</div>';
+  }).join('');
+  el.innerHTML = cards || '';
+  if (empty) empty.style.display = sitesExtra.length ? 'none' : '';
+}
+
+function ajouterSourceManuelle() {
+  var url = document.getElementById('source-url-input').value.trim();
+  var desc = document.getElementById('source-desc-input').value.trim();
+  if (!url) { toast('Saisis une URL ou un compte'); return; }
+  var site = { url: url, desc: desc };
+  sitesExtra.push(site);
+  if (db) db.ref('sites_ressources').push(site);
+  document.getElementById('source-url-input').value = '';
+  document.getElementById('source-desc-input').value = '';
+  afficherSourcesPerso();
+  toast('✅ Source ajoutée !');
+}
+
+function supprimerSource(i) {
+  var s = sitesExtra[i];
+  if (!s) return;
+  if (s._fbKey && db) { db.ref('sites_ressources/'+s._fbKey).remove(); }
+  else { sitesExtra.splice(i, 1); afficherSourcesPerso(); }
+}
 
 // ===== PHASE 8 — PROFIL DYNAMIQUE + RECETTES PERSO =====
 var profilExtra = {};
@@ -1470,7 +1574,12 @@ db.ref('/').on('value',function(snapshot){
   appliquerDepuisFirebase(data.courses || {});
   appliquerIngredientsFirebase(data.ingredients || null);
   if(data.sites_ressources) {
-    sitesExtra = Object.values(data.sites_ressources);
+    sitesExtra = Object.keys(data.sites_ressources).map(function(key) {
+      var s = data.sites_ressources[key];
+      s._fbKey = key;
+      return s;
+    });
+    afficherSourcesPerso();
   }
   if(data.profil) {
     profilExtra = {};
@@ -1488,6 +1597,8 @@ db.ref('/').on('value',function(snapshot){
     afficherRecettesPerso();
   }
 });
+
+afficherSourcesDefaut();
 </script>
 </body>
 </html>
