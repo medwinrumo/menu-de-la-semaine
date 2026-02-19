@@ -1570,7 +1570,7 @@ function buildMultiRecipeDiv(idx) {
     var r = item.recette;
     if (!r) return;
     var tl = typeLabels[item.type] || item.type;
-    html += '<div style="margin:16px 0 4px;padding-bottom:4px;border-bottom:2px solid var(--acc)"><span style="font-size:.68rem;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.06em">'+tl+'</span></div>' +
+    html += '<div style="margin:20px 0 8px"><span class="service-tag-badge">'+tl+'</span></div>' +
       '<div class="recipe-top"><h3>'+r.nom+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
       '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+dayNom+'</span></div>' +
       (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
@@ -1579,7 +1579,7 @@ function buildMultiRecipeDiv(idx) {
   });
   if (J[idx].gou && J[idx].recetteGou) {
     var rg = J[idx].recetteGou;
-    html += '<div style="margin:16px 0 4px;padding-bottom:4px;border-bottom:2px solid var(--acc)"><span style="font-size:.68rem;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.06em">☕ Goûter</span></div>' +
+    html += '<div style="margin:20px 0 8px"><span class="service-tag-badge">☕ Goûter</span></div>' +
       '<div class="recipe-top"><h3>'+rg.nom+'</h3><div class="r-ico">'+(rg.emoji||'☕')+'</div></div>' +
       '<h4>Ingrédients</h4><ul>'+toArr(rg.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
       '<h4>Préparation</h4><ol>'+toArr(rg.etapes).map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>';
