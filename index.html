@@ -509,7 +509,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <div style="background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:var(--r2);padding:16px">
   <strong style="font-size:.85rem;color:#b91c1c">⚠️ Zone dangereuse</strong>
   <p style="font-size:.82rem;color:var(--txt2);margin:6px 0 12px">Remet le planning et la liste de courses à zéro. <b>Vos recettes personnelles sont conservées.</b></p>
-  <button onclick="reinitialiserSysteme()" style="background:#dc2626;color:#fff;border:none;padding:9px 18px;border-radius:var(--r);font-size:.85rem;font-weight:600;cursor:pointer">🗑️ Réinitialiser le planning</button>
+  <button onclick="reinitialiserSysteme()" style="background:#dc2626;color:#fff;border:none;padding:9px 18px;border-radius:var(--r);font-size:.85rem;font-weight:600;cursor:pointer">⚠️ Réinitialiser le planning</button>
 </div>
 </div>
 </div>
@@ -2284,7 +2284,6 @@ function reinitialiserSysteme() {
   if (db) {
     ops.push(db.ref('menus').remove());
     ops.push(db.ref('courses').remove());
-    ops.push(db.ref('ingredients').remove());
   }
   Promise.all(ops).then(function(){ location.reload(); }).catch(function(){ location.reload(); });
 }
