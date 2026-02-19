@@ -234,6 +234,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .mr-count{font-size:.78rem;color:var(--txt2);white-space:nowrap;margin-left:auto}
 .din-line{display:flex;gap:5px;align-items:baseline;font-size:.88rem}
 .din-type{font-size:.68rem;color:var(--acc);font-weight:700;min-width:38px;opacity:.85;text-transform:uppercase}
+.btn-del-service{background:none;border:none;color:var(--txt2);font-size:.72rem;cursor:pointer;padding:0 0 0 6px;opacity:.35;transition:.15s;flex-shrink:0;line-height:1;margin-left:auto}
+.btn-del-service:hover{opacity:1;color:#e55}
 .meal-gou{border-bottom:1px dashed var(--border)}
 .recette-type-sel{padding:6px 10px;border:2px solid var(--acc);border-radius:var(--r);font-size:.82rem;background:var(--card);color:var(--txt)}
 .tags-edit-btn{background:none;border:none;cursor:pointer;font-size:.72rem;color:var(--txt2);padding:0 3px;opacity:.45;transition:.15s;line-height:1}
@@ -738,7 +740,7 @@ g.innerHTML+=
 (j.dinerItems && j.dinerItems.length
   ? j.dinerItems.map(function(it){
       var lab=it.type==='entrée'?'Entrée':it.type==='dessert'?'Dessert':it.type==='accompagnement'?'Accomp.':it.type==='goûter'?'Goûter':'Plat';
-      return '<div class="din-line"><span class="din-type">'+lab+'</span>'+it.nom+'</div>';
+      return '<div class="din-line"><span class="din-type">'+lab+'</span>'+it.nom+'<button class="btn-del-service" onclick="event.stopPropagation();supprimerService('+i+',\''+it.type+'\')" title="Supprimer ce service">✕</button></div>';
     }).join('')
   : j.din) +
 '</div>' +
@@ -2032,6 +2034,28 @@ function recomputeDin(idx) {
   var plat = items.find(function(it){ return it.type==='plat principal'; }) || items[0];
   J[idx].dn = plat.nom;
   J[idx].recette = plat.recette;
+}
+
+function supprimerService(idx, type) {
+  if (!J[idx] || !J[idx].dinerItems) return;
+  J[idx].dinerItems = J[idx].dinerItems.filter(function(it){ return it.type !== type; });
+  if (!J[idx].dinerItems.length) J[idx].dinerItems = null;
+  recomputeDin(idx);
+  var recipeDiv = document.getElementById('recipe-'+idx);
+  if (recipeDiv) {
+    if (J[idx].dinerItems && J[idx].dinerItems.length > 0) {
+      recipeDiv.innerHTML = buildMultiRecipeDiv(idx);
+    } else if (J[idx].recette) {
+      recipeDiv.innerHTML = buildRecipeDiv(idx, J[idx].recette);
+    }
+    initIngredients();
+  }
+  if (db) db.ref('menus/'+idx).set({
+    din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
+    dinerItems: J[idx].dinerItems||null,
+    gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null
+  });
+  rW();
 }
 
 function changerRecette(idx, btn, recettesRefusees) {
