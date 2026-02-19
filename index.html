@@ -436,23 +436,12 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <div class="scat" id="cat-traiteur"><h4>🫕 Fait maison / Traiteur</h4><div class="si" data-cat="traiteur">
 </div></div>
 
-<div class="scat" id="cat-boissons"><h4>🥤 Boissons</h4><div class="si" data-cat="boissons"></div>
-<p class="ph">Ajoutez ci-dessous : eau, jus, café, thé, lait végétal…</p></div>
-
-<div class="scat" id="cat-surgeles"><h4>🧊 Surgelés</h4><div class="si" data-cat="surgeles"></div>
-<p class="ph">Ajoutez ci-dessous : légumes surgelés, poisson surgelé…</p></div>
-
-<div class="scat" id="cat-entretien"><h4>🧹 Entretien</h4><div class="si" data-cat="entretien"></div>
-<p class="ph">Ajoutez ci-dessous : liquide vaisselle, lessive, nettoyant, éponges…</p></div>
-
-<div class="scat" id="cat-sante"><h4>💊 Santé / Pharmacie</h4><div class="si" data-cat="sante"></div>
-<p class="ph">Ajoutez ci-dessous : pansements, vitamines…</p></div>
-
-<div class="scat" id="cat-corps"><h4>🧴 Soin du corps</h4><div class="si" data-cat="corps"></div>
-<p class="ph">Ajoutez ci-dessous : shampoing, savon, crème…</p></div>
-
-<div class="scat" id="cat-divers"><h4>🏷️ Divers</h4><div class="si" data-cat="divers"></div>
-<p class="ph">Ajoutez ci-dessous : piles, ampoules…</p></div>
+<div class="scat" id="cat-boissons"><h4>🥤 Boissons</h4><div class="si" data-cat="boissons"></div></div>
+<div class="scat" id="cat-surgeles"><h4>🧊 Surgelés</h4><div class="si" data-cat="surgeles"></div></div>
+<div class="scat" id="cat-entretien"><h4>🧹 Entretien</h4><div class="si" data-cat="entretien"></div></div>
+<div class="scat" id="cat-sante"><h4>💊 Santé / Pharmacie</h4><div class="si" data-cat="sante"></div></div>
+<div class="scat" id="cat-corps"><h4>🧴 Soin du corps</h4><div class="si" data-cat="corps"></div></div>
+<div class="scat" id="cat-divers"><h4>🏷️ Divers</h4><div class="si" data-cat="divers"></div></div>
 
 </div>
 
@@ -561,7 +550,7 @@ g.innerHTML+=
       var lab=it.type==='entrée'?'Entrée':it.type==='dessert'?'Dessert':it.type==='accompagnement'?'Accomp.':it.type==='goûter'?'Goûter':'Plat';
       return '<div class="din-line"><span class="din-type">'+lab+'</span>'+it.nom+'<button class="btn-del-service" onclick="event.stopPropagation();supprimerService('+i+',\''+it.type+'\')" title="Supprimer ce service">✕</button></div>';
     }).join('')
-  : j.din) +
+  : j.din||'') +
 '</div>' +
 '</div>' +
 '</div>';
@@ -576,7 +565,12 @@ document.getElementById(id).classList.add('on');btn.classList.add('on');
 }
 function sTo(id){var e=document.getElementById(id);if(e)e.scrollIntoView({behavior:'smooth',block:'start'});}
 
-function mC(){}
+function mC(){
+  document.querySelectorAll('#liste-principale .scat').forEach(function(cat){
+    var hasItems=cat.querySelector('.sitem')!==null;
+    cat.style.display=hasItems?'':'none';
+  });
+}
 function bascule(cb){
 var it=cb.closest('.sitem');var cd=document.getElementById('caddie');
 if(cb.checked){
