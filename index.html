@@ -593,7 +593,10 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
     <h2 id="modal-titre"></h2>
     <button class="modal-close" onclick="fermerModal()">✕</button>
   </div>
-  <div class="rmeta" id="modal-meta"></div>
+  <div id="modal-infos" style="display:none">
+    <h4>Infos pratiques</h4>
+    <div class="rmeta" id="modal-meta"></div>
+  </div>
   <div id="modal-url"></div>
   <h4>Ingrédients</h4>
   <ul id="modal-ingredients"></ul>
@@ -1490,8 +1493,12 @@ function changerRecette(idx, btn, recettesRefusees) {
 
 function afficherModal(data) {
   document.getElementById('modal-titre').textContent = data.emoji + ' ' + data.nom;
-  document.getElementById('modal-meta').innerHTML =
-    '<span><b>Prépa :</b> '+data.prepTime+'</span><span><b>Cuisson :</b> '+data.cookTime+'</span>';
+  var metas = [];
+  if (data.prepTime && data.prepTime !== '—') metas.push('<span><b>Prépa :</b> '+data.prepTime+'</span>');
+  if (data.cookTime && data.cookTime !== '—') metas.push('<span><b>Cuisson :</b> '+data.cookTime+'</span>');
+  var infosEl = document.getElementById('modal-infos');
+  if (infosEl) infosEl.style.display = metas.length ? '' : 'none';
+  document.getElementById('modal-meta').innerHTML = metas.join('');
   var urlEl = document.getElementById('modal-url');
   urlEl.innerHTML = data.url
     ? '<a class="recipe-link" href="'+data.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>'

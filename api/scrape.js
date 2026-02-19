@@ -101,11 +101,18 @@ function formatRecipe(r, url) {
 
 function parseDuration(iso) {
   if (!iso) return '—';
-  const h = (iso.match(/(\d+)H/) || [])[1];
-  const m = (iso.match(/(\d+)M/) || [])[1];
-  if (h && m) return h + 'h' + m;
-  if (h) return h + 'h';
-  if (m) return m + ' min';
+  // Nombre entier = minutes
+  if (typeof iso === 'number') return iso + ' min';
+  const str = String(iso);
+  // ISO 8601 : extraire la partie temps après le T (évite de matcher le M des mois)
+  const timePart = str.includes('T') ? str.split('T')[1] : str;
+  const h = (timePart.match(/(\d+)H/) || [])[1];
+  const m = (timePart.match(/(\d+)M/) || [])[1];
+  if (h && parseInt(h) > 0 && m && parseInt(m) > 0) return h + 'h' + m;
+  if (h && parseInt(h) > 0) return h + 'h';
+  if (m && parseInt(m) > 0) return m + ' min';
+  // Texte libre avec chiffres ("20 minutes", "1h30"…)
+  if (/\d/.test(str) && !/^P/i.test(str)) return str;
   return '—';
 }
 
