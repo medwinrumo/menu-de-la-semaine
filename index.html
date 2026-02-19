@@ -1649,11 +1649,17 @@ function ouvrePickerTag(k) {
       return '<div class="tag-picker-group">' +
         '<span class="tag-picker-title">'+g.cat+'</span>' +
         g.tags.map(function(t){
-          return '<button class="tag-picker-chip'+(existing.includes(t)?' has':'')+'" data-tag="'+t+'" onclick="toggleTagCard(\''+k+'\',\''+t+'\')">'+t+'</button>';
+          return '<button class="tag-picker-chip'+(existing.includes(t)?' has':'')+'" data-tag="'+t+'" onclick="event.stopPropagation();toggleTagCard(\''+k+'\',\''+t+'\')">'+t+'</button>';
         }).join('') +
       '</div>';
     }).join('');
   area.parentNode.insertBefore(picker, area.nextSibling);
+  setTimeout(function(){ document.addEventListener('click', fermePickerOutside); }, 0);
+}
+function fermePickerOutside(e) {
+  if (!e.target.closest('.tag-picker') && !e.target.classList.contains('tags-edit-btn')) {
+    fermePickerTag();
+  }
 }
 function fermePickerTag() {
   if (tagPickerOpen) {
@@ -1661,6 +1667,7 @@ function fermePickerTag() {
     if (el) el.remove();
     tagPickerOpen = null;
   }
+  document.removeEventListener('click', fermePickerOutside);
 }
 function changerService(k, newType) {
   var r = recettesPersoMap[k];
