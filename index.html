@@ -1498,6 +1498,74 @@ function buildRecipeDiv(idx, r) {
     '<ol>'+toArr(r.etapes).map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>';
 }
 
+function devinerRayon(ing) {
+  var s = ing.toLowerCase();
+  var map = [
+    ['legumes',    ['carotte','courgette','aubergine','poivron','tomate','poireau','oignon','échalote','ail','pomme de terre','patate','brocoli','chou','épinard','salade','laitue','céleri','navet','betterave','radis','fenouil','artichaut','asperge','haricot vert','petits pois','concombre','champignon','courge','potiron','potimarron','roquette','blette','endive','mâche','cresson','légume']],
+    ['fruits',     ['pomme','poire','orange','citron','mandarine','banane','fraise','framboise','myrtille','cerise','pêche','abricot','prune','mangue','ananas','kiwi','raisin','melon','pastèque','figue','grenade','avocat']],
+    ['viandes',    ['poulet','dinde','canard','pintade','lapin','bœuf','veau','agneau','porc','cochon','lardons','jambon','saucisse','merguez','chorizo','steak','escalope','côtelette','filet','volaille','gibier','viande','blanc de poulet']],
+    ['traiteur',   ['saumon','thon','cabillaud','maquereau','truite','sardine','bar','dorade','crevette','moule','huître','poulpe','calamar','anchois','poisson','fruits de mer']],
+    ['laitier',    ['lait','crème fraîche','crème','yaourt','beurre','fromage','mozzarella','parmesan','emmental','gruyère','ricotta','feta','mascarpone','cheddar','kefir','camembert','comté']],
+    ['feculents',  ['pâtes','pasta','riz','semoule','boulgour','quinoa','avoine','épeautre','millet','polenta','vermicelle','nouille','lasagne','gnocchi','fécule']],
+    ['boulangerie',['pain','baguette','brioche','farine','levure']],
+    ['herbes',     ['basilic','persil','coriandre','thym','romarin','laurier','menthe','ciboulette','origan','cumin','curry','paprika','curcuma','cannelle','gingembre','ras el hanout','safran','cardamome','épice']],
+    ['oleagineux', ['noix','amande','noisette','pistache','cajou','graine','sésame','lin','tournesol','chia','cacahuète','tahini']],
+    ['epicerie',   ['huile','vinaigre','sucre','bouillon','cube','miel','conserve','pois chiche','lentille','haricot','fève','lait de coco','concentré','moutarde','sauce soja','sauce tomate','cornichon']]
+  ];
+  for (var i = 0; i < map.length; i++) {
+    var kws = map[i][1];
+    if (kws.some(function(k){return s.includes(k);})) return map[i][0];
+  }
+  return 'epicerie';
+}
+
+function ajouterProduit(nom, rayon, label) {
+  if (!nom) return;
+  var nomLow = nom.toLowerCase();
+  var existe = false;
+  document.querySelectorAll('#liste-principale .sitem .sn').forEach(function(el) {
+    if (el.textContent.toLowerCase() === nomLow) existe = true;
+  });
+  if (existe) return;
+  var c = document.querySelector('.si[data-cat="'+rayon+'"]');
+  if (!c) c = document.querySelector('.si[data-cat="epicerie"]');
+  if (!c) return;
+  var ph = c.closest('.scat').querySelector('.ph');
+  if (ph) ph.remove();
+  var l = document.createElement('label');
+  l.className = 'sitem';
+  l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nom+'</span><span class="sr">'+(label||'🍽️ Recette semaine')+'</span>';
+  c.appendChild(l);
+  if (db) db.ref('courses/ajoutes').push({nom:nom, rayon:rayon});
+  mC();
+}
+
+function buildMultiRecipeDiv(idx) {
+  var dayNom = J[idx] ? J[idx].nom : '';
+  var html = '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>';
+  var items = J[idx] && J[idx].dinerItems ? J[idx].dinerItems : [];
+  var typeLabels = {'entrée':'🥗 Entrée','plat principal':'🍽️ Plat principal','accompagnement':'🥦 Accompagnement','dessert':'🍮 Dessert','goûter':'☕ Goûter'};
+  items.forEach(function(item) {
+    var r = item.recette;
+    if (!r) return;
+    var tl = typeLabels[item.type] || item.type;
+    html += '<div style="margin:16px 0 4px;padding-bottom:4px;border-bottom:2px solid var(--acc)"><span style="font-size:.68rem;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.06em">'+tl+'</span></div>' +
+      '<div class="recipe-top"><h3>'+r.nom+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
+      '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+dayNom+'</span></div>' +
+      (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
+      '<h4>Ingrédients</h4><ul>'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
+      '<h4>Préparation</h4><ol>'+toArr(r.etapes).map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>';
+  });
+  if (J[idx].gou && J[idx].recetteGou) {
+    var rg = J[idx].recetteGou;
+    html += '<div style="margin:16px 0 4px;padding-bottom:4px;border-bottom:2px solid var(--acc)"><span style="font-size:.68rem;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.06em">☕ Goûter</span></div>' +
+      '<div class="recipe-top"><h3>'+rg.nom+'</h3><div class="r-ico">'+(rg.emoji||'☕')+'</div></div>' +
+      '<h4>Ingrédients</h4><ul>'+toArr(rg.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
+      '<h4>Préparation</h4><ol>'+toArr(rg.etapes).map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>';
+  }
+  return html;
+}
+
 function cuisinerCetteSemaine() {
   var selectionnes = [];
   var erreur = false;
@@ -1548,15 +1616,36 @@ function cuisinerCetteSemaine() {
           return it;
         });
         if (!found) J[idx].dinerItems.push({type:type, nom:r.nom, recette:r});
-        if (type === 'plat principal') {
-          var recipeDiv = document.getElementById('recipe-'+idx);
-          if (recipeDiv) { recipeDiv.innerHTML = buildRecipeDiv(idx, r); initIngredients(); }
-        }
       }
     });
 
     // recomputeDin et écriture Firebase UNE SEULE FOIS après tous les items du jour
     recomputeDin(idx);
+
+    // Mettre à jour l'onglet Recettes pour ce jour
+    var recipeDiv = document.getElementById('recipe-'+idx);
+    if (recipeDiv) {
+      if (J[idx].dinerItems && J[idx].dinerItems.length > 0) {
+        recipeDiv.innerHTML = buildMultiRecipeDiv(idx);
+      } else if (J[idx].recette) {
+        recipeDiv.innerHTML = buildRecipeDiv(idx, J[idx].recette);
+      }
+    }
+
+    // Ajouter les ingrédients à la liste de courses
+    var labelCourses = '🍽️ ' + (J[idx].nom || '');
+    (J[idx].dinerItems || []).forEach(function(dit) {
+      if (!dit.recette) return;
+      toArr(dit.recette.ingredients).forEach(function(ing) {
+        ajouterProduit(ing, devinerRayon(ing), labelCourses);
+      });
+    });
+    if (J[idx].recetteGou) {
+      toArr(J[idx].recetteGou.ingredients || []).forEach(function(ing) {
+        ajouterProduit(ing, devinerRayon(ing), '☕ Goûter ' + (J[idx].nom || ''));
+      });
+    }
+
     if (db) db.ref('menus/'+idx).set({
       din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
       dinerItems: J[idx].dinerItems||null,
@@ -1577,6 +1666,8 @@ function cuisinerCetteSemaine() {
     if (jourDiv) jourDiv.style.display = 'none';
     if (card) card.classList.remove('selected');
   });
+
+  toast('✅ Planning mis à jour — ingrédients ajoutés à la liste de courses !');
 
   // Retourner à l'onglet Semaine
   var tabBtn = document.querySelector('.tabs button');
