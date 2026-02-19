@@ -185,15 +185,38 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .tag-badge{display:inline-block;font-size:.62rem;padding:2px 7px;border-radius:10px;background:var(--accL);color:var(--acc);margin:2px 2px 0 0;white-space:nowrap;font-weight:500}
 .btn-fav{background:none;border:none;font-size:1rem;cursor:pointer;padding:0 2px;opacity:.3;transition:.15s;line-height:1;flex-shrink:0}
 .btn-fav.active{opacity:1}
+.mr-search-row{margin-bottom:10px}
+.mr-search-input{width:100%;padding:9px 14px;border:2px solid var(--border);border-radius:20px;font-size:.88rem;background:var(--card);color:var(--txt);box-sizing:border-box;transition:.15s}
+.mr-search-input:focus{outline:none;border-color:var(--acc)}
 .mr-filtres{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-.btn-fav-filter{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:var(--card);font-size:.8rem;cursor:pointer;transition:.15s}
+.btn-fav-filter{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:var(--card);font-size:.8rem;cursor:pointer;transition:.15s;white-space:nowrap}
 .btn-fav-filter.on{background:var(--acc);color:#fff;border-color:var(--acc)}
-.mr-tag-select{padding:6px 10px;border:1px solid var(--border);border-radius:20px;font-size:.8rem;background:var(--card);color:var(--txt)}
-.mr-count{font-size:.78rem;color:var(--txt2);margin-left:auto}
+.mr-tag-chips{display:flex;flex-wrap:wrap;gap:5px;align-items:center;flex:1}
+.tag-chip{padding:3px 10px;border:1px solid var(--border);border-radius:16px;font-size:.72rem;cursor:pointer;background:var(--bg);color:var(--txt2);transition:.15s;white-space:nowrap}
+.tag-chip:hover{border-color:var(--acc);color:var(--acc)}
+.tag-chip.active{background:var(--acc);color:#fff;border-color:var(--acc)}
+.mr-count{font-size:.78rem;color:var(--txt2);white-space:nowrap}
 .din-line{display:flex;gap:5px;align-items:baseline;font-size:.88rem}
 .din-type{font-size:.68rem;color:var(--acc);font-weight:700;min-width:38px;opacity:.85;text-transform:uppercase}
-.meal-gou{border-top:1px dashed var(--border)}
+.meal-gou{border-bottom:1px dashed var(--border)}
 .recette-type-sel{padding:6px 10px;border:2px solid var(--acc);border-radius:var(--r);font-size:.82rem;background:var(--card);color:var(--txt)}
+.tags-edit-btn{background:none;border:none;cursor:pointer;font-size:.72rem;color:var(--txt2);padding:0 3px;opacity:.45;transition:.15s;line-height:1}
+.tags-edit-btn:hover{opacity:1;color:var(--acc)}
+.tag-picker{background:var(--card);border:1px solid var(--acc);border-radius:var(--r);padding:10px;margin-top:6px;display:flex;flex-wrap:wrap;gap:5px;box-shadow:var(--sh2)}
+.tag-picker-group{width:100%}
+.tag-picker-title{font-size:.6rem;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.05em;display:block;margin:6px 0 4px}
+.tag-picker-title:first-child{margin-top:0}
+.tag-picker-chip{padding:3px 9px;border:1px solid var(--border);border-radius:12px;font-size:.68rem;cursor:pointer;background:var(--bg);color:var(--txt2);transition:.15s}
+.tag-picker-chip:hover{border-color:var(--acc);color:var(--acc)}
+.tag-picker-chip.has{background:var(--acc);color:#fff;border-color:var(--acc)}
+.recette-card-img{width:100%;height:130px;object-fit:cover;border-radius:var(--r);margin-bottom:8px;display:block}
+.modal-img{width:100%;max-height:220px;object-fit:cover;border-radius:var(--r);margin-bottom:14px;display:block}
+.modal-astuces-box{margin-top:10px;padding:10px 12px;background:var(--accL);border-radius:var(--r);border-left:3px solid var(--acc)}
+.modal-astuces-box h4{color:var(--acc);font-size:.85rem;margin-bottom:5px;border:none;padding:0;margin-top:0}
+.modal-sante-box{margin-top:8px;padding:8px 12px;background:#dcfce7;border-radius:var(--r);border-left:3px solid #16a34a}
+@media(prefers-color-scheme:dark){.modal-sante-box{background:#052e16;border-color:#4ade80}}
+.modal-sante-box h4{color:#166534;font-size:.82rem;margin-bottom:4px;border:none;padding:0;margin-top:0}
+@media(prefers-color-scheme:dark){.modal-sante-box h4,.modal-sante-box li{color:#86efac}}
 </style>
 </head>
 <body>
@@ -386,15 +409,15 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <div class="shop">
 <h2>📚 Mes recettes</h2>
 <p class="mr-sub">Recettes importées via NutriCoach • Cliquez sur un nom pour voir le détail • Cochez + choisissez un jour pour cuisiner</p>
+<div class="mr-search-row" id="mr-search-row" style="display:none">
+  <input type="search" id="mr-search" class="mr-search-input" placeholder="🔍 Rechercher une recette…" oninput="filtrerRecettes()">
+</div>
 <div class="mr-filtres" id="mr-filtres" style="display:none">
   <button class="btn-fav-filter" id="btn-filtre-fav"
     onclick="filtreFavoris=!filtreFavoris;this.classList.toggle('on',filtreFavoris);filtrerRecettes()">
     ⭐ Favoris
   </button>
-  <select class="mr-tag-select" id="mr-tag-select"
-    onchange="filtreTag=this.value;filtrerRecettes()">
-    <option value="">Tous les tags</option>
-  </select>
+  <div class="mr-tag-chips" id="mr-tag-chips"></div>
   <span class="mr-count" id="mr-count"></span>
 </div>
 <div id="mes-recettes-liste">
@@ -612,6 +635,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 
 <div class="modal-overlay" id="recette-modal">
 <div class="modal">
+  <img id="modal-img" class="modal-img" src="" alt="" style="display:none" onerror="this.style.display='none'">
   <div class="modal-head">
     <h2 id="modal-titre"></h2>
     <button class="modal-close" onclick="fermerModal()">✕</button>
@@ -625,6 +649,18 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
   <ul id="modal-ingredients"></ul>
   <h4>Préparation</h4>
   <ol id="modal-etapes"></ol>
+  <div id="modal-astuces-wrap" style="display:none">
+    <div class="modal-astuces-box">
+      <h4>💡 Astuces & conseils</h4>
+      <ul id="modal-astuces"></ul>
+    </div>
+  </div>
+  <div id="modal-sante-wrap" style="display:none">
+    <div class="modal-sante-box">
+      <h4>🫀 Infos santé & nutrition</h4>
+      <ul id="modal-sante"></ul>
+    </div>
+  </div>
   <div class="modal-actions">
     <button class="btn-accept" onclick="accepterRecette()">✓ Adopter cette recette</button>
     <button class="btn-reject" onclick="chercherAutre()">↺ En chercher une autre</button>
@@ -651,6 +687,7 @@ g.innerHTML+=
 '<h3>'+j.nom+'</h3>'+
 '<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+j.pdj+'</div></div>'+
 '<div class="meal"><div class="ml">🥗 Collation midi</div><div class="mc">'+j.col+'</div></div>'+
+(j.gou ? '<div class="meal meal-gou"><div class="ml">☕ Goûter</div><div class="mc">'+j.gou+'</div></div>' : '') +
 '<div class="meal meal-din" onclick="goRecette('+i+')">' +
 '<div class="ml din-ml">🍽️ Dîner' +
 '<span class="din-actions" onclick="event.stopPropagation()">' +
@@ -667,7 +704,6 @@ g.innerHTML+=
   : j.din) +
 '</div>' +
 '</div>' +
-(j.gou ? '<div class="meal meal-gou"><div class="ml">☕ Goûter</div><div class="mc">'+j.gou+'</div></div>' : '') +
 '</div>';
 });
 }
@@ -1095,6 +1131,21 @@ function executerActionChat(action) {
     } else {
       ajouterMsg('bot', '⚠️ Je ne trouve pas cette recette dans ta liste.');
     }
+  } else if (action.type === 'ajouter_tag' && action.nom) {
+    var foundR = null;
+    recettesPerso.forEach(function(r) {
+      if (r.nom.toLowerCase().includes(action.nom.toLowerCase())) foundR = r;
+    });
+    if (foundR) {
+      foundR.tags = action.tags || [];
+      var kR = foundR._fbKey || ('local-'+foundR.nom);
+      if (foundR._fbKey && db) db.ref('recettes_perso/'+foundR._fbKey+'/tags').set(foundR.tags);
+      renderCardTags(kR);
+      buildTagChips();
+      ajouterMsg('bot', '✅ Tags mis à jour pour « '+foundR.nom+' » : '+foundR.tags.join(', ')+'.', 'msg-action');
+    } else {
+      ajouterMsg('bot', '⚠️ Je ne trouve pas cette recette dans ta liste.');
+    }
   } else if (action.type === 'modifier_profil' && action.champ && action.valeur) {
     var champsValides = ['aime','naime_pas','restrictions','notes_sante','notes_nutrition'];
     if (champsValides.indexOf(action.champ) !== -1) {
@@ -1286,39 +1337,29 @@ function afficherRecettesPerso(liste) {
   var el = document.getElementById('mes-recettes-liste');
   if (!el) return;
 
-  // Barre de filtre
+  var show = recettesPerso.length > 0;
+  var searchRow = document.getElementById('mr-search-row');
   var filtresEl = document.getElementById('mr-filtres');
-  if (filtresEl) filtresEl.style.display = recettesPerso.length > 0 ? 'flex' : 'none';
-
-  // Mettre à jour le select de tags (union de tous les tags présents)
-  var tagSelect = document.getElementById('mr-tag-select');
-  if (tagSelect) {
-    var allTags = {};
-    recettesPerso.forEach(function(r){ (r.tags||[]).forEach(function(t){ allTags[t]=true; }); });
-    var tagOpts = '<option value="">Tous les tags</option>' +
-      Object.keys(allTags).sort().map(function(t){ return '<option value="'+t+'"'+(t===filtreTag?' selected':'')+'>'+t+'</option>'; }).join('');
-    tagSelect.innerHTML = tagOpts;
-  }
+  if (searchRow) searchRow.style.display = show ? '' : 'none';
+  if (filtresEl) filtresEl.style.display = show ? 'flex' : 'none';
+  buildTagChips();
 
   var srcList = liste !== undefined ? liste : recettesPerso;
-
-  // Mettre à jour le compteur
   var countEl = document.getElementById('mr-count');
-  if (countEl) countEl.textContent = srcList.length + ' / ' + recettesPerso.length + ' recette' + (recettesPerso.length>1?'s':'');
+  if (countEl) countEl.textContent = srcList.length + '/' + recettesPerso.length + ' recette' + (recettesPerso.length > 1 ? 's' : '');
 
   if (!recettesPerso.length) {
     el.innerHTML = '<p class="mr-empty">Aucune recette importée. Allez dans l\'onglet NutriCoach et utilisez le bouton 📎 pour importer une recette (texte, PDF ou photo).</p>';
     return;
   }
 
-  // Trier : favoris en premier, puis alphabétique
   var sorted = srcList.slice().sort(function(a, b) {
     if (!!b.favoris !== !!a.favoris) return b.favoris ? 1 : -1;
     return a.nom.localeCompare(b.nom, 'fr');
   });
 
   if (!sorted.length) {
-    el.innerHTML = '<p class="mr-empty">Aucune recette ne correspond au filtre.</p>';
+    el.innerHTML = '<p class="mr-empty">Aucune recette ne correspond à la recherche.</p>';
     return;
   }
 
@@ -1329,6 +1370,7 @@ function afficherRecettesPerso(liste) {
     }).join('');
     var tags = (r.tags||[]).map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
     return '<div class="recette-card" id="rcard-'+k+'">' +
+      (r.image ? '<img class="recette-card-img" src="'+r.image+'" alt="'+r.nom+'" onerror="this.style.display=\'none\'">' : '') +
       '<div class="recette-card-header">' +
         '<input type="checkbox" class="recette-card-check" id="rcheck-'+k+'" onchange="toggleRecetteJour(\''+k+'\')">' +
         '<button class="btn-fav'+(r.favoris?' active':'')+'" id="rfav-'+k+'" onclick="toggleFavori(\''+k+'\')" title="Favori">'+(r.favoris?'⭐':'☆')+'</button>' +
@@ -1337,7 +1379,9 @@ function afficherRecettesPerso(liste) {
         '<button class="btn-del-recette" onclick="supprimerRecettePerso(\''+k+'\')" title="Supprimer cette recette">🗑</button>' +
       '</div>' +
       (r.description ? '<div class="recette-card-desc">'+(r.description)+'</div>' : '') +
-      (tags ? '<div style="padding:4px 0 2px 28px">'+tags+'</div>' : '') +
+      '<div style="padding:4px 0 2px 28px;display:flex;align-items:center;flex-wrap:wrap;gap:3px;min-height:22px" id="rtags-'+k+'">' +
+        tags + '<button class="tags-edit-btn" onclick="ouvrePickerTag(\''+k+'\')" title="Modifier les tags">✏️</button>' +
+      '</div>' +
       '<div class="recette-card-jour" id="rjour-'+k+'" style="display:none">' +
         '<label>Comme :</label>' +
         '<select class="recette-type-sel" id="rtype-'+k+'">' +
@@ -1473,7 +1517,10 @@ function voirRecettePerso(k) {
     cookTime: r.cookTime || '—',
     url: r.url || r.source || null,
     ingredients: toArr(r.ingredients),
-    etapes: toArr(r.etapes)
+    etapes: toArr(r.etapes),
+    image: r.image || null,
+    astuces: toArr(r.astuces || []),
+    infosSante: toArr(r.infosSante || [])
   };
   afficherModal(modalData);
   var actions = document.querySelector('.modal-actions');
@@ -1556,8 +1603,15 @@ function sauvegarderRecetteDiner(i) {
 
 // ===== PHASE 4 — AUTRE RECETTE =====
 var recetteEnCours = null;
-var filtreTag = '';
+var filtresTags = new Set();
 var filtreFavoris = false;
+var tagPickerOpen = null;
+var TAG_TAXONOMY = [
+  {cat:'Service',    tags:['entrée','plat principal','dessert','goûter','soupe']},
+  {cat:'Protéine',   tags:['volaille','viande rouge','cochon','gibier','poisson','fruits de mer','œufs','légumineuses','végétarien','vegan']},
+  {cat:'Style',      tags:['terroir français','méditerranéen','maghrébin','asiatique','barbecue','mijoté','grillé','vapeur','salade','gratin','pasta / risotto']},
+  {cat:'Nutrition',  tags:['healthy','IG bas','anti-cholestérol','léger']}
+];
 
 function toggleFavori(k) {
   var r = recettesPersoMap[k];
@@ -1568,13 +1622,101 @@ function toggleFavori(k) {
   if (btn) { btn.textContent = r.favoris ? '⭐' : '☆'; btn.classList.toggle('active', r.favoris); }
 }
 
+function buildTagChips() {
+  var allTags = {};
+  recettesPerso.forEach(function(r){ (r.tags||[]).forEach(function(t){ allTags[t]=true; }); });
+  var el = document.getElementById('mr-tag-chips');
+  if (!el) return;
+  el.innerHTML = Object.keys(allTags).sort().map(function(t){
+    return '<button class="tag-chip'+(filtresTags.has(t)?' active':'')+'" onclick="toggleFiltreTag(\''+t+'\')">'+t+'</button>';
+  }).join('');
+}
+
+function toggleFiltreTag(tag) {
+  if (filtresTags.has(tag)) filtresTags.delete(tag);
+  else filtresTags.add(tag);
+  buildTagChips();
+  filtrerRecettes();
+}
+
 function filtrerRecettes() {
+  var q = (document.getElementById('mr-search') ? document.getElementById('mr-search').value.trim().toLowerCase() : '');
   var visible = recettesPerso.filter(function(r) {
     if (filtreFavoris && !r.favoris) return false;
-    if (filtreTag && !(r.tags||[]).includes(filtreTag)) return false;
+    if (filtresTags.size > 0) {
+      var rt = r.tags || [];
+      var match = false;
+      filtresTags.forEach(function(t){ if (rt.includes(t)) match = true; });
+      if (!match) return false;
+    }
+    if (q) {
+      var hay = (r.nom + ' ' + (r.description||'')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
     return true;
   });
   afficherRecettesPerso(visible);
+}
+
+function toggleTagCard(k, tag) {
+  var r = recettesPersoMap[k];
+  if (!r) return;
+  var tags = (r.tags||[]).slice();
+  var idx = tags.indexOf(tag);
+  if (idx !== -1) tags.splice(idx, 1);
+  else tags.push(tag);
+  r.tags = tags;
+  if (r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/tags').set(tags);
+  renderCardTags(k);
+  buildTagChips();
+  var picker = document.getElementById('tpicker-'+k);
+  if (picker) picker.querySelectorAll('.tag-picker-chip').forEach(function(chip){
+    chip.classList.toggle('has', tags.includes(chip.dataset.tag));
+  });
+}
+
+function renderCardTags(k) {
+  var r = recettesPersoMap[k];
+  if (!r) return;
+  var area = document.getElementById('rtags-'+k);
+  if (!area) return;
+  var tags = (r.tags||[]).map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
+  area.innerHTML = tags + '<button class="tags-edit-btn" onclick="ouvrePickerTag(\''+k+'\')" title="Modifier les tags">✏️</button>';
+}
+
+function ouvrePickerTag(k) {
+  if (tagPickerOpen === k) { fermePickerTag(); return; }
+  fermePickerTag();
+  tagPickerOpen = k;
+  var area = document.getElementById('rtags-'+k);
+  if (!area) return;
+  var r = recettesPersoMap[k];
+  var existing = r ? (r.tags||[]) : [];
+  var picker = document.createElement('div');
+  picker.id = 'tpicker-'+k;
+  picker.className = 'tag-picker';
+  picker.innerHTML =
+    '<div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+      '<span style="font-size:.68rem;color:var(--txt2)">Cliquez pour ajouter / retirer</span>' +
+      '<button style="background:none;border:none;cursor:pointer;font-size:.8rem;color:var(--txt2)" onclick="fermePickerTag()">✕</button>' +
+    '</div>' +
+    TAG_TAXONOMY.map(function(g){
+      return '<div class="tag-picker-group">' +
+        '<span class="tag-picker-title">'+g.cat+'</span>' +
+        g.tags.map(function(t){
+          return '<button class="tag-picker-chip'+(existing.includes(t)?' has':'')+'" data-tag="'+t+'" onclick="toggleTagCard(\''+k+'\',\''+t+'\')">'+t+'</button>';
+        }).join('') +
+      '</div>';
+    }).join('');
+  area.parentNode.insertBefore(picker, area.nextSibling);
+}
+
+function fermePickerTag() {
+  if (tagPickerOpen) {
+    var el = document.getElementById('tpicker-'+tagPickerOpen);
+    if (el) el.remove();
+    tagPickerOpen = null;
+  }
 }
 
 function recomputeDin(idx) {
@@ -1612,20 +1754,44 @@ function changerRecette(idx, btn, recettesRefusees) {
 
 function afficherModal(data) {
   document.getElementById('modal-titre').textContent = data.emoji + ' ' + data.nom;
+
+  var imgEl = document.getElementById('modal-img');
+  if (imgEl) {
+    if (data.image) { imgEl.src = data.image; imgEl.style.display = ''; }
+    else imgEl.style.display = 'none';
+  }
+
   var metas = [];
   if (data.prepTime && data.prepTime !== '—') metas.push('<span><b>Prépa :</b> '+data.prepTime+'</span>');
   if (data.cookTime && data.cookTime !== '—') metas.push('<span><b>Cuisson :</b> '+data.cookTime+'</span>');
   var infosEl = document.getElementById('modal-infos');
   if (infosEl) infosEl.style.display = metas.length ? '' : 'none';
   document.getElementById('modal-meta').innerHTML = metas.join('');
+
   var urlEl = document.getElementById('modal-url');
   urlEl.innerHTML = data.url
     ? '<a class="recipe-link" href="'+data.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>'
     : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>';
+
   document.getElementById('modal-ingredients').innerHTML =
     data.ingredients.map(function(i){return '<li>'+i+'</li>';}).join('');
   document.getElementById('modal-etapes').innerHTML =
     data.etapes.map(function(e){return '<li>'+e+'</li>';}).join('');
+
+  var astuces = toArr(data.astuces || []);
+  var astucesWrap = document.getElementById('modal-astuces-wrap');
+  if (astucesWrap) {
+    astucesWrap.style.display = astuces.length ? '' : 'none';
+    document.getElementById('modal-astuces').innerHTML = astuces.map(function(a){return '<li>'+a+'</li>';}).join('');
+  }
+
+  var infosSante = toArr(data.infosSante || []);
+  var santeWrap = document.getElementById('modal-sante-wrap');
+  if (santeWrap) {
+    santeWrap.style.display = infosSante.length ? '' : 'none';
+    document.getElementById('modal-sante').innerHTML = infosSante.map(function(s){return '<li>'+s+'</li>';}).join('');
+  }
+
   document.getElementById('recette-modal').classList.add('on');
 }
 

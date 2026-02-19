@@ -27,14 +27,21 @@ Ta mission : classifier le contenu et extraire les données structurées.
 RÈGLE ABSOLUE : Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ni après.
 
 Si c'est une RECETTE, réponds :
-{"type":"recette","data":{"nom":"Nom de la recette","emoji":"🥘","description":"Description courte 1 ligne","prepTime":"20 min","cookTime":"30 min","ingredients":["ingrédient 1","ingrédient 2"],"etapes":["Étape 1","Étape 2"],"source":"${fileName || 'import'}","tags":["plat principal","volaille","terroir français"]}}
+{"type":"recette","data":{"nom":"Nom complet de la recette","emoji":"🥘","description":"Description courte 1-2 phrases","prepTime":"20 min","cookTime":"30 min","ingredients":["200g de poulet","1 c.s. huile olive"],"etapes":["Étape 1 complète","Étape 2 complète"],"astuces":["Conseil pratique ou variante"],"infosSante":["Point santé ou nutritionnel"],"image":null,"source":"${fileName || 'import'}","tags":["plat principal","volaille","terroir français","IG bas"]}}
 
-RÈGLES POUR LES TAGS :
-- Service (1 obligatoire, choisir 1) : "entrée" | "plat principal" | "dessert" | "goûter" | "soupe"
-- Protéine/Base (0-1) : "volaille" | "viande rouge" | "cochon" | "gibier" | "poisson" | "fruits de mer" | "œufs" | "légumineuses" | "végétarien" | "vegan"
-- Style (0-2) : "terroir français" | "méditerranéen" | "maghrébin" | "asiatique" | "barbecue" | "mijoté" | "grillé" | "vapeur" | "salade" | "gratin" | "pasta / risotto"
-- Nutrition (0-2) : "healthy" | "IG bas" | "anti-cholestérol" | "léger"
-Exemple : ["plat principal","volaille","terroir français","IG bas"]
+RÈGLES POUR LES TAGS (OBLIGATOIRE) :
+- Service (1 tag obligatoire) : "entrée" | "plat principal" | "dessert" | "goûter" | "soupe"
+- Protéine/Base (0-1 tag) : "volaille" | "viande rouge" | "cochon" | "gibier" | "poisson" | "fruits de mer" | "œufs" | "légumineuses" | "végétarien" | "vegan"
+- Style (0-2 tags) : "terroir français" | "méditerranéen" | "maghrébin" | "asiatique" | "barbecue" | "mijoté" | "grillé" | "vapeur" | "salade" | "gratin" | "pasta / risotto"
+- Nutrition (0-2 tags) : "healthy" | "IG bas" | "anti-cholestérol" | "léger"
+Exemples corrects :
+- Tajine poulet pois chiches → ["plat principal","volaille","maghrébin","mijoté","IG bas"]
+- Curry lentilles corail → ["plat principal","légumineuses","asiatique","IG bas","anti-cholestérol"]
+- Salade de thon niçoise → ["plat principal","poisson","salade","méditerranéen","anti-cholestérol"]
+- Soupe de légumes d'hiver → ["soupe","végétarien","IG bas","léger"]
+- Omelette champignons → ["plat principal","œufs","terroir français","léger"]
+
+Cherche systématiquement les sections "Astuces", "Conseils", "Variantes", "Le petit plus", "Info santé".
 
 Si c'est un ARTICLE NUTRITION ou du contenu informatif, réponds :
 {"type":"note_nutrition","data":{"titre":"Titre court","points_cles":["Point clé 1","Point clé 2","Point clé 3"]}}

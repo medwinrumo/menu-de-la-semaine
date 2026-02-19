@@ -59,6 +59,10 @@ Pour ajouter des produits à la liste de courses (quand l'utilisateur dicte une 
 Pour ajouter un nouveau site de référence recettes (quand l'utilisateur partage une URL) :
 {"reponse":"J'ajoute ce site à vos références recettes.","action":{"type":"ajouter_site","url":"https://exemple.com","desc":"Description courte du site et de sa spécialité"}}
 
+Pour ajouter ou modifier les tags d'une recette importée (quand l'utilisateur demande de catégoriser ou tagger une recette) :
+{"reponse":"J'ai mis à jour les tags de cette recette.","action":{"type":"ajouter_tag","nom":"Nom approché de la recette","tags":["plat principal","volaille","terroir français","IG bas"]}}
+Tags disponibles — Service(1 obligatoire): "entrée"|"plat principal"|"dessert"|"goûter"|"soupe" / Protéine(0-1): "volaille"|"viande rouge"|"cochon"|"gibier"|"poisson"|"fruits de mer"|"œufs"|"légumineuses"|"végétarien"|"vegan" / Style(0-2): "terroir français"|"méditerranéen"|"maghrébin"|"asiatique"|"barbecue"|"mijoté"|"grillé"|"vapeur"|"salade"|"gratin"|"pasta / risotto" / Nutrition(0-2): "healthy"|"IG bas"|"anti-cholestérol"|"léger"
+
 Pour supprimer une recette importée de la liste « Mes recettes » :
 {"reponse":"J'ai supprimé cette recette de ta liste.","action":{"type":"supprimer_recette","nom":"Nom exact ou approché de la recette"}}
 
