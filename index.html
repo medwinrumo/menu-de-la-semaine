@@ -87,6 +87,16 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 @media(max-width:700px){header h1{font-size:1.3rem}.grid{grid-template-columns:1fr}.tabs{flex-direction:column}.tabs button{width:100%}.sitem{flex-wrap:wrap}.sitem .sr{max-width:100%;text-align:left}}
 @media(orientation:landscape) and (max-height:500px){.grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.wrap{padding:8px}}
 .meal-din{cursor:pointer;transition:.15s}.meal-din:hover{background:var(--accL);border-left-color:var(--acc2)}
+.din-ml{display:flex;justify-content:space-between;align-items:center}
+.din-actions{display:flex;align-items:center;gap:1px;flex-shrink:0}
+.din-btn{background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.4;padding:2px 5px;color:var(--txt2);transition:.15s;line-height:1;border-radius:4px}
+.din-btn:hover{opacity:1;color:var(--acc);background:var(--accL)}
+.din-btn:disabled{opacity:.2;cursor:wait}
+.din-handle{cursor:grab;font-size:.95rem;opacity:.35;padding:2px 5px;user-select:none;line-height:1;transition:.15s;border-radius:4px}
+.din-handle:hover{opacity:1;color:var(--acc);background:var(--accL)}
+.din-handle:active{cursor:grabbing}
+.day.drag-over{border-color:var(--acc)!important;background:var(--accL)!important;box-shadow:0 0 0 2px var(--acc)}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;padding:10px 22px;border-radius:20px;font-size:.84rem;font-weight:600;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,.2);pointer-events:none;animation:fu .2s ease}
 .btn-back{margin-bottom:14px;padding:6px 14px;background:var(--accL);color:var(--acc);border:1px solid var(--acc);border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer}
 .btn-back:hover{background:var(--acc);color:#fff}
 .recipe ul li.ing-item{cursor:pointer;border-radius:4px;transition:.12s;padding-right:6px}
@@ -567,17 +577,23 @@ var J=[
 function rW(){
 var g=document.getElementById('weekgrid');g.innerHTML='';
 J.forEach(function(j,i){
-var o='';J.forEach(function(j2,i2){if(i2!==i)o+='<option value="'+i2+'">'+j2.nom+' — '+j2.dn+'</option>';});
-g.innerHTML+='<div class="day"><h3>'+j.nom+'</h3>'+
+g.innerHTML+=
+'<div class="day" id="day-'+i+'" ondragover="dragOver(event,'+i+')" ondrop="dropDinner(event,'+i+')" ondragleave="dragLeave(event,'+i+')">' +
+'<h3>'+j.nom+'</h3>'+
 '<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+j.pdj+'</div></div>'+
 '<div class="meal"><div class="ml">🥗 Collation midi</div><div class="mc">'+j.col+'</div></div>'+
-'<div class="meal meal-din" onclick="goRecette('+i+')" title="Voir la recette"><div class="ml">🍽️ Dîner</div><div class="mc">'+j.din+'</div></div>'+
-'<div class="swap-row"><select>'+o+'</select><button onclick="sw('+i+',this)">↔ échanger dîner</button></div>'+
-'<button class="btn-swap" onclick="changerRecette('+i+',this)">↺ Autre recette</button></div>';
+'<div class="meal meal-din" onclick="goRecette('+i+')">' +
+'<div class="ml din-ml">🍽️ Dîner' +
+'<span class="din-actions" onclick="event.stopPropagation()">' +
+'<button class="din-btn" onclick="sauvegarderRecetteDiner('+i+')" title="Sauvegarder dans Mes recettes">＋</button>' +
+'<button class="din-btn" data-swap-idx="'+i+'" onclick="changerRecette('+i+',this)" title="Autre recette">↺</button>' +
+'<span class="din-handle" draggable="true" ondragstart="dragStart(event,'+i+')" title="Glisser pour intervertir">⠿</span>' +
+'</span></div>' +
+'<div class="mc">'+j.din+'</div>' +
+'</div>' +
+'</div>';
 });
 }
-function sw(f,b){var s=b.previousElementSibling;var t=parseInt(s.value);
-var d=J[f].din,n=J[f].dn;J[f].din=J[t].din;J[f].dn=J[t].dn;J[t].din=d;J[t].dn=n;rW();}
 rW();
 
 function tab(id,btn){
@@ -1202,11 +1218,74 @@ function voirRecettePerso(i) {
   };
 }
 
+// ===== DRAG & DROP DÎNERS =====
+var dragIdx = null;
+function dragStart(event, i) {
+  dragIdx = i;
+  event.dataTransfer.effectAllowed = 'move';
+}
+function dragOver(event, i) {
+  if (dragIdx === null || dragIdx === i) return;
+  event.preventDefault();
+  document.getElementById('day-'+i).classList.add('drag-over');
+}
+function dragLeave(event, i) {
+  document.getElementById('day-'+i).classList.remove('drag-over');
+}
+function dropDinner(event, i) {
+  event.preventDefault();
+  document.getElementById('day-'+i).classList.remove('drag-over');
+  if (dragIdx === null || dragIdx === i) { dragIdx = null; return; }
+  var d = J[dragIdx].din, n = J[dragIdx].dn;
+  J[dragIdx].din = J[i].din; J[dragIdx].dn = J[i].dn;
+  J[i].din = d; J[i].dn = n;
+  if (db) {
+    db.ref('menus/'+dragIdx).set({din:J[dragIdx].din, dn:J[dragIdx].dn});
+    db.ref('menus/'+i).set({din:J[i].din, dn:J[i].dn});
+  }
+  dragIdx = null;
+  rW();
+}
+
+// ===== TOAST =====
+function toast(msg) {
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 2500);
+}
+
+// ===== SAUVEGARDER RECETTE DU DÎNER =====
+function sauvegarderRecetteDiner(i) {
+  var nom = J[i].dn;
+  if (!nom) return;
+  if (recettesPerso.some(function(r) { return r.nom.toLowerCase() === nom.toLowerCase(); })) {
+    toast('Déjà dans Mes recettes');
+    return;
+  }
+  var recipeDiv = document.getElementById('recipe-'+i);
+  var emoji = recipeDiv && recipeDiv.querySelector('.r-ico') ? recipeDiv.querySelector('.r-ico').textContent.trim() : '🥘';
+  var ingredients = [];
+  if (recipeDiv) recipeDiv.querySelectorAll('ul li').forEach(function(li) { ingredients.push(li.textContent.trim()); });
+  var etapes = [];
+  if (recipeDiv) recipeDiv.querySelectorAll('ol li').forEach(function(li) { etapes.push(li.textContent.trim()); });
+  var recette = { nom: nom, emoji: emoji, description: J[i].din, ingredients: ingredients, etapes: etapes, source: 'Semaine' };
+  if (db) {
+    db.ref('recettes_perso').push(recette);
+  } else {
+    recettesPerso.push(recette);
+    afficherRecettesPerso();
+  }
+  toast('✅ « ' + nom + ' » ajoutée à Mes recettes');
+}
+
 // ===== PHASE 4 — AUTRE RECETTE =====
 var recetteEnCours = null;
 
 function changerRecette(idx, btn, recettesRefusees) {
-  btn.textContent = '⏳ Recherche en cours…';
+  var origText = btn.textContent;
+  btn.textContent = '⏳';
   btn.disabled = true;
   var autresRecettes = J.filter(function(j,i){return i!==idx;}).map(function(j){return j.dn;});
   fetch('/api/recette', {
@@ -1218,12 +1297,12 @@ function changerRecette(idx, btn, recettesRefusees) {
   .then(function(data){
     recetteEnCours = {idx:idx, data:data, refusees:recettesRefusees||[]};
     afficherModal(data);
-    btn.textContent = '↺ Autre recette';
+    btn.textContent = origText;
     btn.disabled = false;
   })
   .catch(function(){
     alert('Erreur lors de la recherche. Réessayez.');
-    btn.textContent = '↺ Autre recette';
+    btn.textContent = origText;
     btn.disabled = false;
   });
 }
@@ -1272,8 +1351,8 @@ function chercherAutre() {
   var idx = recetteEnCours.idx;
   var refusees = (recetteEnCours.refusees || []).concat([recetteEnCours.data.nom]);
   fermerModal();
-  var btns = document.querySelectorAll('.btn-swap');
-  if (btns[idx]) changerRecette(idx, btns[idx], refusees);
+  var btn = document.querySelector('[data-swap-idx="'+idx+'"]');
+  if (btn) changerRecette(idx, btn, refusees);
 }
 
 // ===== FIREBASE =====
