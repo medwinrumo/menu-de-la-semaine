@@ -1,5 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES, COMPETENCES_NUTRITIONNELLES } = require('./_skills');
+const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, getProfilDynamique, getRecettesPerso, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES, COMPETENCES_NUTRITIONNELLES } = require('./_skills');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,7 +9,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   try {
-    const { jours, dateDebut, dateFin, sitesExtra } = req.body;
+    const { jours, dateDebut, dateFin, sitesExtra, profilExtra, recettesPerso } = req.body;
     const ctx = getContexteSaisonnier();
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -27,11 +27,15 @@ ${getInstructionsSaisonnieres(ctx)}
 
 ${PROFIL_SANTE}
 
+${getProfilDynamique(profilExtra)}
+
 ${SCHEMA_NUTRITIONNEL}
 
 ${CONTRAINTES_PRATIQUES}
 
 ${getSitesRessources(sitesExtra)}
+
+${getRecettesPerso(recettesPerso)}
 
 CONTRAINTES DE VARIÉTÉ (obligatoire) :
 - Pas la même protéine deux jours consécutifs

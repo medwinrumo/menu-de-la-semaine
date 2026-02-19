@@ -142,6 +142,16 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .btn-accept:hover{background:var(--acc2)}
 .btn-reject{padding:9px 18px;background:var(--bg);color:var(--txt2);border:1px solid var(--border);border-radius:var(--r);font-size:.85rem;cursor:pointer;flex:1}
 .btn-reject:hover{border-color:var(--acc);color:var(--acc)}
+.btn-attach{padding:10px 12px;background:var(--bg);color:var(--txt2);border:2px solid var(--border);border-radius:14px;font-size:1.1rem;cursor:pointer;flex-shrink:0;transition:.15s}
+.btn-attach:hover{border-color:var(--acc);color:var(--acc);background:var(--accL)}
+.recettes-perso{margin-top:20px;background:var(--bg);border-radius:var(--r2);border:1px solid var(--border);padding:16px}
+.recettes-perso h4{color:var(--acc);margin-bottom:10px;font-size:.95rem}
+.recette-perso-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--card);border-radius:var(--r);margin-bottom:6px;border:1px solid var(--border)}
+.recette-perso-nom{font-size:.84rem;font-weight:500;flex:1}
+.recette-perso-desc{font-size:.75rem;color:var(--txt2);flex:2}
+.btn-voir-perso{padding:4px 10px;background:var(--accL);color:var(--acc);border:1px solid var(--acc);border-radius:6px;font-size:.73rem;cursor:pointer;font-weight:600;white-space:nowrap}
+.btn-voir-perso:hover{background:var(--acc);color:#fff}
+.recettes-perso-empty{font-size:.82rem;color:var(--txt2);font-style:italic}
 </style>
 </head>
 <body>
@@ -324,8 +334,14 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
   </div>
   <div class="chat-input-area">
     <textarea id="chat-input" rows="2" placeholder="Question ou instruction…"></textarea>
+    <input type="file" id="fichierImport" accept=".txt,.md,.pdf,.jpg,.jpeg,.png,.webp" style="display:none" onchange="importerFichier(this)">
+    <button class="btn-attach" onclick="document.getElementById('fichierImport').click()" title="Importer un fichier (recette, article, photo)">📎</button>
     <button id="btn-chat-send" onclick="envoyerChat()">➤</button>
   </div>
+</div>
+<div class="recettes-perso" id="recettes-perso-section">
+  <h4>📚 Mes recettes importées</h4>
+  <div id="recettes-perso-liste"><p class="recettes-perso-empty">Aucune recette importée pour le moment. Utilisez le bouton 📎 pour importer une recette.</p></div>
 </div>
 </div>
 
@@ -729,6 +745,10 @@ function ingAnnuler(id) {
 // ===== SITES RESSOURCES =====
 var sitesExtra = [];
 
+// ===== PHASE 8 — PROFIL DYNAMIQUE + RECETTES PERSO =====
+var profilExtra = {};
+var recettesPerso = [];
+
 // ===== PHASE 6 — NUTRICOACH CHAT =====
 var chatHisto = [];
 
@@ -746,7 +766,7 @@ function envoyerChat() {
   fetch('/api/chat', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({message:msg, historique:chatHisto, menus:menusCtx, sitesExtra:sitesExtra})
+    body:JSON.stringify({message:msg, historique:chatHisto, menus:menusCtx, sitesExtra:sitesExtra, profilExtra:profilExtra, recettesPerso:recettesPerso})
   })
   .then(function(r){return r.json();})
   .then(function(data){
@@ -834,6 +854,14 @@ function executerActionChat(action) {
     });
     mC();
     ajouterMsg('bot','✅ '+action.produits.length+' produit(s) ajouté(s) à votre liste !','msg-action');
+  } else if (action.type === 'modifier_profil' && action.champ && action.valeur) {
+    var champsValides = ['aime','naime_pas','restrictions','notes_sante','notes_nutrition'];
+    if (champsValides.indexOf(action.champ) !== -1) {
+      if (!profilExtra[action.champ]) profilExtra[action.champ] = [];
+      profilExtra[action.champ].push(action.valeur);
+      if (db) db.ref('profil/' + action.champ).set(profilExtra[action.champ]);
+      ajouterMsg('bot','✅ Profil mis à jour : « '+action.valeur+' » ajouté dans "'+action.champ+'"','msg-action');
+    }
   }
 }
 
@@ -866,7 +894,7 @@ function genererSemaine(skipConfirm) {
   fetch('/api/menus', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({jours: joursDates, dateDebut: dateDebut, dateFin: dateFin, sitesExtra: sitesExtra})
+    body: JSON.stringify({jours: joursDates, dateDebut: dateDebut, dateFin: dateFin, sitesExtra: sitesExtra, profilExtra: profilExtra, recettesPerso: recettesPerso})
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
@@ -951,6 +979,110 @@ function appliquerNouveauxMenus(data) {
   }
 }
 
+// ===== PHASE 8 — IMPORT DE FICHIERS =====
+function importerFichier(input) {
+  var file = input.files[0];
+  if (!file) return;
+  // Réinitialiser l'input pour permettre de ré-importer le même fichier
+  input.value = '';
+
+  var mimeType = file.type;
+  var estTexte = mimeType === 'text/plain' || mimeType === 'text/markdown' ||
+                 file.name.endsWith('.txt') || file.name.endsWith('.md');
+
+  ajouterMsg('bot', '📎 Analyse de « ' + file.name + ' » en cours…', 'chat-typing');
+  var typingEl = document.getElementById('chat-messages').lastElementChild;
+
+  var reader = new FileReader();
+
+  reader.onload = function(e) {
+    var content = e.target.result;
+    fetch('/api/import', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({fileName: file.name, fileType: mimeType, content: content})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (typingEl) typingEl.remove();
+      if (data.error) {
+        ajouterMsg('bot', '❌ Erreur lors de l\'analyse : ' + data.error);
+        return;
+      }
+      if (data.type === 'recette' && data.data) {
+        var r = data.data;
+        if (db) {
+          db.ref('recettes_perso').push(r);
+        } else {
+          recettesPerso.push(r);
+          afficherRecettesPerso();
+        }
+        ajouterMsg('bot', '✅ Recette importée : **' + r.nom + '**\n' + (r.description || '') + '\n\nElle est maintenant disponible dans « Mes recettes importées » et NutriCoach pourra la proposer dans tes menus.', 'msg-action');
+      } else if (data.type === 'note_nutrition' && data.data) {
+        var n = data.data;
+        var points = (n.points_cles || []);
+        if (!profilExtra.notes_nutrition) profilExtra.notes_nutrition = [];
+        points.forEach(function(p) { profilExtra.notes_nutrition.push(p); });
+        if (db) db.ref('profil/notes_nutrition').set(profilExtra.notes_nutrition);
+        ajouterMsg('bot', '✅ Article analysé : **' + n.titre + '**\n' + points.map(function(p){return '• '+p;}).join('\n') + '\n\nCes notes ont été ajoutées à ton profil nutrition.', 'msg-action');
+      } else if (data.type === 'erreur' && data.data) {
+        ajouterMsg('bot', '⚠️ ' + data.data.message);
+      } else {
+        ajouterMsg('bot', '⚠️ Contenu non reconnu dans ce fichier.');
+      }
+    })
+    .catch(function() {
+      if (typingEl) typingEl.remove();
+      ajouterMsg('bot', '❌ Erreur de connexion lors de l\'import. Réessayez.');
+    });
+  };
+
+  if (estTexte) {
+    reader.readAsText(file, 'UTF-8');
+  } else {
+    reader.readAsDataURL(file);
+  }
+}
+
+function afficherRecettesPerso() {
+  var liste = document.getElementById('recettes-perso-liste');
+  if (!liste) return;
+  if (!recettesPerso.length) {
+    liste.innerHTML = '<p class="recettes-perso-empty">Aucune recette importée pour le moment. Utilisez le bouton 📎 pour importer une recette.</p>';
+    return;
+  }
+  liste.innerHTML = recettesPerso.map(function(r, i) {
+    return '<div class="recette-perso-item">' +
+      '<span class="recette-perso-nom">' + (r.emoji || '🥘') + ' ' + r.nom + '</span>' +
+      '<span class="recette-perso-desc">' + (r.description || '') + '</span>' +
+      '<button class="btn-voir-perso" onclick="voirRecettePerso(' + i + ')">Voir</button>' +
+      '</div>';
+  }).join('');
+}
+
+function voirRecettePerso(i) {
+  var r = recettesPerso[i];
+  if (!r) return;
+  // Utiliser le modal existant pour afficher la recette perso
+  var modalData = {
+    nom: r.nom,
+    emoji: r.emoji || '🥘',
+    prepTime: r.prepTime || '—',
+    cookTime: r.cookTime || '—',
+    ingredients: r.ingredients || [],
+    etapes: r.etapes || []
+  };
+  afficherModal(modalData);
+  // Masquer les boutons d'action car c'est une consultation
+  document.querySelector('.modal-actions').style.display = 'none';
+  var oldClose = document.querySelector('.modal-close').onclick;
+  document.querySelector('.modal-close').onclick = function() {
+    fermerModal();
+    document.querySelector('.modal-actions').style.display = '';
+    document.querySelector('.modal-close').onclick = oldClose;
+  };
+}
+
 // ===== PHASE 4 — AUTRE RECETTE =====
 var recetteEnCours = null;
 
@@ -961,7 +1093,7 @@ function changerRecette(idx, btn, recettesRefusees) {
   fetch('/api/recette', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({jour:J[idx].nom, recetteActuelle:J[idx].dn, autresRecettes:autresRecettes, recettesRefusees:recettesRefusees||[], sitesExtra:sitesExtra})
+    body: JSON.stringify({jour:J[idx].nom, recetteActuelle:J[idx].dn, autresRecettes:autresRecettes, recettesRefusees:recettesRefusees||[], sitesExtra:sitesExtra, profilExtra:profilExtra, recettesPerso:recettesPerso})
   })
   .then(function(r){return r.json();})
   .then(function(data){
@@ -1115,6 +1247,17 @@ db.ref('/').on('value',function(snapshot){
   appliquerIngredientsFirebase(data.ingredients || null);
   if(data.sites_ressources) {
     sitesExtra = Object.values(data.sites_ressources);
+  }
+  if(data.profil) {
+    profilExtra = {};
+    Object.keys(data.profil).forEach(function(champ) {
+      var val = data.profil[champ];
+      profilExtra[champ] = Array.isArray(val) ? val : Object.values(val);
+    });
+  }
+  if(data.recettes_perso) {
+    recettesPerso = Object.values(data.recettes_perso);
+    afficherRecettesPerso();
   }
 });
 </script>

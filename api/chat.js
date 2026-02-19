@@ -1,5 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES, COMPETENCES_NUTRITIONNELLES } = require('./_skills');
+const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, getProfilDynamique, getRecettesPerso, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES, COMPETENCES_NUTRITIONNELLES } = require('./_skills');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,7 +9,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   try {
-    const { message, historique, menus, sitesExtra } = req.body;
+    const { message, historique, menus, sitesExtra, profilExtra, recettesPerso } = req.body;
     const ctx = getContexteSaisonnier();
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -25,11 +25,15 @@ ${getInstructionsSaisonnieres(ctx)}
 
 ${PROFIL_SANTE}
 
+${getProfilDynamique(profilExtra)}
+
 ${SCHEMA_NUTRITIONNEL}
 
 ${CONTRAINTES_PRATIQUES}
 
 ${getSitesRessources(sitesExtra)}
+
+${getRecettesPerso(recettesPerso)}
 
 ## MENUS DE LA SEMAINE ACTUELS
 ${menusTexte}
@@ -53,6 +57,11 @@ Pour ajouter des produits à la liste de courses (quand l'utilisateur dicte une 
 
 Pour ajouter un nouveau site de référence recettes (quand l'utilisateur partage une URL) :
 {"reponse":"J'ajoute ce site à vos références recettes.","action":{"type":"ajouter_site","url":"https://exemple.com","desc":"Description courte du site et de sa spécialité"}}
+
+Pour mettre à jour le profil de l'utilisateur (préférences, aversions, restrictions, évolutions de santé) :
+{"reponse":"J'ai noté cette information dans ton profil.","action":{"type":"modifier_profil","champ":"naime_pas","valeur":"fenouil"}}
+Champs valides : "aime" (plats/ingrédients appréciés), "naime_pas" (à éviter), "restrictions" (allergies, intolérances), "notes_sante" (évolutions du bilan de santé), "notes_nutrition" (notes libres nutrition)
+Exemples : "Je déteste le fenouil" → champ "naime_pas", valeur "fenouil" | "J'adore les lentilles" → champ "aime", valeur "lentilles" | "Je suis intolérant au gluten" → champ "restrictions", valeur "intolérance gluten"
 
 Rayons disponibles pour ajouter_courses : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers
 

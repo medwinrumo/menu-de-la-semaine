@@ -510,10 +510,39 @@ Inspire-toi de ces sources pour proposer des recettes adaptées au profil :
 ${tous.map(s => `- ${s.url} — ${s.desc}`).join('\n')}`;
 }
 
+/**
+ * Formate le profil dynamique (mis à jour via le chat) en bloc texte pour les prompts.
+ * @param {Object} profilExtra - objet Firebase profil/ avec champs aime, naime_pas, etc.
+ */
+function getProfilDynamique(profilExtra) {
+  if (!profilExtra || !Object.keys(profilExtra).length) return '';
+  const lignes = [];
+  if (profilExtra.aime && profilExtra.aime.length)            lignes.push(`Préférences positives : ${profilExtra.aime.join(', ')}`);
+  if (profilExtra.naime_pas && profilExtra.naime_pas.length)  lignes.push(`À éviter (préférences) : ${profilExtra.naime_pas.join(', ')}`);
+  if (profilExtra.restrictions && profilExtra.restrictions.length) lignes.push(`Restrictions/allergies : ${profilExtra.restrictions.join(', ')}`);
+  if (profilExtra.notes_sante && profilExtra.notes_sante.length)   lignes.push(`Évolutions santé :\n${profilExtra.notes_sante.map(n => '- ' + n).join('\n')}`);
+  if (profilExtra.notes_nutrition && profilExtra.notes_nutrition.length) lignes.push(`Notes nutrition :\n${profilExtra.notes_nutrition.map(n => '- ' + n).join('\n')}`);
+  if (!lignes.length) return '';
+  return `━━━ PROFIL DYNAMIQUE (mis à jour via chat) ━━━\n${lignes.join('\n\n')}`;
+}
+
+/**
+ * Formate les recettes personnelles importées en bloc texte pour les prompts.
+ * @param {Array} recettesPerso - tableau de recettes importées depuis Firebase recettes_perso/
+ */
+function getRecettesPerso(recettesPerso) {
+  if (!recettesPerso || !recettesPerso.length) return '';
+  return `━━━ RECETTES PERSONNELLES DE L'UTILISATEUR ━━━
+L'utilisateur a importé ces recettes — tu peux les proposer en priorité si elles correspondent :
+${recettesPerso.map(r => `- ${r.nom} : ${r.description || ''}`).join('\n')}`;
+}
+
 module.exports = {
   getContexteSaisonnier,
   getInstructionsSaisonnieres,
   getSitesRessources,
+  getProfilDynamique,
+  getRecettesPerso,
   SITES_RESSOURCES_DEFAUT,
   PROFIL_SANTE,
   SCHEMA_NUTRITIONNEL,
