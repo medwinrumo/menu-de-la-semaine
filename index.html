@@ -183,19 +183,27 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .btn-del-recette{background:none;border:none;cursor:pointer;font-size:.9rem;opacity:.35;transition:.15s;padding:2px 5px;flex-shrink:0;line-height:1}
 .btn-del-recette:hover{opacity:1}
 .tag-badge{display:inline-block;font-size:.62rem;padding:2px 7px;border-radius:10px;background:var(--accL);color:var(--acc);margin:2px 2px 0 0;white-space:nowrap;font-weight:500}
-.btn-fav{background:none;border:none;font-size:1rem;cursor:pointer;padding:0 2px;opacity:.3;transition:.15s;line-height:1;flex-shrink:0}
-.btn-fav.active{opacity:1}
+.btn-fav{background:none;border:none;font-size:1rem;cursor:pointer;padding:0 2px;color:var(--txt2);opacity:.35;transition:.15s;line-height:1;flex-shrink:0}
+.btn-fav.active{opacity:1;color:#f59e0b}
 .mr-search-row{margin-bottom:10px}
 .mr-search-input{width:100%;padding:9px 14px;border:2px solid var(--border);border-radius:20px;font-size:.88rem;background:var(--card);color:var(--txt);box-sizing:border-box;transition:.15s}
 .mr-search-input:focus{outline:none;border-color:var(--acc)}
-.mr-filtres{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-.btn-fav-filter{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:var(--card);font-size:.8rem;cursor:pointer;transition:.15s;white-space:nowrap}
+.mr-filtres{display:flex;gap:8px;align-items:center;margin-bottom:4px;flex-wrap:wrap}
+.btn-fav-filter{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:var(--card);color:var(--txt);font-size:.8rem;cursor:pointer;transition:.15s;white-space:nowrap}
 .btn-fav-filter.on{background:var(--acc);color:#fff;border-color:var(--acc)}
-.mr-tag-chips{display:flex;flex-wrap:wrap;gap:5px;align-items:center;flex:1}
+.btn-tag-filter{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:var(--card);color:var(--txt);font-size:.8rem;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn-tag-filter.has-active{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tag-filter-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-bottom:12px;box-shadow:var(--sh2);display:none}
+.tag-filter-section{margin-bottom:10px}
+.tag-filter-section:last-child{margin-bottom:0}
+.tag-filter-cat-title{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt2);display:block;margin-bottom:6px}
+.tag-filter-chips{display:flex;flex-wrap:wrap;gap:5px}
 .tag-chip{padding:3px 10px;border:1px solid var(--border);border-radius:16px;font-size:.72rem;cursor:pointer;background:var(--bg);color:var(--txt2);transition:.15s;white-space:nowrap}
 .tag-chip:hover{border-color:var(--acc);color:var(--acc)}
 .tag-chip.active{background:var(--acc);color:#fff;border-color:var(--acc)}
-.mr-count{font-size:.78rem;color:var(--txt2);white-space:nowrap}
+.tag-filter-reset{width:100%;padding:6px;font-size:.75rem;color:var(--txt2);background:none;border:none;border-top:1px solid var(--border);cursor:pointer;margin-top:10px;padding-top:10px;display:block}
+.tag-filter-reset:hover{color:var(--acc)}
+.mr-count{font-size:.78rem;color:var(--txt2);white-space:nowrap;margin-left:auto}
 .din-line{display:flex;gap:5px;align-items:baseline;font-size:.88rem}
 .din-type{font-size:.68rem;color:var(--acc);font-weight:700;min-width:38px;opacity:.85;text-transform:uppercase}
 .meal-gou{border-bottom:1px dashed var(--border)}
@@ -417,9 +425,12 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
     onclick="filtreFavoris=!filtreFavoris;this.classList.toggle('on',filtreFavoris);filtrerRecettes()">
     ⭐ Favoris
   </button>
-  <div class="mr-tag-chips" id="mr-tag-chips"></div>
+  <button class="btn-tag-filter" id="btn-tag-filter" onclick="toggleTagFilterPanel()">
+    🏷️ Tags<span id="tag-filter-badge"></span> ▾
+  </button>
   <span class="mr-count" id="mr-count"></span>
 </div>
+<div class="tag-filter-panel" id="tag-filter-panel"></div>
 <div id="mes-recettes-liste">
   <p class="mr-empty">Aucune recette importée. Allez dans l'onglet NutriCoach et utilisez le bouton 📎 pour importer une recette (texte, PDF ou photo).</p>
 </div>
@@ -1141,7 +1152,7 @@ function executerActionChat(action) {
       var kR = foundR._fbKey || ('local-'+foundR.nom);
       if (foundR._fbKey && db) db.ref('recettes_perso/'+foundR._fbKey+'/tags').set(foundR.tags);
       renderCardTags(kR);
-      buildTagChips();
+      buildTagFilterPanel();
       ajouterMsg('bot', '✅ Tags mis à jour pour « '+foundR.nom+' » : '+foundR.tags.join(', ')+'.', 'msg-action');
     } else {
       ajouterMsg('bot', '⚠️ Je ne trouve pas cette recette dans ta liste.');
@@ -1342,7 +1353,7 @@ function afficherRecettesPerso(liste) {
   var filtresEl = document.getElementById('mr-filtres');
   if (searchRow) searchRow.style.display = show ? '' : 'none';
   if (filtresEl) filtresEl.style.display = show ? 'flex' : 'none';
-  buildTagChips();
+  buildTagFilterPanel();
 
   var srcList = liste !== undefined ? liste : recettesPerso;
   var countEl = document.getElementById('mr-count');
@@ -1383,15 +1394,8 @@ function afficherRecettesPerso(liste) {
         tags + '<button class="tags-edit-btn" onclick="ouvrePickerTag(\''+k+'\')" title="Modifier les tags">✏️</button>' +
       '</div>' +
       '<div class="recette-card-jour" id="rjour-'+k+'" style="display:none">' +
-        '<label>Comme :</label>' +
-        '<select class="recette-type-sel" id="rtype-'+k+'">' +
-          '<option value="plat principal">🍽️ Plat principal</option>' +
-          '<option value="entrée">🥗 Entrée</option>' +
-          '<option value="dessert">🍮 Dessert</option>' +
-          '<option value="goûter">☕ Goûter</option>' +
-        '</select>' +
-        '<label>le :</label>' +
-        '<select id="rsel-'+k+'"><option value="">— Jour —</option>'+opts+'</select>' +
+        '<label>Ajouter au dîner du :</label>' +
+        '<select id="rsel-'+k+'"><option value="">— Choisir un jour —</option>'+opts+'</select>' +
       '</div>' +
       '</div>';
   }).join('');
@@ -1445,8 +1449,9 @@ function cuisinerCetteSemaine() {
       erreur = true;
       return;
     }
-    var typeEl = document.getElementById('rtype-'+k);
-    var type = typeEl ? typeEl.value : 'plat principal';
+    // Type dérivé automatiquement du tag service de la recette
+    var serviceTags = ['entrée','plat principal','dessert','goûter','soupe'];
+    var type = (r.tags||[]).find(function(t){ return serviceTags.includes(t); }) || 'plat principal';
     selectionnes.push({recette: r, jourIdx: parseInt(sel.value), type: type});
   });
   if (erreur || !selectionnes.length) {
@@ -1622,20 +1627,47 @@ function toggleFavori(k) {
   if (btn) { btn.textContent = r.favoris ? '⭐' : '☆'; btn.classList.toggle('active', r.favoris); }
 }
 
-function buildTagChips() {
-  var allTags = {};
-  recettesPerso.forEach(function(r){ (r.tags||[]).forEach(function(t){ allTags[t]=true; }); });
-  var el = document.getElementById('mr-tag-chips');
-  if (!el) return;
-  el.innerHTML = Object.keys(allTags).sort().map(function(t){
-    return '<button class="tag-chip'+(filtresTags.has(t)?' active':'')+'" onclick="toggleFiltreTag(\''+t+'\')">'+t+'</button>';
+function buildTagFilterPanel() {
+  // Mettre à jour le badge du bouton
+  var badge = document.getElementById('tag-filter-badge');
+  if (badge) badge.textContent = filtresTags.size > 0 ? ' ('+filtresTags.size+')' : '';
+  var btn = document.getElementById('btn-tag-filter');
+  if (btn) btn.classList.toggle('has-active', filtresTags.size > 0);
+  // Reconstruire le panneau seulement s'il est visible
+  var panel = document.getElementById('tag-filter-panel');
+  if (!panel || panel.style.display === 'none') return;
+  var existingTags = {};
+  recettesPerso.forEach(function(r){ (r.tags||[]).forEach(function(t){ existingTags[t]=true; }); });
+  var html = TAG_TAXONOMY.map(function(g) {
+    var chips = g.tags.filter(function(t){ return !!existingTags[t]; }).map(function(t){
+      return '<button class="tag-chip'+(filtresTags.has(t)?' active':'')+'" onclick="toggleFiltreTag(\''+t+'\')">'+t+'</button>';
+    }).join('');
+    if (!chips) return '';
+    return '<div class="tag-filter-section"><span class="tag-filter-cat-title">'+g.cat+'</span><div class="tag-filter-chips">'+chips+'</div></div>';
   }).join('');
+  if (!html) html = '<p style="font-size:.8rem;color:var(--txt2)">Aucun tag encore — importez des recettes pour en créer.</p>';
+  if (filtresTags.size > 0) html += '<button class="tag-filter-reset" onclick="resetTagFilter()">✕ Effacer tous les filtres</button>';
+  panel.innerHTML = html;
+}
+
+function toggleTagFilterPanel() {
+  var panel = document.getElementById('tag-filter-panel');
+  if (!panel) return;
+  var isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : '';
+  if (!isOpen) buildTagFilterPanel();
+}
+
+function resetTagFilter() {
+  filtresTags.clear();
+  buildTagFilterPanel();
+  filtrerRecettes();
 }
 
 function toggleFiltreTag(tag) {
   if (filtresTags.has(tag)) filtresTags.delete(tag);
   else filtresTags.add(tag);
-  buildTagChips();
+  buildTagFilterPanel();
   filtrerRecettes();
 }
 
@@ -1668,7 +1700,7 @@ function toggleTagCard(k, tag) {
   r.tags = tags;
   if (r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/tags').set(tags);
   renderCardTags(k);
-  buildTagChips();
+  buildTagFilterPanel();
   var picker = document.getElementById('tpicker-'+k);
   if (picker) picker.querySelectorAll('.tag-picker-chip').forEach(function(chip){
     chip.classList.toggle('has', tags.includes(chip.dataset.tag));
