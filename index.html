@@ -853,7 +853,7 @@ function afficherSourcesPerso() {
       '<a href="'+(s.url.startsWith('http') ? s.url : 'https://'+s.url)+'" target="_blank" rel="noopener">'+nomDomaine(s.url)+'</a>' +
       '<div class="source-card-desc">'+(s.desc||'')+'</div>' +
       '</div>' +
-      '<button class="btn-del-recette" onclick="supprimerSource('+i+')" title="Supprimer">🗑</button>' +
+      (s._fbKey ? '<button class="btn-del-recette" onclick="supprimerSource(\''+s._fbKey+'\')" title="Supprimer">🗑</button>' : '') +
       '</div>';
   }).join('');
   el.innerHTML = cards || '';
@@ -905,11 +905,9 @@ function importerRecetteUrl() {
   });
 }
 
-function supprimerSource(i) {
-  var s = sitesExtra[i];
-  if (!s) return;
-  if (s._fbKey && db) { db.ref('sites_ressources/'+s._fbKey).remove(); }
-  else { sitesExtra.splice(i, 1); afficherSourcesPerso(); }
+function supprimerSource(fbKey) {
+  if (!fbKey || !db) return;
+  db.ref('sites_ressources/'+fbKey).remove();
 }
 
 // ===== PHASE 8 — PROFIL DYNAMIQUE + RECETTES PERSO =====
@@ -1251,35 +1249,36 @@ function afficherRecettesPerso() {
     liste.innerHTML = '<p class="mr-empty">Aucune recette importée. Allez dans l\'onglet NutriCoach et utilisez le bouton 📎 pour importer une recette (texte, PDF ou photo).</p>';
     return;
   }
-  liste.innerHTML = recettesPerso.map(function(r, i) {
+  liste.innerHTML = recettesPerso.map(function(r) {
+    var k = r._fbKey || ('local-'+r.nom);
     var opts = J.map(function(j, idx) {
       return '<option value="'+idx+'">'+j.nom+'</option>';
     }).join('');
-    return '<div class="recette-card" id="rcard-'+i+'">' +
+    return '<div class="recette-card" id="rcard-'+k+'">' +
       '<div class="recette-card-header">' +
-        '<input type="checkbox" class="recette-card-check" id="rcheck-'+i+'" onchange="toggleRecetteJour('+i+')">' +
+        '<input type="checkbox" class="recette-card-check" id="rcheck-'+k+'" onchange="toggleRecetteJour(\''+k+'\')">' +
         '<span class="recette-card-emoji">'+(r.emoji||'🥘')+'</span>' +
-        '<span class="recette-card-nom" onclick="voirRecettePerso('+i+')" title="Voir la recette complète">'+(r.nom)+'</span>' +
-        '<button class="btn-del-recette" onclick="supprimerRecettePerso('+i+')" title="Supprimer cette recette">🗑</button>' +
+        '<span class="recette-card-nom" onclick="voirRecettePerso(\''+k+'\')" title="Voir la recette complète">'+(r.nom)+'</span>' +
+        '<button class="btn-del-recette" onclick="supprimerRecettePerso(\''+k+'\')" title="Supprimer cette recette">🗑</button>' +
       '</div>' +
       (r.description ? '<div class="recette-card-desc">'+(r.description)+'</div>' : '') +
-      '<div class="recette-card-jour" id="rjour-'+i+'" style="display:none">' +
+      '<div class="recette-card-jour" id="rjour-'+k+'" style="display:none">' +
         '<label>Placer le :</label>' +
-        '<select id="rsel-'+i+'"><option value="">— Choisir un jour —</option>'+opts+'</select>' +
+        '<select id="rsel-'+k+'"><option value="">— Choisir un jour —</option>'+opts+'</select>' +
       '</div>' +
       '</div>';
   }).join('');
 }
 
-function supprimerRecettePerso(i) {
-  var r = recettesPerso[i];
+function supprimerRecettePerso(k) {
+  var r = recettesPerso.find(function(x) { return (x._fbKey || 'local-'+x.nom) === k; });
   if (!r) return;
   if (!confirm('Supprimer « ' + r.nom + ' » ?')) return;
   if (r._fbKey && db) {
     db.ref('recettes_perso/' + r._fbKey).remove();
     // Le listener Firebase mettra à jour recettesPerso + afficherRecettesPerso automatiquement
   } else {
-    recettesPerso.splice(i, 1);
+    recettesPerso = recettesPerso.filter(function(x) { return x !== r; });
     afficherRecettesPerso();
   }
 }
@@ -1296,9 +1295,10 @@ function toggleRecetteJour(i) {
 function cuisinerCetteSemaine() {
   var selectionnes = [];
   var erreur = false;
-  recettesPerso.forEach(function(r, i) {
-    var cb = document.getElementById('rcheck-'+i);
-    var sel = document.getElementById('rsel-'+i);
+  recettesPerso.forEach(function(r) {
+    var k = r._fbKey || ('local-'+r.nom);
+    var cb = document.getElementById('rcheck-'+k);
+    var sel = document.getElementById('rsel-'+k);
     if (cb && cb.checked) {
       if (!sel || sel.value === '') {
         alert('Choisissez un jour pour : « ' + r.nom + ' »');
@@ -1342,10 +1342,11 @@ function cuisinerCetteSemaine() {
   initIngredients();
 
   // Décocher + réinitialiser l'affichage
-  recettesPerso.forEach(function(r, i) {
-    var cb = document.getElementById('rcheck-'+i);
-    var jourDiv = document.getElementById('rjour-'+i);
-    var card = document.getElementById('rcard-'+i);
+  recettesPerso.forEach(function(r) {
+    var k = r._fbKey || ('local-'+r.nom);
+    var cb = document.getElementById('rcheck-'+k);
+    var jourDiv = document.getElementById('rjour-'+k);
+    var card = document.getElementById('rcard-'+k);
     if (cb) cb.checked = false;
     if (jourDiv) jourDiv.style.display = 'none';
     if (card) card.classList.remove('selected');
@@ -1356,14 +1357,15 @@ function cuisinerCetteSemaine() {
   tab('apercu', tabBtn);
 }
 
-function voirRecettePerso(i) {
-  var r = recettesPerso[i];
+function voirRecettePerso(k) {
+  var r = recettesPerso.find(function(x) { return (x._fbKey || 'local-'+x.nom) === k; });
   if (!r) return;
   var modalData = {
     nom: r.nom,
     emoji: r.emoji || '🥘',
     prepTime: r.prepTime || '—',
     cookTime: r.cookTime || '—',
+    url: r.url || r.source || null,
     ingredients: r.ingredients || [],
     etapes: r.etapes || []
   };
