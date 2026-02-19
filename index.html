@@ -1636,17 +1636,8 @@ db.ref('/').on('value',function(snapshot){
         if(localNom!==fbM.recette.nom){
           J[idx].recette=fbM.recette;
           var recipeDiv=document.getElementById('recipe-'+idx);
-          if(recipeDiv){
-            recipeDiv.innerHTML=buildRecipeDiv(idx,J[idx].recette);
-            toast('🔄 Recette jour '+idx+' mise à jour');
-          } else {
-            toast('❌ DIV recipe-'+idx+' absent');
-          }
-        } else {
-          toast('⏭ Recette jour '+idx+' déjà à jour ('+fbM.recette.nom.substring(0,20)+')');
+          if(recipeDiv) recipeDiv.innerHTML=buildRecipeDiv(idx,J[idx].recette);
         }
-      } else {
-        if(fbM.din) toast('⚠️ Jour '+idx+' : pas de recette dans Firebase');
       }
     });
     if(needRW) rW();
