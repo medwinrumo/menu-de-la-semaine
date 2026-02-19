@@ -1257,7 +1257,7 @@ function afficherRecettesPerso(liste) {
         '<button class="btn-fav'+(r.favoris?' active':'')+'" id="rfav-'+k+'" onclick="toggleFavori(\''+k+'\')" title="Favori">'+(r.favoris?'★':'☆')+'</button>' +
         '<span class="recette-card-emoji">'+(r.emoji||'🥘')+'</span>' +
         '<span class="recette-card-nom" onclick="voirRecettePerso(\''+k+'\')" title="Voir la recette complète">'+(r.nom)+'</span>' +
-        (serviceTag ? '<span class="service-tag-badge">'+serviceTag+'</span>' : '') +
+        '<span class="service-tag-badge" id="rsvc-'+k+'" style="'+(serviceTag?'':'display:none')+'">'+( serviceTag||'')+'</span>' +
         '<button class="btn-del-recette" onclick="supprimerRecettePerso(\''+k+'\')" title="Supprimer cette recette">🗑</button>' +
       '</div>' +
       (r.description ? '<div class="recette-card-desc">'+(r.description)+'</div>' : '') +
@@ -1799,9 +1799,19 @@ function toggleTagCard(k, tag) {
 function renderCardTags(k) {
   var r = recettesPersoMap[k];
   if (!r) return;
+  var serviceTagsList = ['entrée','plat principal','accompagnement','dessert','goûter','soupe'];
+  var serviceTag = (r.tags||[]).find(function(t){ return serviceTagsList.includes(t); });
+  // Mettre à jour le badge service à côté du nom
+  var svcBadge = document.getElementById('rsvc-'+k);
+  if (svcBadge) {
+    svcBadge.textContent = serviceTag || '';
+    svcBadge.style.display = serviceTag ? '' : 'none';
+  }
+  // Mettre à jour la zone tags (tags non-service uniquement)
   var area = document.getElementById('rtags-'+k);
   if (!area) return;
-  var tags = (r.tags||[]).map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
+  var nonSvcTags = (r.tags||[]).filter(function(t){ return !serviceTagsList.includes(t); });
+  var tags = nonSvcTags.map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
   area.innerHTML = tags + '<button class="tags-edit-btn" onclick="ouvrePickerTag(\''+k+'\')" title="Modifier les tags">✏️</button>';
 }
 
