@@ -720,6 +720,12 @@ var J=[
 {id:5,nom:"Jeudi 20",pdj:"Eau citronnée • Fromage blanc 3% + graines lin • 1 kiwi • Amandes",col:"Salade de fruits • Yaourt nature • Graines courge",din:"Poisson pané maison au four • Riz basmati • Salade verte colza",dn:"Poisson pané"},
 {id:6,nom:"Vendredi 20",pdj:"Eau citronnée • 2 œufs brouillés • Pain complet + huile olive • 1 orange",col:"Bâtonnets carottes • Houmous de betterave",din:"Salade composée : PDT, betteraves, œufs, thon, vinaigrette colza",dn:"Salade composée"}
 ];
+var SERVICE_ORDER = {'entrée':0,'plat principal':1,'accompagnement':2,'dessert':3,'goûter':4};
+function sortDI(arr) {
+  if (!arr) return arr;
+  var a = Array.isArray(arr) ? arr : Object.values(arr).filter(Boolean);
+  return a.slice().sort(function(a,b){ return (SERVICE_ORDER[a.type]||99)-(SERVICE_ORDER[b.type]||99); });
+}
 function rW(){
 var g=document.getElementById('weekgrid');g.innerHTML='';
 J.forEach(function(j,i){
@@ -738,7 +744,7 @@ g.innerHTML+=
 '</span></div>' +
 '<div class="mc">' +
 (j.dinerItems && j.dinerItems.length
-  ? j.dinerItems.map(function(it){
+  ? sortDI(j.dinerItems).map(function(it){
       var lab=it.type==='entrée'?'Entrée':it.type==='dessert'?'Dessert':it.type==='accompagnement'?'Accomp.':it.type==='goûter'?'Goûter':'Plat';
       return '<div class="din-line"><span class="din-type">'+lab+'</span>'+it.nom+'<button class="btn-del-service" onclick="event.stopPropagation();supprimerService('+i+',\''+it.type+'\')" title="Supprimer ce service">✕</button></div>';
     }).join('')
@@ -1558,7 +1564,7 @@ function ajouterProduit(nom, rayon, label) {
 function buildMultiRecipeDiv(idx) {
   var dayNom = J[idx] ? J[idx].nom : '';
   var html = '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>';
-  var items = J[idx] && J[idx].dinerItems ? J[idx].dinerItems : [];
+  var items = sortDI(J[idx] && J[idx].dinerItems ? J[idx].dinerItems : []);
   var typeLabels = {'entrée':'🥗 Entrée','plat principal':'🍽️ Plat principal','accompagnement':'🥦 Accompagnement','dessert':'🍮 Dessert','goûter':'☕ Goûter'};
   items.forEach(function(item) {
     var r = item.recette;
@@ -2038,7 +2044,8 @@ function recomputeDin(idx) {
 
 function supprimerService(idx, type) {
   if (!J[idx] || !J[idx].dinerItems) return;
-  J[idx].dinerItems = J[idx].dinerItems.filter(function(it){ return it.type !== type; });
+  var arr = Array.isArray(J[idx].dinerItems) ? J[idx].dinerItems : Object.values(J[idx].dinerItems).filter(Boolean);
+  J[idx].dinerItems = arr.filter(function(it){ return it.type !== type; });
   if (!J[idx].dinerItems.length) J[idx].dinerItems = null;
   recomputeDin(idx);
   var recipeDiv = document.getElementById('recipe-'+idx);
@@ -2253,21 +2260,33 @@ db.ref('/').on('value',function(snapshot){
         J[idx].dn=fbM.dn;
         needRW=true;
       }
-      // Sync nouveaux champs multi-plats + goûter
-      var newDinerItems = fbM.dinerItems||null;
-      var newGou = fbM.gou||null;
-      if(JSON.stringify(J[idx].dinerItems)!==JSON.stringify(newDinerItems)){
-        J[idx].dinerItems=newDinerItems; needRW=true;
+      // Sync dinerItems — Firebase renvoie un objet {0:{…},1:{…}}, convertir en tableau
+      var rawDI=fbM.dinerItems||null;
+      var newDI=rawDI?(Array.isArray(rawDI)?rawDI:Object.values(rawDI)).filter(Boolean):null;
+      if(newDI&&!newDI.length)newDI=null;
+      var needRecipe=false;
+      if(JSON.stringify(J[idx].dinerItems)!==JSON.stringify(newDI)){
+        J[idx].dinerItems=newDI; needRW=true; needRecipe=true;
       }
+      // Sync goûter
+      var newGou=fbM.gou||null;
       if(J[idx].gou!==newGou){ J[idx].gou=newGou; needRW=true; }
       J[idx].recetteGou=fbM.recetteGou||null;
-      // Sync recette si présente et différente (comparaison par nom)
+      // Sync recette
       if(fbM.recette){
         var localNom=J[idx].recette?J[idx].recette.nom:null;
-        if(localNom!==fbM.recette.nom){
-          J[idx].recette=fbM.recette;
-          var recipeDiv=document.getElementById('recipe-'+idx);
-          if(recipeDiv){ recipeDiv.innerHTML=buildRecipeDiv(idx,J[idx].recette); initIngredients(); }
+        if(localNom!==fbM.recette.nom){ J[idx].recette=fbM.recette; needRecipe=true; }
+      }
+      // Mettre à jour l'onglet Recettes si recette ou dinerItems ont changé
+      if(needRecipe){
+        var recipeDiv=document.getElementById('recipe-'+idx);
+        if(recipeDiv){
+          if(J[idx].dinerItems&&J[idx].dinerItems.length){
+            recipeDiv.innerHTML=buildMultiRecipeDiv(idx);
+          } else if(J[idx].recette){
+            recipeDiv.innerHTML=buildRecipeDiv(idx,J[idx].recette);
+          }
+          initIngredients();
         }
       }
     });
