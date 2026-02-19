@@ -1301,20 +1301,21 @@ function cuisinerCetteSemaine() {
   var selectionnes = [];
   var erreur = false;
   var checks = document.querySelectorAll('#mes-recettes-liste .recette-card-check:checked');
+  toast('🔍 ' + checks.length + ' recette(s) cochée(s)');
   Array.prototype.forEach.call(checks, function(cb) {
     var k = cb.id.replace('rcheck-', '');
     var r = recettesPersoMap[k];
     var sel = document.getElementById('rsel-'+k);
-    if (!r) return;
+    if (!r) { toast('⚠️ Recette introuvable : ' + k); return; }
     if (!sel || sel.value === '') {
-      alert('Choisissez un jour pour : « ' + r.nom + ' »');
+      toast('⚠️ Choisissez un jour pour : « ' + r.nom + ' »');
       erreur = true;
       return;
     }
     selectionnes.push({recette: r, jourIdx: parseInt(sel.value)});
   });
   if (erreur || !selectionnes.length) {
-    if (!selectionnes.length && !erreur) alert('Cochez au moins une recette et choisissez un jour.');
+    if (!selectionnes.length && !erreur) toast('⚠️ Cochez au moins une recette et choisissez un jour.');
     return;
   }
 
@@ -1364,27 +1365,33 @@ function cuisinerCetteSemaine() {
 
 function voirRecettePerso(k) {
   var r = recettesPersoMap[k];
-  if (!r) { toast('❌ Recette introuvable'); return; }
-  var modalData = {
-    nom: r.nom,
-    emoji: r.emoji || '🥘',
-    prepTime: r.prepTime || '—',
-    cookTime: r.cookTime || '—',
-    url: r.url || r.source || null,
-    ingredients: r.ingredients || [],
-    etapes: r.etapes || []
-  };
-  afficherModal(modalData);
-  // Mode consultation : masquer les boutons Adopter / Chercher une autre
-  var actions = document.querySelector('.modal-actions');
-  if (actions) actions.style.display = 'none';
-  var closeBtn = document.querySelector('.modal-close');
-  var origOnclick = closeBtn.onclick;
-  closeBtn.onclick = function() {
-    fermerModal();
-    if (actions) actions.style.display = '';
-    closeBtn.onclick = origOnclick;
-  };
+  if (!r) { toast('❌ Recette introuvable (clé : ' + k + ')'); return; }
+  try {
+    var toArr = function(x) { return Array.isArray(x) ? x : (x ? Object.values(x) : []); };
+    var modalData = {
+      nom: r.nom,
+      emoji: r.emoji || '🥘',
+      prepTime: r.prepTime || '—',
+      cookTime: r.cookTime || '—',
+      url: r.url || r.source || null,
+      ingredients: toArr(r.ingredients),
+      etapes: toArr(r.etapes)
+    };
+    afficherModal(modalData);
+    var actions = document.querySelector('.modal-actions');
+    if (actions) actions.style.display = 'none';
+    var closeBtn = document.querySelector('.modal-close');
+    if (closeBtn) {
+      var origOnclick = closeBtn.onclick;
+      closeBtn.onclick = function() {
+        fermerModal();
+        if (actions) actions.style.display = '';
+        closeBtn.onclick = origOnclick;
+      };
+    }
+  } catch(e) {
+    toast('❌ Erreur modal : ' + e.message);
+  }
 }
 
 // ===== INTERVERTIR DÎNERS (deux-taps — tous appareils) =====
