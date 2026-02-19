@@ -96,6 +96,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .din-handle:hover{opacity:1;color:var(--acc);background:var(--accL)}
 .din-handle:active{cursor:grabbing}
 .day.drag-over{border-color:var(--acc)!important;background:var(--accL)!important;box-shadow:0 0 0 2px var(--acc)}
+.day.swap-selected{border-color:var(--acc)!important;background:var(--accL)!important;box-shadow:0 0 0 3px var(--acc);animation:swappulse 1.2s ease-in-out infinite}
+@keyframes swappulse{0%,100%{box-shadow:0 0 0 3px var(--acc)}50%{box-shadow:0 0 0 7px var(--accL)}}
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;padding:10px 22px;border-radius:20px;font-size:.84rem;font-weight:600;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,.2);pointer-events:none;animation:fu .2s ease}
 .btn-back{margin-bottom:14px;padding:6px 14px;background:var(--accL);color:var(--acc);border:1px solid var(--acc);border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer}
 .btn-back:hover{background:var(--acc);color:#fff}
@@ -1272,11 +1274,50 @@ function dropDinner(event, i) {
 
 // ===== TOUCH DRAG & DROP (mobile/tablette) =====
 var touchDragIdx = null;
+var touchSelectIdx = null; // mode deux-taps (téléphone)
+
+function performSwap(src, dst) {
+  var d = J[src].din, n = J[src].dn;
+  J[src].din = J[dst].din; J[src].dn = J[dst].dn;
+  J[dst].din = d; J[dst].dn = n;
+  rW();
+  if (db) {
+    swapInProgress = true;
+    var updates = {};
+    updates['menus/'+src] = {din:J[src].din, dn:J[src].dn};
+    updates['menus/'+dst] = {din:J[dst].din, dn:J[dst].dn};
+    db.ref().update(updates).then(function(){ swapInProgress = false; })
+                            .catch(function(){ swapInProgress = false; });
+  }
+  toast('✅ Dîners intervertis !');
+}
+
 function touchDragStart(event, i) {
-  touchDragIdx = i;
   event.preventDefault();
+  // Téléphone (< 600px) : mode deux-taps
+  if (window.innerWidth < 600) {
+    if (touchSelectIdx === null) {
+      // 1er tap : sélectionner ce jour
+      touchSelectIdx = i;
+      document.getElementById('day-'+i).classList.add('swap-selected');
+      toast('📌 Scrolle et tape un autre dîner pour intervertir');
+    } else if (touchSelectIdx === i) {
+      // Re-tap sur le même : annuler
+      document.getElementById('day-'+i).classList.remove('swap-selected');
+      touchSelectIdx = null;
+    } else {
+      // 2e tap sur un autre jour : swap
+      document.getElementById('day-'+touchSelectIdx).classList.remove('swap-selected');
+      performSwap(touchSelectIdx, i);
+      touchSelectIdx = null;
+    }
+    return;
+  }
+  // Tablette : mode glisser-déposer
+  touchDragIdx = i;
   document.getElementById('day-'+i).style.opacity = '0.5';
 }
+
 function touchDragMove(event) {
   if (touchDragIdx === null) return;
   event.preventDefault();
@@ -1286,6 +1327,7 @@ function touchDragMove(event) {
   while (el && (!el.id || !el.id.startsWith('day-'))) el = el.parentElement;
   if (el && el.id !== 'day-'+touchDragIdx) el.classList.add('drag-over');
 }
+
 function touchDragEnd(event) {
   if (touchDragIdx === null) return;
   event.preventDefault();
@@ -1296,21 +1338,7 @@ function touchDragEnd(event) {
   while (el && (!el.id || !el.id.startsWith('day-'))) el = el.parentElement;
   if (el) {
     var dst = parseInt(el.id.replace('day-', ''));
-    if (!isNaN(dst) && dst !== touchDragIdx) {
-      var src = touchDragIdx;
-      var d = J[src].din, n = J[src].dn;
-      J[src].din = J[dst].din; J[src].dn = J[dst].dn;
-      J[dst].din = d; J[dst].dn = n;
-      rW();
-      if (db) {
-        swapInProgress = true;
-        var updates = {};
-        updates['menus/'+src] = {din:J[src].din, dn:J[src].dn};
-        updates['menus/'+dst] = {din:J[dst].din, dn:J[dst].dn};
-        db.ref().update(updates).then(function(){ swapInProgress = false; })
-                                .catch(function(){ swapInProgress = false; });
-      }
-    }
+    if (!isNaN(dst) && dst !== touchDragIdx) performSwap(touchDragIdx, dst);
   }
   touchDragIdx = null;
 }
