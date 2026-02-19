@@ -505,6 +505,12 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
   <input type="url" id="scrape-url-input" placeholder="https://cuisinerigbas.com/curry-lentilles-corail/">
   <button class="btn-cuisiner" id="btn-scrape" style="margin-top:4px" onclick="importerRecetteUrl()">📥 Importer cette recette</button>
 </div>
+<hr style="margin:28px 0;border:none;border-top:1px solid var(--border)">
+<div style="background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:var(--r2);padding:16px">
+  <strong style="font-size:.85rem;color:#b91c1c">⚠️ Zone dangereuse</strong>
+  <p style="font-size:.82rem;color:var(--txt2);margin:6px 0 12px">Remet le planning et la liste de courses à zéro. <b>Vos recettes personnelles sont conservées.</b></p>
+  <button onclick="reinitialiserSysteme()" style="background:#dc2626;color:#fff;border:none;padding:9px 18px;border-radius:var(--r);font-size:.85rem;font-weight:600;cursor:pointer">🗑️ Réinitialiser le planning</button>
+</div>
 </div>
 </div>
 
@@ -2269,6 +2275,18 @@ function appliquerDepuisFirebase(data){
   var cd=document.getElementById('caddie');
   if(!cd.querySelector('.sitem'))cd.innerHTML='<p class="caddie-empty">Cochez les produits pour les ajouter ici.</p>';
   mC();
+}
+
+function reinitialiserSysteme() {
+  if (!confirm('⚠️ Réinitialiser le planning et la liste de courses ?\n\nVos recettes personnelles (Mes Recettes) seront conservées.')) return;
+  if (!confirm('Dernière confirmation — effacer définitivement le planning et la liste de courses ?')) return;
+  var ops = [];
+  if (db) {
+    ops.push(db.ref('menus').remove());
+    ops.push(db.ref('courses').remove());
+    ops.push(db.ref('ingredients').remove());
+  }
+  Promise.all(ops).then(function(){ location.reload(); }).catch(function(){ location.reload(); });
 }
 
 var firebaseConfig={
