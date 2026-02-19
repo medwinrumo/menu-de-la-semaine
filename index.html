@@ -1237,6 +1237,7 @@ function voirRecettePerso(i) {
 
 // ===== DRAG & DROP DÎNERS =====
 var dragIdx = null;
+var swapInProgress = false;
 function dragStart(event, i) {
   dragIdx = i;
   event.dataTransfer.effectAllowed = 'move';
@@ -1253,17 +1254,20 @@ function dropDinner(event, i) {
   event.preventDefault();
   document.getElementById('day-'+i).classList.remove('drag-over');
   if (dragIdx === null || dragIdx === i) { dragIdx = null; return; }
-  var d = J[dragIdx].din, n = J[dragIdx].dn;
-  J[dragIdx].din = J[i].din; J[dragIdx].dn = J[i].dn;
-  J[i].din = d; J[i].dn = n;
-  if (db) {
-    var updates = {};
-    updates['menus/'+dragIdx] = {din:J[dragIdx].din, dn:J[dragIdx].dn};
-    updates['menus/'+i] = {din:J[i].din, dn:J[i].dn};
-    db.ref().update(updates);
-  }
+  var src = dragIdx, dst = i;
+  var d = J[src].din, n = J[src].dn;
+  J[src].din = J[dst].din; J[src].dn = J[dst].dn;
+  J[dst].din = d; J[dst].dn = n;
   dragIdx = null;
   rW();
+  if (db) {
+    swapInProgress = true;
+    var updates = {};
+    updates['menus/'+src] = {din:J[src].din, dn:J[src].dn};
+    updates['menus/'+dst] = {din:J[dst].din, dn:J[dst].dn};
+    db.ref().update(updates).then(function(){ swapInProgress = false; })
+                            .catch(function(){ swapInProgress = false; });
+  }
 }
 
 // ===== TOAST =====
@@ -1454,7 +1458,7 @@ db=firebase.database();
 db.ref('/').on('value',function(snapshot){
   var data=snapshot.val()||{};
   // Sync menus modifiés
-  if (data.menus) {
+  if (data.menus && !swapInProgress) {
     Object.keys(data.menus).forEach(function(i){
       var idx=parseInt(i);
       if(J[idx]&&(J[idx].din!==data.menus[i].din)){
