@@ -17,7 +17,7 @@ header{text-align:center;padding:28px 16px;background:var(--card);border-radius:
 header h1{font-size:1.7rem;color:var(--acc)}
 header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .wk{display:inline-block;margin-top:8px;padding:5px 14px;background:var(--acc);color:#fff;border-radius:20px;font-size:.8rem;font-weight:600}
-.tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;justify-content:center}
+.tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;justify-content:center;position:sticky;top:0;z-index:200;background:var(--bg);padding:10px 0}
 .tabs button{padding:9px 18px;background:var(--card);border:2px solid var(--border);border-radius:var(--r);color:var(--txt);font-size:.9rem;font-weight:600;cursor:pointer;transition:.2s}
 .tabs button:hover{border-color:var(--acc);color:var(--acc)}
 .tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
@@ -321,18 +321,6 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 <div id="chat" class="pnl">
 <div class="chat-wrap">
   <div class="chat-messages" id="chat-messages">
-    <div class="msg msg-bot">
-      <div class="msg-bubble">👋 Bonjour ! Je suis <b>NutriCoach</b>, votre assistant nutritionniste.<br><br>
-      Je peux :<br>
-      • Répondre à vos questions nutrition<br>
-      • Vous expliquer les bienfaits des aliments<br>
-      • Vous dire quels légumes sont de saison<br>
-      • Modifier vos menus sur commande<br><br>
-      <b>Exemples :</b><br>
-      "Remplace le dîner de lundi par une recette au saumon"<br>
-      "Quels sont les bienfaits des oméga-3 ?"<br>
-      "Génère une nouvelle semaine de menus"</div>
-    </div>
   </div>
   <div class="chat-input-area">
     <textarea id="chat-input" rows="2" placeholder="Question ou instruction…"></textarea>
@@ -604,7 +592,8 @@ mC();
 function goRecette(idx){
   var btn=document.querySelectorAll('.tabs button')[1];
   tab('recettes',btn);
-  setTimeout(function(){var e=document.getElementById('recipe-'+idx);if(e)e.scrollIntoView({behavior:'smooth',block:'start'});},80);
+  var e=document.getElementById('recipe-'+idx);
+  if(e)e.scrollIntoView({behavior:'instant',block:'start'});
 }
 function goMenu(){
   var btn=document.querySelector('.tabs button');
@@ -687,6 +676,13 @@ function ingOk(id) {
   li.onclick = function() { editerIngredient(this); };
 
   if (nouveau === ancien) return;
+
+  // Sauvegarder la modification dans Firebase
+  var recipeDiv = li.closest('.recipe');
+  if (recipeDiv && db) {
+    var recipeIdx = recipeDiv.id.replace('recipe-', '');
+    db.ref('ingredients/' + recipeIdx + '/' + fbKey(ancien)).set({original: ancien, nouveau: nouveau});
+  }
 
   document.querySelectorAll('#liste-principale .sitem').forEach(function(el) {
     var nm = el.querySelector('.sn').textContent.toLowerCase();
@@ -808,6 +804,19 @@ function executerActionChat(action) {
     }
   } else if (action.type === 'generer_semaine') {
     genererSemaine(true);
+  } else if (action.type === 'ajouter_courses' && action.produits) {
+    action.produits.forEach(function(item){
+      var c=document.querySelector('.si[data-cat="'+item.rayon+'"]');
+      if(c){
+        var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
+        var l=document.createElement('label');l.className='sitem';
+        l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">💬 Ajouté par NutriCoach</span>';
+        c.appendChild(l);
+      }
+      if(db)db.ref('courses/ajoutes').push({nom:item.nom,rayon:item.rayon});
+    });
+    mC();
+    ajouterMsg('bot','✅ '+action.produits.length+' produit(s) ajouté(s) à votre liste !','msg-action');
   }
 }
 
@@ -921,24 +930,25 @@ function appliquerNouveauxMenus(data) {
       db.ref('menus/'+i).set({nom:jour.nom, pdj:jour.pdj, col:jour.col, din:jour.din, dn:jour.dn});
     });
     if (data.semaine) db.ref('semaine').set(data.semaine);
+    db.ref('ingredients').remove();
   }
 }
 
 // ===== PHASE 4 — AUTRE RECETTE =====
 var recetteEnCours = null;
 
-function changerRecette(idx, btn) {
+function changerRecette(idx, btn, recettesRefusees) {
   btn.textContent = '⏳ Recherche en cours…';
   btn.disabled = true;
   var autresRecettes = J.filter(function(j,i){return i!==idx;}).map(function(j){return j.dn;});
   fetch('/api/recette', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({jour:J[idx].nom, recetteActuelle:J[idx].dn, autresRecettes:autresRecettes})
+    body: JSON.stringify({jour:J[idx].nom, recetteActuelle:J[idx].dn, autresRecettes:autresRecettes, recettesRefusees:recettesRefusees||[]})
   })
   .then(function(r){return r.json();})
   .then(function(data){
-    recetteEnCours = {idx:idx, data:data};
+    recetteEnCours = {idx:idx, data:data, refusees:recettesRefusees||[]};
     afficherModal(data);
     btn.textContent = '↺ Autre recette';
     btn.disabled = false;
@@ -992,14 +1002,32 @@ function accepterRecette() {
 function chercherAutre() {
   if (!recetteEnCours) return;
   var idx = recetteEnCours.idx;
+  var refusees = (recetteEnCours.refusees || []).concat([recetteEnCours.data.nom]);
   fermerModal();
   var btns = document.querySelectorAll('.btn-swap');
-  if (btns[idx]) changerRecette(idx, btns[idx]);
+  if (btns[idx]) changerRecette(idx, btns[idx], refusees);
 }
 
 // ===== FIREBASE =====
 var db=null;
 function fbKey(nom){return nom.replace(/[.#$[\]/]/g,'-').replace(/\s+/g,'_').substring(0,60);}
+
+function appliquerIngredientsFirebase(ingredients){
+  if(!ingredients)return;
+  Object.keys(ingredients).forEach(function(idx){
+    var recipeDiv=document.getElementById('recipe-'+idx);
+    if(!recipeDiv)return;
+    var changes=ingredients[idx];
+    Object.values(changes).forEach(function(change){
+      recipeDiv.querySelectorAll('ul li').forEach(function(li){
+        if(li.textContent.trim()===change.original){
+          li.textContent=change.nouveau;
+          li.classList.add('ing-changed');
+        }
+      });
+    });
+  });
+}
 
 function appliquerDepuisFirebase(data){
   var coches=data.coches||{};
@@ -1066,7 +1094,8 @@ db.ref('/').on('value',function(snapshot){
     });
     rW();
   }
-  appliquerDepuisFirebase(data);
+  appliquerDepuisFirebase(data.courses || {});
+  appliquerIngredientsFirebase(data.ingredients || null);
 });
 </script>
 </body>

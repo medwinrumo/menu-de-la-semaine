@@ -9,16 +9,21 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   try {
-    const { jour, recetteActuelle, autresRecettes } = req.body;
+    const { jour, recetteActuelle, autresRecettes, recettesRefusees } = req.body;
     const ctx = getContexteSaisonnier();
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    const refuseesTexte = recettesRefusees && recettesRefusees.length > 0
+      ? `RECETTES DÉJÀ PROPOSÉES ET REFUSÉES — NE PAS REPROPOSER : ${recettesRefusees.join(', ')}`
+      : '';
 
     const prompt = `Tu es un nutritionniste expert en cuisine française saine.
 
 MISSION : Proposer une recette de dîner alternative pour ${jour}.
 RECETTE À REMPLACER : "${recetteActuelle}"
 MENUS DÉJÀ PLANIFIÉS CETTE SEMAINE (ne pas répéter) : ${autresRecettes ? autresRecettes.join(', ') : 'aucun'}
+${refuseesTexte}
 
 ${getInstructionsSaisonnieres(ctx)}
 
@@ -34,7 +39,7 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
   "emoji": "🥘",
   "prepTime": "15 min",
   "cookTime": "25 min",
-  "description": "Description ultra-courte style planning (ex: Curry lentilles corail • Quinoa • Mâche)",
+  "description": "Description ultra-courte style planning (ex: Saumon vapeur • Quinoa • Poireaux fondants)",
   "ingredients": ["400g filets de cabillaud", "3 carottes en rondelles", "2 poireaux", "..."],
   "etapes": ["Étape 1...", "Étape 2...", "Étape 3..."],
   "coursesAAjouter": [

@@ -6,7 +6,80 @@
 const MOIS_FR = ['janvier','février','mars','avril','mai','juin',
                  'juillet','août','septembre','octobre','novembre','décembre'];
 
-// Calendrier saisonnier précis pour la France (par mois)
+// Tableau maître : chaque légume/fruit avec ses mois de disponibilité en France
+// Mois : 1=janvier ... 12=décembre
+const LEGUMES_SAISON = {
+  'poireaux':           [1,2,3,11,12],
+  'carottes':           [1,2,3,9,10,11,12],
+  'navets':             [1,2,3,10,11,12],
+  'céleri-rave':        [1,2,10,11,12],
+  'panais':             [1,2,3,10,11,12],
+  'butternut':          [1,2,9,10,11,12],
+  'potimarron':         [9,10,11,12],
+  'chou blanc':         [1,2,10,11,12],
+  'chou rouge':         [1,10,11,12],
+  'chou de Bruxelles':  [1,2,11,12],
+  'chou frisé':         [1,2,11,12],
+  'chou-fleur':         [3,9,10,11],
+  'brocolis':           [3,9,10,11],
+  'endives':            [1,2,3,11,12],
+  'mâche':              [1,2,3,11,12],
+  'betterave':          [1,2,9,10,11,12],
+  'topinambour':        [1,2,10,11,12],
+  'salsifis':           [1,12],
+  'épinards':           [1,2,3,4,5,9,10,11,12],
+  'oignon':             [1,2,3,4,5,6,7,8,9,10,11,12],
+  'ail':                [1,2,6,7,9,10,11,12],
+  'radis':              [3,4,5],
+  'asperges':           [4,5],
+  'petits pois':        [4,5,6],
+  'artichaut':          [4,5,6,9],
+  'laitue':             [4,5,6,7,8],
+  'roquette':           [4,5,6],
+  'bette':              [4,5,6,7,8],
+  'oignon nouveau':     [4,5,6],
+  'fèves':              [5,6],
+  'courgettes':         [5,6,7,8,9],
+  'tomates':            [6,7,8,9],
+  'poivrons':           [6,7,8,9],
+  'haricots verts':     [6,7,8,9],
+  'concombre':          [6,7,8],
+  'fenouil':            [6,7,8,9],
+  'basilic frais':      [6,7,8],
+  'aubergines':         [7,8,9],
+  'maïs':               [7,8,9],
+  'courges':            [9,10,11,12],
+  'champignons frais':  [9,10,11],
+};
+
+const FRUITS_SAISON = {
+  'pommes':         [1,2,3,9,10,11,12],
+  'poires':         [1,2,3,9,10,11,12],
+  'clémentines':    [1,2,11,12],
+  'oranges':        [1,2,3,11,12],
+  'kiwi':           [1,2,3,4,11,12],
+  'citrons':        [1,2,3,4,5,6,7,8,9,10,11,12],
+  'pamplemousse':   [1,2,3,11,12],
+  'banane':         [1,2,3,4,5,6,7,8,9,10,11,12],
+  'fraises':        [3,4,5,6],
+  'rhubarbe':       [4,5,6],
+  'cerises':        [5,6],
+  'framboises':     [6,7,8,9],
+  'abricots':       [6,7,8],
+  'melon':          [6,7,8,9],
+  'pêches':         [6,7,8,9],
+  'nectarines':     [6,7,8,9],
+  'pastèque':       [7,8],
+  'figues':         [8,9,10],
+  'raisins':        [9,10],
+  'prunes':         [7,8,9],
+  'coings':         [10,11],
+  'châtaignes':     [10,11,12],
+  'mûres':          [8,9],
+  'myrtilles':      [7,8],
+};
+
+// Calendrier saisonnier (liste positive par mois, pour affichage)
 const CALENDRIER = {
   1:  {
     legumes: 'poireaux, carottes, navets, céleri-rave, panais, butternut, potimarron, chou blanc, chou rouge, chou de Bruxelles, chou frisé, endives, mâche, betterave, topinambour, salsifis, épinards, ail, oignon',
@@ -21,11 +94,11 @@ const CALENDRIER = {
     fruits:  'pommes, poires, oranges, kiwi, fraises (toute fin mars uniquement)'
   },
   4:  {
-    legumes: 'asperges vertes et blanches, petits pois, artichaut, radis, épinards, roquette, carottes nouvelles, laitue, bette, blettes, oignon nouveau, ciboulette',
+    legumes: 'asperges vertes et blanches, petits pois, artichaut, radis, épinards, roquette, carottes nouvelles, laitue, bette, oignon nouveau, ciboulette',
     fruits:  'fraises, rhubarbe, kiwi'
   },
   5:  {
-    legumes: 'asperges, petits pois, fèves, artichaut, courgettes (début), radis, laitue, bette, épinards, roquette, ciboulette, oignon nouveau',
+    legumes: 'asperges, petits pois, fèves, artichaut, courgettes (début), radis, laitue, bette, épinards, roquette, oignon nouveau',
     fruits:  'fraises, cerises, rhubarbe, melon (début fin mai)'
   },
   6:  {
@@ -83,25 +156,41 @@ function getContexteSaisonnier() {
 }
 
 /**
- * Génère le bloc "instructions saisonnières" à injecter dans les prompts
+ * Génère le bloc "instructions saisonnières" à injecter dans les prompts.
+ * Inclut la liste positive (autorisés) ET la liste interdite dynamique (tout le reste).
  */
 function getInstructionsSaisonnieres(ctx) {
+  const moisNum = ctx.moisNum;
+
+  // Construire dynamiquement la liste des produits interdits ce mois-ci
+  const legumesForbids = Object.keys(LEGUMES_SAISON)
+    .filter(l => !LEGUMES_SAISON[l].includes(moisNum))
+    .join(', ');
+
+  const fruitsForbids = Object.keys(FRUITS_SAISON)
+    .filter(f => !FRUITS_SAISON[f].includes(moisNum))
+    .join(', ');
+
   return `
 ━━━ DATE ET SAISON ━━━
 Aujourd'hui : ${ctx.dateStr} — ${ctx.saison} en France
 Pays : France (climat tempéré, 4 saisons)
 
-━━━ LÉGUMES DE SAISON EN ${ctx.mois.toUpperCase()} — LISTE EXCLUSIVE ━━━
+━━━ LÉGUMES AUTORISÉS EN ${ctx.mois.toUpperCase()} ━━━
 ${ctx.legumes}
 
-━━━ FRUITS DE SAISON EN ${ctx.mois.toUpperCase()} ━━━
+━━━ FRUITS AUTORISÉS EN ${ctx.mois.toUpperCase()} ━━━
 ${ctx.fruits}
 
+⛔ INTERDITS EN ${ctx.mois.toUpperCase()} — NE JAMAIS UTILISER CES PRODUITS :
+Légumes hors saison : ${legumesForbids}
+Fruits hors saison : ${fruitsForbids}
+
 ⚠️ RÈGLE ABSOLUE SAISONNALITÉ :
-- Utiliser UNIQUEMENT les légumes et fruits listés ci-dessus
-- Ne JAMAIS proposer : tomates, courgettes, aubergines, poivrons, fraises, framboises, pêches, abricots en dehors de leur saison
-- En cas de doute sur un produit, ne pas l'utiliser
-- Les légumineuses (lentilles, pois chiches, haricots secs) et les céréales (quinoa, riz, boulgour) sont disponibles toute l'année`.trim();
+- Utiliser UNIQUEMENT les légumes et fruits de la liste AUTORISÉS ci-dessus
+- Aucune recette ne doit contenir un seul légume ou fruit de la liste INTERDITS
+- Les légumineuses (lentilles, pois chiches, haricots SECS) et les céréales (quinoa, riz, boulgour) sont disponibles toute l'année
+- En cas de doute sur un produit, ne pas l'utiliser`.trim();
 }
 
 // Profil santé de l'utilisateur
@@ -123,7 +212,7 @@ Dîner : 1/2 légumes de saison + 1/4 protéines maigres + 1/4 féculents comple
 Hydratation : eau citronnée le matin, 1,5L eau par jour
 
 Aliments AUTORISÉS :
-- Légumineuses : lentilles, pois chiches, haricots (2×/semaine min)
+- Légumineuses SÈCHES : lentilles, pois chiches, haricots secs (2×/semaine min)
 - Poisson : cabillaud, colin, saumon, sardines, maquereau (2×/semaine min)
 - Volailles : poulet, dinde sans peau
 - Œufs : max 1/jour
