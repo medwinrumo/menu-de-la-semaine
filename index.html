@@ -1453,7 +1453,7 @@ function cuisinerCetteSemaine() {
     // Mettre à jour l'onglet Recettes pour ce jour
     var recipeDiv = document.getElementById('recipe-'+idx);
     if (recipeDiv) {
-      if (J[idx].dinerItems && J[idx].dinerItems.length > 0) {
+      if ((J[idx].dinerItems && J[idx].dinerItems.length > 0) || J[idx].recetteGou) {
         recipeDiv.innerHTML = buildMultiRecipeDiv(idx);
       } else if (J[idx].recette) {
         recipeDiv.innerHTML = buildRecipeDiv(idx, J[idx].recette);
