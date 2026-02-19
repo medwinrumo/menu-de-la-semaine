@@ -261,7 +261,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <body>
 <div class="wrap">
 <header>
-<h1>🍽️ Planificateur Menus Santé</h1>
+<h1>🍽️ Planificateur Menus</h1>
 <div class="wk" id="wk-label">📅 Samedi 14 → Vendredi 20 février 2026</div>
 <br>
 <button id="btn-gen" class="btn-gen" onclick="genererSemaine()">🗓️ Générer la semaine</button>
@@ -749,8 +749,8 @@ g.innerHTML+=
 '<div class="day" id="day-'+i+'">' +
 '<h3>'+j.nom+'</h3>'+
 '<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+j.pdj+'</div></div>'+
-'<div class="meal"><div class="ml">🥗 Collation midi</div><div class="mc">'+j.col+'</div></div>'+
-(j.gou ? '<div class="meal meal-gou"><div class="ml">☕ Goûter</div><div class="mc">'+j.gou+'</div></div>' : '') +
+'<div class="meal"><div class="ml">🥗 Midi</div><div class="mc">'+j.col+'</div></div>'+
+(j.gou ? '<div class="meal meal-gou"><div class="ml">☕ Goûter<button class="btn-del-service" onclick="event.stopPropagation();supprimerGouteur('+i+')" title="Supprimer le goûter">✕</button></div><div class="mc">'+j.gou+'</div></div>' : '') +
 '<div class="meal meal-din" onclick="goRecette('+i+')">' +
 '<div class="ml din-ml">🍽️ Dîner' +
 '<span class="din-actions" onclick="event.stopPropagation()">' +
@@ -2077,6 +2077,18 @@ function supprimerService(idx, type) {
     nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
     dinerItems: J[idx].dinerItems||null,
     gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null
+  });
+  rW();
+}
+
+function supprimerGouteur(idx) {
+  if (!J[idx]) return;
+  J[idx].gou = null;
+  J[idx].recetteGou = null;
+  if (db) db.ref('menus/'+idx).set({
+    nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
+    dinerItems: J[idx].dinerItems||null,
+    gou: null, recetteGou: null
   });
   rW();
 }
