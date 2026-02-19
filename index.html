@@ -913,6 +913,7 @@ function supprimerSource(fbKey) {
 // ===== PHASE 8 — PROFIL DYNAMIQUE + RECETTES PERSO =====
 var profilExtra = {};
 var recettesPerso = [];
+var recettesPersoMap = {}; // lookup rapide key → recette
 
 // ===== PHASE 6 — NUTRICOACH CHAT =====
 var chatHisto = [];
@@ -1243,6 +1244,10 @@ function importerFichier(input) {
 }
 
 function afficherRecettesPerso() {
+  recettesPersoMap = {};
+  recettesPerso.forEach(function(r) {
+    recettesPersoMap[r._fbKey || ('local-'+r.nom)] = r;
+  });
   var liste = document.getElementById('mes-recettes-liste');
   if (!liste) return;
   if (!recettesPerso.length) {
@@ -1271,7 +1276,7 @@ function afficherRecettesPerso() {
 }
 
 function supprimerRecettePerso(k) {
-  var r = recettesPerso.find(function(x) { return (x._fbKey || 'local-'+x.nom) === k; });
+  var r = recettesPersoMap[k];
   if (!r) return;
   if (!confirm('Supprimer « ' + r.nom + ' » ?')) return;
   if (r._fbKey && db) {
@@ -1295,18 +1300,18 @@ function toggleRecetteJour(i) {
 function cuisinerCetteSemaine() {
   var selectionnes = [];
   var erreur = false;
-  recettesPerso.forEach(function(r) {
-    var k = r._fbKey || ('local-'+r.nom);
-    var cb = document.getElementById('rcheck-'+k);
+  var checks = document.querySelectorAll('#mes-recettes-liste .recette-card-check:checked');
+  Array.prototype.forEach.call(checks, function(cb) {
+    var k = cb.id.replace('rcheck-', '');
+    var r = recettesPersoMap[k];
     var sel = document.getElementById('rsel-'+k);
-    if (cb && cb.checked) {
-      if (!sel || sel.value === '') {
-        alert('Choisissez un jour pour : « ' + r.nom + ' »');
-        erreur = true;
-        return;
-      }
-      selectionnes.push({recette: r, jourIdx: parseInt(sel.value)});
+    if (!r) return;
+    if (!sel || sel.value === '') {
+      alert('Choisissez un jour pour : « ' + r.nom + ' »');
+      erreur = true;
+      return;
     }
+    selectionnes.push({recette: r, jourIdx: parseInt(sel.value)});
   });
   if (erreur || !selectionnes.length) {
     if (!selectionnes.length && !erreur) alert('Cochez au moins une recette et choisissez un jour.');
@@ -1358,8 +1363,8 @@ function cuisinerCetteSemaine() {
 }
 
 function voirRecettePerso(k) {
-  var r = recettesPerso.find(function(x) { return (x._fbKey || 'local-'+x.nom) === k; });
-  if (!r) return;
+  var r = recettesPersoMap[k];
+  if (!r) { toast('❌ Recette introuvable'); return; }
   var modalData = {
     nom: r.nom,
     emoji: r.emoji || '🥘',
@@ -1629,14 +1634,18 @@ db.ref('/').on('value',function(snapshot){
       profilExtra[champ] = Array.isArray(val) ? val : Object.values(val);
     });
   }
-  if(data.recettes_perso) {
-    recettesPerso = Object.keys(data.recettes_perso).map(function(key) {
-      var r = data.recettes_perso[key];
-      r._fbKey = key;
-      return r;
-    });
-    afficherRecettesPerso();
-  }
+  recettesPerso = data.recettes_perso
+    ? Object.keys(data.recettes_perso).map(function(key) {
+        var r = data.recettes_perso[key];
+        r._fbKey = key;
+        return r;
+      })
+    : [];
+  recettesPersoMap = {};
+  recettesPerso.forEach(function(r) {
+    recettesPersoMap[r._fbKey || ('local-'+r.nom)] = r;
+  });
+  afficherRecettesPerso();
 });
 
 afficherSourcesDefaut();
