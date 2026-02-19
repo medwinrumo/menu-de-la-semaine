@@ -1619,18 +1619,28 @@ db.ref('/').on('value',function(snapshot){
   var data=snapshot.val()||{};
   // Sync menus modifiés
   if (data.menus && !swapInProgress) {
+    var needRW=false;
     Object.keys(data.menus).forEach(function(i){
       var idx=parseInt(i);
-      if(J[idx]&&(J[idx].din!==data.menus[i].din)){
-        J[idx].din=data.menus[i].din;
-        J[idx].dn=data.menus[i].dn;
-        J[idx].recette=data.menus[i].recette||null;
-        // Reconstruire le div recette sur cet appareil
-        var recipeDiv=document.getElementById('recipe-'+idx);
-        if(recipeDiv && J[idx].recette) recipeDiv.innerHTML=buildRecipeDiv(idx, J[idx].recette);
+      var fbM=data.menus[i];
+      if(!J[idx]||!fbM) return;
+      // Sync din/dn si changé
+      if(J[idx].din!==fbM.din){
+        J[idx].din=fbM.din;
+        J[idx].dn=fbM.dn;
+        needRW=true;
+      }
+      // Sync recette si présente et différente (comparaison par nom)
+      if(fbM.recette){
+        var localNom=J[idx].recette?J[idx].recette.nom:null;
+        if(localNom!==fbM.recette.nom){
+          J[idx].recette=fbM.recette;
+          var recipeDiv=document.getElementById('recipe-'+idx);
+          if(recipeDiv) recipeDiv.innerHTML=buildRecipeDiv(idx,J[idx].recette);
+        }
       }
     });
-    rW();
+    if(needRW) rW();
   }
   appliquerDepuisFirebase(data.courses || {});
   appliquerIngredientsFirebase(data.ingredients || null);
