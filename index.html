@@ -726,6 +726,9 @@ function ingAnnuler(id) {
   li.onclick = function() { editerIngredient(this); };
 }
 
+// ===== SITES RESSOURCES =====
+var sitesExtra = [];
+
 // ===== PHASE 6 — NUTRICOACH CHAT =====
 var chatHisto = [];
 
@@ -743,7 +746,7 @@ function envoyerChat() {
   fetch('/api/chat', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({message:msg, historique:chatHisto, menus:menusCtx})
+    body:JSON.stringify({message:msg, historique:chatHisto, menus:menusCtx, sitesExtra:sitesExtra})
   })
   .then(function(r){return r.json();})
   .then(function(data){
@@ -813,6 +816,11 @@ function executerActionChat(action) {
     }
   } else if (action.type === 'generer_semaine') {
     genererSemaine(true);
+  } else if (action.type === 'ajouter_site' && action.url) {
+    var site = {url: action.url, desc: action.desc || ''};
+    sitesExtra.push(site);
+    if(db) db.ref('sites_ressources').push(site);
+    ajouterMsg('bot','✅ Site ajouté à vos références : '+action.url,'msg-action');
   } else if (action.type === 'ajouter_courses' && action.produits) {
     action.produits.forEach(function(item){
       var c=document.querySelector('.si[data-cat="'+item.rayon+'"]');
@@ -858,7 +866,7 @@ function genererSemaine(skipConfirm) {
   fetch('/api/menus', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({jours: joursDates, dateDebut: dateDebut, dateFin: dateFin})
+    body: JSON.stringify({jours: joursDates, dateDebut: dateDebut, dateFin: dateFin, sitesExtra: sitesExtra})
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
@@ -953,7 +961,7 @@ function changerRecette(idx, btn, recettesRefusees) {
   fetch('/api/recette', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({jour:J[idx].nom, recetteActuelle:J[idx].dn, autresRecettes:autresRecettes, recettesRefusees:recettesRefusees||[]})
+    body: JSON.stringify({jour:J[idx].nom, recetteActuelle:J[idx].dn, autresRecettes:autresRecettes, recettesRefusees:recettesRefusees||[], sitesExtra:sitesExtra})
   })
   .then(function(r){return r.json();})
   .then(function(data){
@@ -1105,6 +1113,9 @@ db.ref('/').on('value',function(snapshot){
   }
   appliquerDepuisFirebase(data.courses || {});
   appliquerIngredientsFirebase(data.ingredients || null);
+  if(data.sites_ressources) {
+    sitesExtra = Object.values(data.sites_ressources);
+  }
 });
 </script>
 </body>

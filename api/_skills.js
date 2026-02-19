@@ -193,52 +193,121 @@ Fruits hors saison : ${fruitsForbids}
 - En cas de doute sur un produit, ne pas l'utiliser`.trim();
 }
 
-// Profil santé de l'utilisateur
+// Profil complet de l'utilisateur
 const PROFIL_SANTE = `
-━━━ PROFIL SANTÉ DE L'UTILISATEUR ━━━
-Localisation : France
-Objectif 1 : Réduire le cholestérol LDL de 10-15% en 3 mois
-Objectif 2 : Améliorer la glycémie à jeun
-Objectif 3 : Perdre 2-3 kg de graisse abdominale en 6 mois
-Suivi médical : bilan sanguin à 3 mois et 6 mois
-Régime actuel : transition vers alimentation IG bas + anti-cholestérol`.trim();
+━━━ PROFIL DE L'UTILISATEUR ━━━
+Homme, 52 ans, 175 cm, 68 kg — France
+Ex-fumeur (30 ans, arrêt il y a 5 ans)
+Sédentaire depuis 1 an (télétravail) — embonpoint ceinture abdominale
+Seule activité physique : aviron le week-end (actuellement en pause — douleur épaule)
+
+━━━ RÉSULTATS SANGUINS (à améliorer) ━━━
+- Glycémie à jeun : 1,13 g/L (norme 0,74–1,06) → HORS NORME — risque pré-diabète
+- Cholestérol total : 2,29 g/L (souhaité <2,00) → ÉLEVÉ
+- LDL : 1,57 g/L (cible entre 1,00 et 0,70 selon risque) → ÉLEVÉ
+- HDL : 0,54 g/L (souhaité >0,62) → BAS
+- Non-HDL : 1,74 g/L (souhaité <1,30) → ÉLEVÉ
+- Triglycérides : 0,87 g/L → OK
+- Fonction rénale, foie, thyroïde : normales
+
+━━━ OBJECTIFS SANTÉ ━━━
+1. Réduire LDL de 10-15% en 3 mois (via fibres solubles, graisses insaturées, réduction graisses saturées)
+2. Améliorer la glycémie à jeun (IG bas strict, protéines + fibres à chaque repas)
+3. Perdre 2-3 kg de graisse abdominale en 6 mois
+4. Améliorer le HDL (via activité physique et alimentation)
+5. Bilan sanguin de contrôle à 3 mois et 6 mois`.trim();
 
 // Schéma nutritionnel quotidien
 const SCHEMA_NUTRITIONNEL = `
-━━━ SCHÉMA NUTRITIONNEL OBLIGATOIRE ━━━
-Petit-déjeuner : eau citronnée + 1 fruit de saison + oléagineux + [fromage blanc 0-3% OU yaourt nature OU 2 œufs + pain seigle]
-Collation midi : [crudités de saison + houmous/tzatziki] OU [fruits + noix] OU [smoothie vert épinards-banane]
-Dîner : 1/2 légumes de saison + 1/4 protéines maigres + 1/4 féculents complets
-Hydratation : eau citronnée le matin, 1,5L eau par jour
+━━━ SCHÉMA NUTRITIONNEL DE L'UTILISATEUR ━━━
 
-Aliments AUTORISÉS :
-- Légumineuses SÈCHES : lentilles, pois chiches, haricots secs (2×/semaine min)
-- Poisson : cabillaud, colin, saumon, sardines, maquereau (2×/semaine min)
-- Volailles : poulet, dinde sans peau
-- Œufs : max 1/jour
-- Céréales complètes : riz basmati, quinoa, boulgour, pain seigle/complet
-- Graisses : huile d'olive, huile de colza, noix, amandes, noisettes, graines de lin
-- Produits laitiers allégés : fromage blanc 0-3%, yaourt nature
+PETIT-DÉJEUNER (nouvelle habitude en cours d'installation) :
+- Eau citronnée + 1 fruit de saison + oléagineux (amandes, noix, noisettes)
+- + fromage blanc 0-3% avec miel OU yaourt nature OU 2 œufs + pain seigle
 
-Aliments À ÉVITER :
-- Viande rouge, charcuterie, saucisses
-- Beurre en excès, crème fraîche épaisse, fromages gras
-- Farine blanche T45, pain blanc, viennoiseries
-- Sucres rapides, sodas, jus de fruits industriels
-- Alcool (max 2-3 verres de vin/semaine)`.trim();
+COLLATION MIDI (habitude de ne pas déjeuner — on adapte, pas on impose) :
+- Rapide, frais, cru, préparation max 5 minutes, mangeable au bureau
+- Option 1 : bâtonnets carottes/concombre + houmous ou tzatziki
+- Option 2 : 1 fruit + poignée de noix
+- Option 3 : smoothie vert (épinards, banane, lait amande, graines lin)
+- Option 4 : radis + œuf dur + huile de colza
+- Option 5 : salade de fruits de saison + yaourt + graines de courge
+- PAS de repas cuisiné le midi, PAS de plat chaud
+
+DÎNER (repas principal, apports nutritionnels majeurs) :
+- 1/2 assiette : légumes de saison (cuits ou crus en entrée)
+- 1/4 assiette : protéines (volailles, légumineuses, œufs — poisson très occasionnel)
+- 1/4 assiette : féculents complets (quinoa, riz basmati, boulgour, lentilles)
+- 1 cuillère à soupe : bonnes graisses (huile d'olive ou colza)
+- Style cuisine : FRANÇAIS TERROIR — plats mijotés, soupes, gratins allégés, poêlées
+
+━━━ RÈGLES PROTÉINES (ordre de priorité) ━━━
+1. Légumineuses (lentilles, pois chiches, haricots secs) : PRIORITÉ ABSOLUE — 3 à 4 fois/semaine
+2. Volailles (poulet, dinde sans peau) : 2 à 3 fois/semaine
+3. Œufs : 1 à 2 fois/semaine
+4. Poisson blanc ou gras : MAXIMUM 1 FOIS TOUTES LES 2 SEMAINES (habitude à construire progressivement, pas une priorité)
+5. Viande rouge/charcuterie : JAMAIS dans les recettes proposées
+
+━━━ OMÉGA-3 : SOURCES VÉGÉTALES PRIORITAIRES ━━━
+Les oméga-3 sont couverts par les végétaux, pas besoin de forcer le poisson :
+- Huile de colza : systématiquement dans les vinaigrettes et cuissons douces
+- Noix (5-6 par jour dans les collations)
+- Graines de lin moulues : 1 cuillère à soupe dans yaourt/salade/soupe
+- Graines de chia dans smoothies et fromage blanc
+
+━━━ ALIMENTS À ÉVITER DANS LES RECETTES ━━━
+- Charcuterie (saucisson, rillettes, pâtés, lardons)
+- Fromages gras >45% MG en quantité importante
+- Beurre en cuisson (acceptable en finition, max 10g)
+- Crème fraîche épaisse (remplacer par crème légère 15% ou fromage blanc)
+- Farine blanche T45, pain blanc
+- Sucres rapides, miel en grande quantité
+- Fritures`.trim();
 
 // Contraintes de préparation
 const CONTRAINTES_PRATIQUES = `
 ━━━ CONTRAINTES PRATIQUES ━━━
+- Cuisine : française terroir — plats simples du quotidien, pas de cuisine exotique imposée
 - Temps de préparation : max 30 minutes
 - Temps de cuisson : max 45 minutes
 - Quantité : pour 2 personnes
-- Budget : raisonnable (pas d'ingrédients exotiques coûteux)
-- Équipement : cuisine standard (pas de matériel professionnel)`.trim();
+- Budget : raisonnable (ingrédients du marché français, pas d'exotisme coûteux)
+- Équipement : cuisine standard (pas de matériel professionnel)
+- Style attendu : blanquette allégée, potée, gratin léger, soupe, poêlée, omelette, salade composée...`.trim();
+
+// Sites de référence recettes (liste par défaut)
+const SITES_RESSOURCES_DEFAUT = [
+  { url: 'https://cuisinerigbas.com', desc: 'Cuisine IG bas quotidienne, plats mijotés, terroir adapté' },
+  { url: 'https://www.lanutrition.fr/cuisine-et-recettes/recettes-sante/index-glycemique-bas', desc: 'Recettes IG bas validées scientifiquement, légumineuses, céréales complètes' },
+  { url: 'https://www.santemagazine.fr/alimentation/regime-alimentaire/regime-anti-cholesterol/une-semaine-de-menus-anticholesterol-173890', desc: 'Menus anti-cholestérol cuisine familiale française, huile colza/noix' },
+  { url: 'https://www.primevere.com/idees-recettes/plats/', desc: 'Plats terroir/famille allégés cholestérol (pizzas, gratins, parmentier, falafels)' },
+  { url: 'https://bienvenuechezvero.fr/recettes-ig-bas-idees-menus', desc: 'Blog IG bas familial, légumineuses, bons gras, féculents complets' },
+  { url: 'https://saines-gourmandises.fr/ig-bas-forme-et-minceur/', desc: 'Cuisine terroir gourmande IG bas, tartes salées, gratins, pains complets' },
+  { url: 'http://www.adoptelacuisineigbas.com', desc: 'Recettes quotidiennes IG bas, légumes, légumineuses, farines complètes' },
+  { url: 'https://jow.fr/blog/posts/quest-ce-que-lalimentation-a-ig-bas', desc: 'Recettes et conseils IG bas, féculents complets, association protéines/fibres/graisses' },
+  { url: 'https://www.cuisineaz.com/diaporamas/15-recettes-anti-cholesterol-toujours-plus-folles-4102/interne/1.aspx', desc: 'Recettes anti-cholestérol gourmandes, poulet, légumes, féculents' },
+  { url: 'https://www.marieclaire.fr/cuisine/18-recettes-anti-cholesterol-saines-et-gourmandes,1453308.asp', desc: 'Recettes anti-cholestérol cuisine française et méditerranéenne' },
+  { url: 'https://www.passionnutrition.com/baisser-le-cholesterol/', desc: 'Diététicienne IG bas, recettes cholestérol, association fibres+protéines+bonnes graisses' },
+  { url: 'https://www.cuisineaz.com/diaporamas/15-recettes-a-ig-bas-a-deguster-toute-l-annee-3913/interne/1.aspx', desc: 'Sélection recettes IG bas toute l\'année, féculents complets, légumes' },
+  { url: 'https://www.isabellehuot.com/blogs/recettes-et-conseils/tagged/cholesterol', desc: 'Recettes santé cholestérol, petits-déjeuners protéinés, collations crues' },
+];
+
+/**
+ * Génère le bloc "sites de référence" pour les prompts.
+ * @param {Array} sitesExtra - sites supplémentaires ajoutés par l'utilisateur via le chat
+ */
+function getSitesRessources(sitesExtra) {
+  const tous = [...SITES_RESSOURCES_DEFAUT, ...(sitesExtra || [])];
+  return `━━━ SITES DE RÉFÉRENCE RECETTES ━━━
+Inspire-toi de ces sources pour proposer des recettes adaptées au profil :
+${tous.map(s => `- ${s.url} — ${s.desc}`).join('\n')}`;
+}
 
 module.exports = {
   getContexteSaisonnier,
   getInstructionsSaisonnieres,
+  getSitesRessources,
+  SITES_RESSOURCES_DEFAUT,
   PROFIL_SANTE,
   SCHEMA_NUTRITIONNEL,
   CONTRAINTES_PRATIQUES

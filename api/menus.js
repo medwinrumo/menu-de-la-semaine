@@ -1,5 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const { getContexteSaisonnier, getInstructionsSaisonnieres, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES } = require('./_skills');
+const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES } = require('./_skills');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,7 +9,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   try {
-    const { jours, dateDebut, dateFin } = req.body;
+    const { jours, dateDebut, dateFin, sitesExtra } = req.body;
     const ctx = getContexteSaisonnier();
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -29,21 +29,15 @@ ${SCHEMA_NUTRITIONNEL}
 
 ${CONTRAINTES_PRATIQUES}
 
-SITES DE RÉFÉRENCE (inspire-toi de ces sources) :
-- cuisineigbas.com — IG bas, plats mijotés
-- lanutrition.fr — recettes scientifiquement validées IG bas
-- santemagazine.fr — menus anti-cholestérol
-- primevere.com — plats plaisir adaptés cholestérol
-- jow.fr — IG bas accessible
-- cuisineaz.com — recettes IG bas variées
-- marieclaire.fr/cuisine — anti-cholestérol méditerranéen
+${getSitesRessources(sitesExtra)}
 
 CONTRAINTES DE VARIÉTÉ (obligatoire) :
 - Pas la même protéine deux jours consécutifs
-- Au moins 2 dîners végétariens (légumineuses ou œufs)
-- Au moins 2 dîners poisson
-- Au moins 1 volaille
-- Recettes différentes des classiques habituels (pas tajine, pas curry lentilles, pas poulet rôti citron)
+- Au moins 3 dîners légumineuses (lentilles, pois chiches, haricots secs) — PRIORITÉ
+- Au moins 2 dîners volaille (poulet ou dinde)
+- 1 à 2 dîners œufs (omelette, œufs cocotte...)
+- Poisson : 0 ou 1 maximum par semaine, uniquement si pertinent — PAS obligatoire
+- Recettes différentes chaque semaine (varier les plats, ne pas répéter tajine, curry lentilles, poulet rôti citron systématiquement)
 
 STRUCTURE PETIT-DÉJEUNER (léger, IG bas, varie chaque jour) :
 - Eau citronnée + [fruit de saison] + [oléagineux] + [fromage blanc OU yaourt OU œufs + pain seigle]

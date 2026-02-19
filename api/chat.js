@@ -1,5 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const { getContexteSaisonnier, getInstructionsSaisonnieres, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES } = require('./_skills');
+const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES } = require('./_skills');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,7 +9,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   try {
-    const { message, historique, menus } = req.body;
+    const { message, historique, menus, sitesExtra } = req.body;
     const ctx = getContexteSaisonnier();
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -75,6 +75,8 @@ ${SCHEMA_NUTRITIONNEL}
 
 ${CONTRAINTES_PRATIQUES}
 
+${getSitesRessources(sitesExtra)}
+
 ## MENUS DE LA SEMAINE ACTUELS
 ${menusTexte}
 
@@ -94,6 +96,9 @@ Pour générer toute la semaine :
 
 Pour ajouter des produits à la liste de courses (quand l'utilisateur dicte une liste) :
 {"reponse":"J'ajoute ces produits à votre liste de courses.","action":{"type":"ajouter_courses","produits":[{"nom":"Lait demi-écrémé","rayon":"laitier"},{"nom":"Pain de seigle","rayon":"boulangerie"}]}}
+
+Pour ajouter un nouveau site de référence recettes (quand l'utilisateur partage une URL) :
+{"reponse":"J'ajoute ce site à vos références recettes.","action":{"type":"ajouter_site","url":"https://exemple.com","desc":"Description courte du site et de sa spécialité"}}
 
 Rayons disponibles pour ajouter_courses : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers
 

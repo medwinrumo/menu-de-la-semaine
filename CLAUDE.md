@@ -21,10 +21,14 @@ https://github.com/medwinrumo/menu-de-la-semaine
 - `index.html` : application complète (HTML + CSS + JS en un seul fichier)
 - `CLAUDE.md` : ce fichier de contexte permanent
 - `package.json` : dépendance `@anthropic-ai/sdk ^0.39.0`
-- `api/_skills.js` : compétences centralisées de NutriCoach (calendrier saisonnier, profil santé, schéma nutritionnel, contraintes)
+- `api/_skills.js` : compétences centralisées de NutriCoach (calendrier saisonnier, profil santé, schéma nutritionnel, sites ressources)
 - `api/recette.js` : remplacement d'une recette individuelle (claude-opus-4-6, max_tokens 1500)
 - `api/menus.js` : génération de la semaine complète (claude-sonnet-4-6, max_tokens 8000)
 - `api/chat.js` : assistant NutriCoach + actions sur les menus (claude-sonnet-4-6, max_tokens 1500)
+- `mon profil santé.md` : profil complet utilisateur (âge, activité, habitudes alimentaires)
+- `Schéma nutritionnel personnalisé.md` : schéma nutritionnel détaillé avec stratégies de transition
+- `Compte Rendu analyse sanguine medwin` : résultats sanguins (glycémie, cholestérol LDL/HDL)
+- `Site ressources menu healthy .md` : 14 sites de référence recettes IG bas et anti-cholestérol
 
 ---
 
@@ -75,11 +79,16 @@ Création du fichier de contexte projet.
 - `skipConfirm = true` quand appelé depuis le chat
 - Met à jour : J[], header, vue semaine, recettes, liste de courses, Firebase
 
-### Skills NutriCoach ✅ TERMINÉ
+### Skills NutriCoach ✅ TERMINÉ + enrichi
 - Fichier `api/_skills.js` centralisé
-- Calendrier saisonnier France, mois par mois (12 mois)
+- Calendrier saisonnier France, mois par mois (12 mois) avec liste interdite dynamique
 - `getContexteSaisonnier()` : utilise `new Date()` côté serveur (date réelle)
-- `getInstructionsSaisonnieres(ctx)` : règle ABSOLUE — jamais hors saison
+- `getInstructionsSaisonnieres(ctx)` : liste autorisée + liste interdite générée dynamiquement
+- `getSitesRessources(sitesExtra)` : 14 sites de référence + sites ajoutés par l'utilisateur
+- Profil complet intégré : résultats sanguins réels, préférences culinaires, ordre de priorité des protéines
+- Poisson : max 0-1 fois/semaine (habitude à construire, pas une priorité)
+- Légumineuses : priorité absolue (3-4 fois/semaine)
+- Cuisine terroir française uniquement sauf demande spécifique via chat
 - Injecté dans les 3 APIs : recette.js, menus.js, chat.js
 
 ---
@@ -97,10 +106,12 @@ Création du fichier de contexte projet.
   * Liste de courses avec cases à cocher + section caddie
   * Zone de chat nutritionnel
 
-### Phase 8 — Profil santé 🔴 À CONSTRUIRE
-- Créer et stocker le profil santé complet de l'utilisateur
-- Permettre la mise à jour du profil (objectifs, restrictions alimentaires...)
-- Le profil alimentera `_skills.js` dynamiquement
+### Phase 8 — Profil santé ✅ INTÉGRÉ (statique)
+- Profil complet intégré dans `api/_skills.js` depuis les fichiers Markdown fournis
+- Résultats sanguins réels : glycémie 1,13 g/L, LDL 1,57, HDL 0,54
+- Sites ressources : 14 sites, extensibles via le chat NutriCoach (sauvegardés Firebase)
+- Actions chat : `remplacer_repas`, `generer_semaine`, `ajouter_courses`, `ajouter_site`
+- Évolution possible : permettre mise à jour du profil via l'interface (Phase 8b)
 
 ---
 
@@ -146,27 +157,22 @@ Au début de la prochaine session, effectuer des tests complets de toutes les fo
 
 ---
 
-## Schéma nutritionnel personnalisé
+## Profil utilisateur et schéma nutritionnel
+Voir les fichiers sources complets :
+- `mon profil santé.md` — profil physique, activité, habitudes alimentaires
+- `Schéma nutritionnel personnalisé.md` — schéma détaillé, stratégies, progression sur 6 mois
+- `Compte Rendu analyse sanguine medwin` — résultats sanguins commentés
 
-### Structure des repas journaliers
-- Petit-déjeuner : eau citronnée + fruit de saison + oléagineux + [fromage blanc 0-3% OU yaourt OU 2 œufs + pain seigle]
-- Collation midi : crudités + houmous/tzatziki OU fruits + noix OU smoothie vert
-- Dîner : 1/2 légumes + 1/4 protéines maigres + 1/4 féculents complets
+### Résumé des points clés pour l'IA
+- Homme 52 ans, cuisine terroir française, pas de déjeuner (collation rapide seulement)
+- Glycémie 1,13 g/L (pré-diabète) + LDL 1,57 (élevé) + HDL 0,54 (bas) → IG bas strict
+- Protéines : légumineuses (priorité) > volailles > œufs > poisson (max 1/semaine)
+- Oméga-3 via végétaux : huile colza, noix, graines de lin (pas besoin de forcer le poisson)
+- Interdits dans les recettes : charcuterie, fromages gras, beurre en cuisson, fritures
 
-### Objectifs santé
-- Réduire le cholestérol LDL de 10-15% en 3 mois
-- Améliorer la glycémie à jeun
-- Perdre 2-3 kg de graisse abdominale en 6 mois
-- Bilan sanguin à 3 mois et 6 mois
-
----
-
-## Sites de référence recettes
-- cuisineigbas.com — IG bas, plats mijotés
-- lanutrition.fr — recettes scientifiquement validées IG bas
-- santemagazine.fr — menus anti-cholestérol
-- primevere.com — plats plaisir adaptés cholestérol
-- jow.fr — IG bas accessible
+## Sites de référence recettes (14 sites — voir `Site ressources menu healthy .md`)
+Stockés dans `api/_skills.js` → `SITES_RESSOURCES_DEFAUT`
+Extensibles via le chat NutriCoach → sauvegardés dans Firebase `sites_ressources`
 - cuisineaz.com — recettes IG bas variées
 - marieclaire.fr/cuisine — anti-cholestérol méditerranéen
 
