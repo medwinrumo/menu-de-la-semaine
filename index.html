@@ -262,6 +262,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <div class="wrap">
 <header>
 <h1>🍽️ Planificateur Menus Santé</h1>
+<div id="today-label" style="font-size:.85rem;color:var(--txt2);margin:-4px 0 4px;font-weight:500"></div>
 <div class="wk" id="wk-label">📅 Samedi 14 → Vendredi 20 février 2026</div>
 <br>
 <button id="btn-gen" class="btn-gen" onclick="genererSemaine()">🗓️ Générer la semaine</button>
@@ -741,6 +742,9 @@ function sortDI(arr) {
   var ven = new Date(sat); ven.setDate(sat.getDate() + 6);
   var el = document.getElementById('wk-label');
   if (el) el.textContent = '📅 ' + sat.getDate() + ' ' + moisCourt[sat.getMonth()] + ' → ' + ven.getDate() + ' ' + moisCourt[ven.getMonth()] + ' ' + ven.getFullYear();
+  var joursLong = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  var todayEl = document.getElementById('today-label');
+  if (todayEl) todayEl.textContent = joursLong[today.getDay()] + ' ' + today.getDate() + ' ' + moisFr[today.getMonth()] + ' ' + today.getFullYear();
 })();
 function rW(){
 var g=document.getElementById('weekgrid');g.innerHTML='';
