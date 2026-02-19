@@ -731,15 +731,16 @@ function sortDI(arr) {
   var today = new Date();
   var daysSinceSat = (today.getDay() + 1) % 7;
   var joursNoms = ['Samedi','Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
-  var moisFr = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  var moisFr = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  var moisCourt = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
   for (var i = 0; i < 7; i++) {
     var d = new Date(today); d.setDate(today.getDate() - daysSinceSat + i);
-    J[i].nom = joursNoms[i] + ' ' + d.getDate();
+    J[i].nom = joursNoms[i] + ' ' + d.getDate() + ' ' + moisFr[d.getMonth()];
   }
   var sat = new Date(today); sat.setDate(today.getDate() - daysSinceSat);
   var ven = new Date(sat); ven.setDate(sat.getDate() + 6);
   var el = document.getElementById('wk-label');
-  if (el) el.textContent = '📅 ' + sat.getDate() + ' ' + moisFr[sat.getMonth()] + ' → ' + ven.getDate() + ' ' + moisFr[ven.getMonth()] + ' ' + ven.getFullYear();
+  if (el) el.textContent = '📅 ' + sat.getDate() + ' ' + moisCourt[sat.getMonth()] + ' → ' + ven.getDate() + ' ' + moisCourt[ven.getMonth()] + ' ' + ven.getFullYear();
 })();
 function rW(){
 var g=document.getElementById('weekgrid');g.innerHTML='';
