@@ -720,7 +720,7 @@ var J=[
 {id:5,nom:"Jeudi 20",pdj:"Eau citronnée • Fromage blanc 3% + graines lin • 1 kiwi • Amandes",col:"Salade de fruits • Yaourt nature • Graines courge",din:"Poisson pané maison au four • Riz basmati • Salade verte colza",dn:"Poisson pané"},
 {id:6,nom:"Vendredi 20",pdj:"Eau citronnée • 2 œufs brouillés • Pain complet + huile olive • 1 orange",col:"Bâtonnets carottes • Houmous de betterave",din:"Salade composée : PDT, betteraves, œufs, thon, vinaigrette colza",dn:"Salade composée"}
 ];
-var SERVICE_ORDER = {'entrée':0,'plat principal':1,'accompagnement':2,'dessert':3,'goûter':4};
+var SERVICE_ORDER = {'entrée':1,'plat principal':2,'accompagnement':3,'dessert':4,'goûter':5};
 function sortDI(arr) {
   if (!arr) return arr;
   var a = Array.isArray(arr) ? arr : Object.values(arr).filter(Boolean);
