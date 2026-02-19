@@ -187,6 +187,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .btn-del-recette{background:none;border:none;cursor:pointer;font-size:.9rem;opacity:.35;transition:.15s;padding:2px 5px;flex-shrink:0;line-height:1}
 .btn-del-recette:hover{opacity:1}
 .tag-badge{display:inline-block;font-size:.62rem;padding:2px 7px;border-radius:10px;background:var(--accL);color:var(--acc);margin:2px 2px 0 0;white-space:nowrap;font-weight:500}
+.service-tag-badge{font-size:.58rem;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(234,108,0,.11);color:#c2620a;white-space:nowrap;flex-shrink:0;align-self:center;letter-spacing:.02em}
+@media(prefers-color-scheme:dark){.service-tag-badge{background:rgba(251,146,60,.15);color:#fb923c}}
 .btn-fav{background:none;border:none;font-size:1rem;cursor:pointer;padding:0 2px;color:var(--txt2);opacity:.5;transition:.15s;line-height:1;flex-shrink:0}
 .btn-fav.active{opacity:1;color:#f59e0b}
 @media(prefers-color-scheme:dark){.btn-fav{color:#8a9a9a}.btn-fav-filter,.btn-tag-filter{color:#e4eded}}
@@ -1405,9 +1407,11 @@ function afficherRecettesPerso(liste) {
     var opts = J.map(function(j, idx) {
       return '<option value="'+idx+'">'+j.nom+'</option>';
     }).join('');
-    var tags = (r.tags||[]).map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
     var serviceTagsList = ['entrée','plat principal','accompagnement','dessert','goûter','soupe'];
-    var defaultType = (r.tags||[]).find(function(t){ return serviceTagsList.includes(t); }) || 'plat principal';
+    var serviceTag = (r.tags||[]).find(function(t){ return serviceTagsList.includes(t); });
+    var defaultType = serviceTag || 'plat principal';
+    var tags = (r.tags||[]).filter(function(t){ return !serviceTagsList.includes(t); })
+                           .map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
     var typePills = [
       {v:'plat principal', l:'🍽️ Plat'},
       {v:'entrée',         l:'🥗 Entrée'},
@@ -1425,6 +1429,7 @@ function afficherRecettesPerso(liste) {
         '<button class="btn-fav'+(r.favoris?' active':'')+'" id="rfav-'+k+'" onclick="toggleFavori(\''+k+'\')" title="Favori">'+(r.favoris?'★':'☆')+'</button>' +
         '<span class="recette-card-emoji">'+(r.emoji||'🥘')+'</span>' +
         '<span class="recette-card-nom" onclick="voirRecettePerso(\''+k+'\')" title="Voir la recette complète">'+(r.nom)+'</span>' +
+        (serviceTag ? '<span class="service-tag-badge">'+serviceTag+'</span>' : '') +
         '<button class="btn-del-recette" onclick="supprimerRecettePerso(\''+k+'\')" title="Supprimer cette recette">🗑</button>' +
       '</div>' +
       (r.description ? '<div class="recette-card-desc">'+(r.description)+'</div>' : '') +
