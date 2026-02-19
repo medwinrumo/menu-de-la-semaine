@@ -87,7 +87,6 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 @media(max-width:700px){header h1{font-size:1.3rem}.grid{grid-template-columns:1fr}.tabs{flex-direction:column}.tabs button{width:100%}.sitem{flex-wrap:wrap}.sitem .sr{max-width:100%;text-align:left}}
 @media(orientation:landscape) and (max-height:500px){.grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.wrap{padding:8px}}
 .meal-din{cursor:pointer;transition:.15s}.meal-din:hover{background:var(--accL);border-left-color:var(--acc2)}
-.lien-din{font-size:.62rem;font-weight:400;opacity:.55;margin-left:5px}
 .btn-back{margin-bottom:14px;padding:6px 14px;background:var(--accL);color:var(--acc);border:1px solid var(--acc);border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer}
 .btn-back:hover{background:var(--acc);color:#fff}
 .recipe ul li.ing-item{cursor:pointer;border-radius:4px;transition:.12s;padding-right:6px}
@@ -166,7 +165,6 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <div class="wrap">
 <header>
 <h1>🍽️ Planificateur Menus Santé</h1>
-<p>Équilibré • Anti-cholestérol • IG bas • Gourmand</p>
 <div class="wk" id="wk-label">📅 Samedi 14 → Vendredi 20 février 2026</div>
 <br>
 <button id="btn-gen" class="btn-gen" onclick="genererSemaine()">🗓️ Générer la semaine</button>
@@ -182,10 +180,6 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <!-- ===== APERÇU ===== -->
 <div id="apercu" class="pnl on">
 <div class="grid" id="weekgrid"></div>
-<div class="ctr">
-<span class="ntag nt1">IG bas</span> <span class="ntag nt2">Anti-cholestérol</span> <span class="ntag nt3">Fibres &amp; oméga-3</span><br><br>
-Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison février</b>
-</div>
 </div>
 
 <!-- ===== RECETTES ===== -->
@@ -340,6 +334,7 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 <div id="chat" class="pnl">
 <div class="chat-wrap">
   <div class="chat-messages" id="chat-messages">
+    <div class="msg msg-bot"><div class="msg-bubble">Bonjour ! Je suis NutriCoach 👋<br>Posez-moi une question sur la nutrition, demandez-moi de modifier un repas, ou utilisez le bouton 📎 pour importer une recette ou un article.</div></div>
   </div>
   <div class="chat-input-area">
     <textarea id="chat-input" rows="2" placeholder="Question ou instruction…"></textarea>
@@ -366,8 +361,7 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 <div id="courses" class="pnl">
 <div class="shop">
 <h2>🛒 Liste de courses</h2>
-<p class="shop-sub">Semaine du 14 au 20 février 2026 — Pour 2 personnes</p>
-<div class="ctr" id="compteur"></div>
+<p class="shop-sub" id="courses-sub">Semaine du 14 au 20 février 2026</p>
 
 <div class="toggle-rayons" onclick="document.getElementById('rnav').classList.toggle('open')">📍 Navigation par rayon ▾</div>
 <div class="rayon-nav" id="rnav">
@@ -536,9 +530,6 @@ Prépa <b>≤ 30 min</b> • Cuisson <b>≤ 45 min</b> • Légumes de <b>saison
 <button onclick="ajP()">Ajouter</button>
 </div></div>
 
-<p style="margin-top:20px;padding:14px;background:var(--bg);border-radius:var(--r);font-size:.8rem;color:var(--txt2)">
-<b>💡</b> Cochez → produit dans le caddie. Décochez dans le caddie → retour liste. Cliquez « Navigation par rayon » pour sauter à une catégorie.
-</p>
 </div>
 </div>
 
@@ -578,7 +569,7 @@ var o='';J.forEach(function(j2,i2){if(i2!==i)o+='<option value="'+i2+'">'+j2.nom
 g.innerHTML+='<div class="day"><h3>'+j.nom+'</h3>'+
 '<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+j.pdj+'</div></div>'+
 '<div class="meal"><div class="ml">🥗 Collation midi</div><div class="mc">'+j.col+'</div></div>'+
-'<div class="meal meal-din" onclick="goRecette('+i+')" title="Voir la recette"><div class="ml">🍽️ Dîner<span class="lien-din">↗ voir recette</span></div><div class="mc">'+j.din+'</div></div>'+
+'<div class="meal meal-din" onclick="goRecette('+i+')" title="Voir la recette"><div class="ml">🍽️ Dîner</div><div class="mc">'+j.din+'</div></div>'+
 '<div class="swap-row"><select>'+o+'</select><button onclick="sw('+i+',this)">↔ échanger dîner</button></div>'+
 '<button class="btn-swap" onclick="changerRecette('+i+',this)">↺ Autre recette</button></div>';
 });
@@ -594,12 +585,7 @@ document.getElementById(id).classList.add('on');btn.classList.add('on');
 }
 function sTo(id){var e=document.getElementById(id);if(e)e.scrollIntoView({behavior:'smooth',block:'start'});}
 
-function mC(){
-var r=0,h=0;
-document.querySelectorAll('#liste-principale .sitem').forEach(function(e){r++;if(e.style.display==='none')h++;});
-var c=document.querySelectorAll('#caddie .sitem').length;
-document.getElementById('compteur').innerHTML='<b>'+(r-h)+'</b> produit'+((r-h)>1?'s':'')+' à acheter — <b>'+c+'</b> dans le caddie';
-}
+function mC(){}
 function bascule(cb){
 var it=cb.closest('.sitem');var cd=document.getElementById('caddie');
 if(cb.checked){
@@ -1119,7 +1105,7 @@ function cuisinerCetteSemaine() {
   selectionnes.forEach(function(item) {
     var r = item.recette;
     var idx = item.jourIdx;
-    J[idx].din = r.description || r.nom;
+    J[idx].din = r.nom;
     J[idx].dn = r.nom;
 
     // Mettre à jour la carte dans l'onglet Recettes
