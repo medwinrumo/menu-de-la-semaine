@@ -163,9 +163,13 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .recette-card-nom{flex:1;font-weight:600;font-size:.9rem;cursor:pointer;color:var(--acc)}
 .recette-card-nom:hover{text-decoration:underline}
 .recette-card-desc{font-size:.78rem;color:var(--txt2);margin-top:5px;padding-left:28px;line-height:1.4}
-.recette-card-jour{margin-top:10px;padding:10px;background:var(--bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.recette-card-jour label{font-size:.82rem;color:var(--txt2);white-space:nowrap}
+.recette-card-jour{margin-top:10px;padding:10px;background:var(--bg);border-radius:var(--r);display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}
+.recette-card-jour label{font-size:.82rem;color:var(--txt2);white-space:nowrap;line-height:2}
 .recette-card-jour select{padding:6px 10px;border:2px solid var(--acc);border-radius:var(--r);font-size:.82rem;background:var(--card);color:var(--txt);flex:1}
+.type-pills{display:flex;gap:4px;flex-wrap:wrap;width:100%}
+.type-pill{padding:4px 10px;border-radius:14px;font-size:.72rem;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--txt2);transition:.15s;white-space:nowrap;user-select:none}
+.type-pill:hover{border-color:var(--acc);color:var(--acc)}
+.type-pill.active{background:var(--acc);color:#fff;border-color:var(--acc)}
 .btn-cuisiner{display:block;width:100%;padding:13px;background:var(--acc);color:#fff;border:none;border-radius:var(--r);font-size:.95rem;font-weight:700;cursor:pointer;transition:.2s;margin-top:18px;text-align:center}
 .btn-cuisiner:hover{background:var(--acc2);transform:translateY(-2px)}
 .btn-cuisiner:disabled{opacity:.5;cursor:wait;transform:none}
@@ -434,7 +438,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
   </button>
   <span class="mr-count" id="mr-count"></span>
 </div>
-<div class="tag-filter-panel" id="tag-filter-panel"></div>
+<div class="tag-filter-panel" id="tag-filter-panel" style="display:none"></div>
 <div id="mes-recettes-liste">
   <p class="mr-empty">Aucune recette importée. Allez dans l'onglet NutriCoach et utilisez le bouton 📎 pour importer une recette (texte, PDF ou photo).</p>
 </div>
@@ -713,7 +717,7 @@ g.innerHTML+=
 '<div class="mc">' +
 (j.dinerItems && j.dinerItems.length
   ? j.dinerItems.map(function(it){
-      var lab=it.type==='entrée'?'Entrée':it.type==='dessert'?'Dessert':'Plat';
+      var lab=it.type==='entrée'?'Entrée':it.type==='dessert'?'Dessert':it.type==='accompagnement'?'Accomp.':it.type==='goûter'?'Goûter':'Plat';
       return '<div class="din-line"><span class="din-type">'+lab+'</span>'+it.nom+'</div>';
     }).join('')
   : j.din) +
@@ -1384,16 +1388,17 @@ function afficherRecettesPerso(liste) {
       return '<option value="'+idx+'">'+j.nom+'</option>';
     }).join('');
     var tags = (r.tags||[]).map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
-    // Auto-derive service type from tags for the selector default
-    var serviceTags = ['entrée','plat principal','dessert','goûter','soupe'];
-    var defaultType = (r.tags||[]).find(function(t){ return serviceTags.includes(t); }) || 'plat principal';
-    var typeOpts = [
+    var serviceTagsList = ['entrée','plat principal','accompagnement','dessert','goûter','soupe'];
+    var defaultType = (r.tags||[]).find(function(t){ return serviceTagsList.includes(t); }) || 'plat principal';
+    var typePills = [
       {v:'plat principal', l:'🍽️ Plat'},
-      {v:'entrée', l:'🥗 Entrée'},
-      {v:'dessert', l:'🍮 Dessert'},
-      {v:'goûter', l:'☕ Goûter'}
+      {v:'entrée',         l:'🥗 Entrée'},
+      {v:'accompagnement', l:'🥦 Accomp.'},
+      {v:'dessert',        l:'🍮 Dessert'},
+      {v:'goûter',         l:'☕ Goûter'}
     ].map(function(o){
-      return '<option value="'+o.v+'"'+(o.v===defaultType?' selected':'')+'>'+o.l+'</option>';
+      var active = o.v === defaultType ? ' active' : '';
+      return '<span class="type-pill'+active+'" data-type="'+o.v+'" onclick="setTypePill(\''+k+'\',\''+o.v+'\',this)">'+o.l+'</span>';
     }).join('');
     return '<div class="recette-card" id="rcard-'+k+'">' +
       (r.image ? '<img class="recette-card-img" src="'+r.image+'" alt="'+r.nom+'" onerror="this.style.display=\'none\'">' : '') +
@@ -1409,7 +1414,9 @@ function afficherRecettesPerso(liste) {
         tags + '<button class="tags-edit-btn" onclick="ouvrePickerTag(\''+k+'\')" title="Modifier les tags">✏️</button>' +
       '</div>' +
       '<div class="recette-card-jour" id="rjour-'+k+'" style="display:none">' +
-        '<select class="recette-type-sel" id="rtype-'+k+'">'+typeOpts+'</select>' +
+        '<input type="hidden" id="rtype-'+k+'" value="'+defaultType+'">' +
+        '<div class="type-pills" id="rpills-'+k+'">'+typePills+'</div>' +
+        '<label>le :</label>' +
         '<select id="rsel-'+k+'"><option value="">— Jour —</option>'+opts+'</select>' +
       '</div>' +
       '</div>';
@@ -1429,13 +1436,31 @@ function supprimerRecettePerso(k) {
   }
 }
 
-function toggleRecetteJour(i) {
-  var cb = document.getElementById('rcheck-'+i);
-  var jourDiv = document.getElementById('rjour-'+i);
-  var card = document.getElementById('rcard-'+i);
+function setTypePill(k, type, el) {
+  var hidden = document.getElementById('rtype-'+k);
+  if (hidden) hidden.value = type;
+  var container = el ? el.closest('.type-pills') : document.getElementById('rpills-'+k);
+  if (container) container.querySelectorAll('.type-pill').forEach(function(p){
+    p.classList.toggle('active', p.dataset.type === type);
+  });
+}
+
+function toggleRecetteJour(k) {
+  var cb = document.getElementById('rcheck-'+k);
+  var jourDiv = document.getElementById('rjour-'+k);
+  var card = document.getElementById('rcard-'+k);
   if (!cb || !jourDiv || !card) return;
   jourDiv.style.display = cb.checked ? 'flex' : 'none';
   card.classList.toggle('selected', cb.checked);
+  if (cb.checked) {
+    // Rafraîchir la pill active selon les tags de la recette
+    var r = recettesPersoMap[k];
+    if (r) {
+      var svcTags = ['entrée','plat principal','accompagnement','dessert','goûter'];
+      var t = (r.tags||[]).find(function(x){ return svcTags.includes(x); }) || 'plat principal';
+      setTypePill(k, t);
+    }
+  }
 }
 
 function buildRecipeDiv(idx, r) {
@@ -1474,33 +1499,41 @@ function cuisinerCetteSemaine() {
     return;
   }
 
+  // Grouper par jour pour éviter les conflits Firebase (1 seule écriture par jour)
+  var parJour = {};
   selectionnes.forEach(function(item) {
-    var r = item.recette;
-    var idx = item.jourIdx;
-    var type = item.type;
+    if (!parJour[item.jourIdx]) parJour[item.jourIdx] = [];
+    parJour[item.jourIdx].push(item);
+  });
 
-    if (type === 'goûter') {
-      J[idx].gou = r.nom;
-      J[idx].recetteGou = r;
-    } else {
-      // Initialiser dinerItems si besoin
-      if (!J[idx].dinerItems) J[idx].dinerItems = [];
-      // Remplacer ou ajouter l'entrée du même type
-      var found = false;
-      J[idx].dinerItems = J[idx].dinerItems.map(function(it) {
-        if (it.type === type) { found = true; return {type:type, nom:r.nom, recette:r}; }
-        return it;
-      });
-      if (!found) J[idx].dinerItems.push({type:type, nom:r.nom, recette:r});
-      recomputeDin(idx);
+  Object.keys(parJour).forEach(function(idxStr) {
+    var idx = parseInt(idxStr);
+    var items = parJour[idxStr];
 
-      // Si plat principal, mettre à jour aussi la carte Recettes
-      if (type === 'plat principal') {
-        var recipeDiv = document.getElementById('recipe-'+idx);
-        if (recipeDiv) { recipeDiv.innerHTML = buildRecipeDiv(idx, r); initIngredients(); }
+    items.forEach(function(item) {
+      var r = item.recette;
+      var type = item.type;
+
+      if (type === 'goûter') {
+        J[idx].gou = r.nom;
+        J[idx].recetteGou = r;
+      } else {
+        if (!J[idx].dinerItems) J[idx].dinerItems = [];
+        var found = false;
+        J[idx].dinerItems = J[idx].dinerItems.map(function(it) {
+          if (it.type === type) { found = true; return {type:type, nom:r.nom, recette:r}; }
+          return it;
+        });
+        if (!found) J[idx].dinerItems.push({type:type, nom:r.nom, recette:r});
+        if (type === 'plat principal') {
+          var recipeDiv = document.getElementById('recipe-'+idx);
+          if (recipeDiv) { recipeDiv.innerHTML = buildRecipeDiv(idx, r); initIngredients(); }
+        }
       }
-    }
+    });
 
+    // recomputeDin et écriture Firebase UNE SEULE FOIS après tous les items du jour
+    recomputeDin(idx);
     if (db) db.ref('menus/'+idx).set({
       din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
       dinerItems: J[idx].dinerItems||null,
@@ -1639,7 +1672,7 @@ function toggleFavori(k) {
   r.favoris = !r.favoris;
   if (db) db.ref('recettes_perso/' + r._fbKey + '/favoris').set(r.favoris);
   var btn = document.getElementById('rfav-'+k);
-  if (btn) { btn.textContent = r.favoris ? '⭐' : '☆'; btn.classList.toggle('active', r.favoris); }
+  if (btn) { btn.textContent = r.favoris ? '★' : '☆'; btn.classList.toggle('active', r.favoris); }
 }
 
 function buildTagFilterPanel() {
@@ -1650,7 +1683,7 @@ function buildTagFilterPanel() {
   if (btn) btn.classList.toggle('has-active', filtresTags.size > 0);
   // Reconstruire le panneau seulement s'il est visible
   var panel = document.getElementById('tag-filter-panel');
-  if (!panel || panel.style.display === 'none') return;
+  if (!panel || panel.style.display !== 'block') return;
   // Compter les recettes par tag
   var countMap = {};
   recettesPerso.forEach(function(r){ (r.tags||[]).forEach(function(t){ countMap[t]=(countMap[t]||0)+1; }); });
@@ -1673,8 +1706,8 @@ function buildTagFilterPanel() {
 function toggleTagFilterPanel() {
   var panel = document.getElementById('tag-filter-panel');
   if (!panel) return;
-  var isOpen = panel.style.display !== 'none';
-  panel.style.display = isOpen ? 'none' : '';
+  var isOpen = panel.style.display === 'block';
+  panel.style.display = isOpen ? 'none' : 'block';
   if (!isOpen) buildTagFilterPanel();
 }
 
