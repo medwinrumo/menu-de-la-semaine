@@ -27,7 +27,11 @@ module.exports = async function handler(req, res) {
     // 2. Tentative extraction JSON-LD schema.org/Recipe (rapide, sans IA)
     const recipeJsonLd = extractJsonLd(html);
     if (recipeJsonLd) {
-      return res.status(200).json(formatRecipe(recipeJsonLd, url));
+      const recipe = formatRecipe(recipeJsonLd, url);
+      // Compléter les temps manquants depuis le texte HTML (certains sites ne les mettent pas en JSON-LD)
+      if (recipe.prepTime === '—') recipe.prepTime = extractTimeFromHtml(html, 'prep');
+      if (recipe.cookTime === '—') recipe.cookTime = extractTimeFromHtml(html, 'cook');
+      return res.status(200).json(recipe);
     }
 
     // 3. Fallback : Claude Haiku extrait depuis le texte brut de la page
@@ -41,6 +45,22 @@ module.exports = async function handler(req, res) {
 };
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+
+function extractTimeFromHtml(html, type) {
+  const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  const patterns = type === 'prep'
+    ? [/[Tt]emps\s+de\s+pr[ée]paration\s*[：:]\s*(\d[^<•·\n,]{1,30})/,
+       /[Pp]r[ée]paration\s*[：:]\s*(\d[^<•·\n,]{1,30})/,
+       /[Pp]rep(?:aration)?\s*[：:]\s*(\d[^<•·\n,]{1,30})/i]
+    : [/[Tt]emps\s+de\s+cuisson\s*[：:]\s*(\d[^<•·\n,]{1,30})/,
+       /[Cc]uisson\s*[：:]\s*(\d[^<•·\n,]{1,30})/,
+       /[Cc]ook(?:ing)?\s*[：:]\s*(\d[^<•·\n,]{1,30})/i];
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) return m[1].trim().replace(/\s+/g, ' ').substring(0, 25);
+  }
+  return '—';
+}
 
 function normalizeArr(x) {
   if (!x) return [];
