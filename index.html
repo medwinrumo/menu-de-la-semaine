@@ -590,7 +590,7 @@ g.innerHTML+=
 '<span class="din-actions" onclick="event.stopPropagation()">' +
 '<button class="din-btn" onclick="sauvegarderRecetteDiner('+i+')" title="Sauvegarder dans Mes recettes">＋</button>' +
 '<button class="din-btn" data-swap-idx="'+i+'" onclick="changerRecette('+i+',this)" title="Autre recette">↺</button>' +
-'<span class="din-handle" ontouchstart="event.preventDefault();selectSwap('+i+')" onclick="selectSwap('+i+')" title="Intervertir ce dîner">⠿</span>' +
+'<span class="din-handle" onclick="selectSwap('+i+')" title="Intervertir ce dîner">⠿</span>' +
 '</span></div>' +
 '<div class="mc">'+j.din+'</div>' +
 '</div>' +
