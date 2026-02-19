@@ -58,6 +58,9 @@ Pour ajouter des produits à la liste de courses (quand l'utilisateur dicte une 
 Pour ajouter un nouveau site de référence recettes (quand l'utilisateur partage une URL) :
 {"reponse":"J'ajoute ce site à vos références recettes.","action":{"type":"ajouter_site","url":"https://exemple.com","desc":"Description courte du site et de sa spécialité"}}
 
+Pour supprimer une recette importée de la liste « Mes recettes » :
+{"reponse":"J'ai supprimé cette recette de ta liste.","action":{"type":"supprimer_recette","nom":"Nom exact ou approché de la recette"}}
+
 Pour mettre à jour le profil de l'utilisateur (préférences, aversions, restrictions, évolutions de santé) :
 {"reponse":"J'ai noté cette information dans ton profil.","action":{"type":"modifier_profil","champ":"naime_pas","valeur":"fenouil"}}
 Champs valides : "aime" (plats/ingrédients appréciés), "naime_pas" (à éviter), "restrictions" (allergies, intolérances), "notes_sante" (évolutions du bilan de santé), "notes_nutrition" (notes libres nutrition)

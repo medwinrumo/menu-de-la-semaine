@@ -159,6 +159,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .btn-cuisiner:disabled{opacity:.5;cursor:wait;transform:none}
 .mr-empty{color:var(--txt2);font-style:italic;font-size:.86rem;text-align:center;padding:30px 0}
 .mr-sub{color:var(--txt2);font-size:.82rem;margin-bottom:16px}
+.btn-del-recette{background:none;border:none;cursor:pointer;font-size:.9rem;opacity:.35;transition:.15s;padding:2px 5px;flex-shrink:0;line-height:1}
+.btn-del-recette:hover{opacity:1}
 </style>
 </head>
 <body>
@@ -857,6 +859,24 @@ function executerActionChat(action) {
     });
     mC();
     ajouterMsg('bot','✅ '+action.produits.length+' produit(s) ajouté(s) à votre liste !','msg-action');
+  } else if (action.type === 'supprimer_recette' && action.nom) {
+    var nomCherche = action.nom.toLowerCase();
+    var idx = -1;
+    recettesPerso.forEach(function(r, i) {
+      if (r.nom.toLowerCase().includes(nomCherche) || nomCherche.includes(r.nom.toLowerCase())) idx = i;
+    });
+    if (idx !== -1) {
+      var r = recettesPerso[idx];
+      if (r._fbKey && db) {
+        db.ref('recettes_perso/' + r._fbKey).remove();
+      } else {
+        recettesPerso.splice(idx, 1);
+        afficherRecettesPerso();
+      }
+      ajouterMsg('bot', '✅ Recette « ' + r.nom + ' » supprimée.', 'msg-action');
+    } else {
+      ajouterMsg('bot', '⚠️ Je ne trouve pas cette recette dans ta liste.');
+    }
   } else if (action.type === 'modifier_profil' && action.champ && action.valeur) {
     var champsValides = ['aime','naime_pas','restrictions','notes_sante','notes_nutrition'];
     if (champsValides.indexOf(action.champ) !== -1) {
@@ -1063,6 +1083,7 @@ function afficherRecettesPerso() {
         '<input type="checkbox" class="recette-card-check" id="rcheck-'+i+'" onchange="toggleRecetteJour('+i+')">' +
         '<span class="recette-card-emoji">'+(r.emoji||'🥘')+'</span>' +
         '<span class="recette-card-nom" onclick="voirRecettePerso('+i+')" title="Voir la recette complète">'+(r.nom)+'</span>' +
+        '<button class="btn-del-recette" onclick="supprimerRecettePerso('+i+')" title="Supprimer cette recette">🗑</button>' +
       '</div>' +
       (r.description ? '<div class="recette-card-desc">'+(r.description)+'</div>' : '') +
       '<div class="recette-card-jour" id="rjour-'+i+'" style="display:none">' +
@@ -1071,6 +1092,19 @@ function afficherRecettesPerso() {
       '</div>' +
       '</div>';
   }).join('');
+}
+
+function supprimerRecettePerso(i) {
+  var r = recettesPerso[i];
+  if (!r) return;
+  if (!confirm('Supprimer « ' + r.nom + ' » ?')) return;
+  if (r._fbKey && db) {
+    db.ref('recettes_perso/' + r._fbKey).remove();
+    // Le listener Firebase mettra à jour recettesPerso + afficherRecettesPerso automatiquement
+  } else {
+    recettesPerso.splice(i, 1);
+    afficherRecettesPerso();
+  }
 }
 
 function toggleRecetteJour(i) {
@@ -1341,7 +1375,11 @@ db.ref('/').on('value',function(snapshot){
     });
   }
   if(data.recettes_perso) {
-    recettesPerso = Object.values(data.recettes_perso);
+    recettesPerso = Object.keys(data.recettes_perso).map(function(key) {
+      var r = data.recettes_perso[key];
+      r._fbKey = key;
+      return r;
+    });
     afficherRecettesPerso();
   }
 });
