@@ -852,7 +852,7 @@ function executerActionChat(action) {
           '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>' +
           '<div class="recipe-top"><h3>'+(r.nom)+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
           '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+J[idx].nom+'</span></div>' +
-          (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '') +
+          (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
           '<h4>Ingrédients</h4>' +
           '<ul>'+(r.ingredients||[]).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
           '<h4>Préparation</h4>' +
@@ -994,7 +994,7 @@ function appliquerNouveauxMenus(data) {
       '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>' +
       '<div class="recipe-top"><h3>'+r.nom+'</h3><div class="r-ico">'+r.emoji+'</div></div>' +
       '<div class="rmeta"><span><b>Prépa :</b> '+r.prepTime+'</span><span><b>Cuisson :</b> '+r.cookTime+'</span><span><b>📅</b> '+jour.nom+'</span></div>' +
-      (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '') +
+      (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
       '<h4>Ingrédients</h4>' +
       '<ul>'+r.ingredients.map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
       '<h4>Préparation</h4>' +
@@ -1183,7 +1183,7 @@ function cuisinerCetteSemaine() {
         '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span>' +
         '<span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span>' +
         '<span><b>📅</b> '+J[idx].nom+'</span></div>' +
-        (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '') +
+        (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
         '<h4>Ingrédients</h4>' +
         '<ul>'+(r.ingredients||[]).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
         '<h4>Préparation</h4>' +
@@ -1257,8 +1257,10 @@ function dropDinner(event, i) {
   J[dragIdx].din = J[i].din; J[dragIdx].dn = J[i].dn;
   J[i].din = d; J[i].dn = n;
   if (db) {
-    db.ref('menus/'+dragIdx).set({din:J[dragIdx].din, dn:J[dragIdx].dn});
-    db.ref('menus/'+i).set({din:J[i].din, dn:J[i].dn});
+    var updates = {};
+    updates['menus/'+dragIdx] = {din:J[dragIdx].din, dn:J[dragIdx].dn};
+    updates['menus/'+i] = {din:J[i].din, dn:J[i].dn};
+    db.ref().update(updates);
   }
   dragIdx = null;
   rW();
@@ -1331,7 +1333,7 @@ function afficherModal(data) {
   var urlEl = document.getElementById('modal-url');
   urlEl.innerHTML = data.url
     ? '<a class="recipe-link" href="'+data.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>'
-    : '';
+    : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>';
   document.getElementById('modal-ingredients').innerHTML =
     data.ingredients.map(function(i){return '<li>'+i+'</li>';}).join('');
   document.getElementById('modal-etapes').innerHTML =
