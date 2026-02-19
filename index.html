@@ -401,6 +401,13 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
   <input type="text" id="source-desc-input" placeholder="Description courte (spécialité, type de recettes...)">
   <button class="btn-cuisiner" style="margin-top:4px" onclick="ajouterSourceManuelle()">＋ Ajouter à mes sources</button>
 </div>
+
+<div class="source-section-title">📥 Importer une recette depuis une URL</div>
+<p class="mr-sub">Colle l'URL d'une recette précise — elle sera analysée et ajoutée à « Mes recettes ».</p>
+<div class="source-add">
+  <input type="url" id="scrape-url-input" placeholder="https://cuisinerigbas.com/curry-lentilles-corail/">
+  <button class="btn-cuisiner" id="btn-scrape" style="margin-top:4px" onclick="importerRecetteUrl()">📥 Importer cette recette</button>
+</div>
 </div>
 </div>
 
@@ -864,6 +871,38 @@ function ajouterSourceManuelle() {
   document.getElementById('source-desc-input').value = '';
   afficherSourcesPerso();
   toast('✅ Source ajoutée !');
+}
+
+function importerRecetteUrl() {
+  var url = document.getElementById('scrape-url-input').value.trim();
+  if (!url) { toast('Colle une URL de recette'); return; }
+  var btn = document.getElementById('btn-scrape');
+  btn.textContent = '⏳ Analyse en cours...';
+  btn.disabled = true;
+  fetch('/api/scrape', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: url })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    btn.textContent = '📥 Importer cette recette';
+    btn.disabled = false;
+    if (data.error) { toast('❌ ' + data.error); return; }
+    if (db) {
+      db.ref('recettes_perso').push(data);
+    } else {
+      recettesPerso.push(data);
+      afficherRecettesPerso();
+    }
+    document.getElementById('scrape-url-input').value = '';
+    toast('✅ « ' + data.nom + ' » ajoutée à Mes recettes !');
+  })
+  .catch(function(err) {
+    btn.textContent = '📥 Importer cette recette';
+    btn.disabled = false;
+    toast('❌ Erreur : ' + err.message);
+  });
 }
 
 function supprimerSource(i) {
