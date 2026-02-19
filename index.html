@@ -2269,8 +2269,6 @@ db.ref('/').on('value',function(snapshot){
       var idx=parseInt(i);
       var fbM=data.menus[i];
       if(!J[idx]||!fbM) return;
-      // Sync nom (date du jour) si présent dans Firebase
-      if(fbM.nom && J[idx].nom!==fbM.nom){ J[idx].nom=fbM.nom; needRW=true; }
       // Sync din/dn si changé
       if(J[idx].din!==fbM.din){
         J[idx].din=fbM.din;
