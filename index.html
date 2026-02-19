@@ -1620,12 +1620,17 @@ function toggleTagCard(k, tag) {
   if (idx !== -1) tags.splice(idx, 1); else tags.push(tag);
   r.tags = tags;
   if (r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/tags').set(tags);
-  renderCardTags(k);
   buildTagFilterPanel();
+  // Ne pas reconstruire l'area pendant que le picker est ouvert
+  // (ça détruirait le picker lui-même)
   var picker = document.getElementById('tpicker-'+k);
-  if (picker) picker.querySelectorAll('.tag-picker-chip').forEach(function(chip){
-    chip.classList.toggle('has', tags.includes(chip.dataset.tag));
-  });
+  if (picker) {
+    picker.querySelectorAll('.tag-picker-chip').forEach(function(chip){
+      chip.classList.toggle('has', tags.includes(chip.dataset.tag));
+    });
+  } else {
+    renderCardTags(k);
+  }
 }
 function ouvrePickerTag(k) {
   if (tagPickerOpen === k) { fermePickerTag(); return; }
@@ -1662,12 +1667,15 @@ function fermePickerOutside(e) {
   }
 }
 function fermePickerTag() {
+  var wasOpen = tagPickerOpen;
   if (tagPickerOpen) {
     var el = document.getElementById('tpicker-'+tagPickerOpen);
     if (el) el.remove();
     tagPickerOpen = null;
   }
   document.removeEventListener('click', fermePickerOutside);
+  // Mettre à jour les badges après fermeture
+  if (wasOpen) renderCardTags(wasOpen);
 }
 function changerService(k, newType) {
   var r = recettesPersoMap[k];
