@@ -588,7 +588,7 @@ g.innerHTML+=
 '<span class="din-actions" onclick="event.stopPropagation()">' +
 '<button class="din-btn" onclick="sauvegarderRecetteDiner('+i+')" title="Sauvegarder dans Mes recettes">＋</button>' +
 '<button class="din-btn" data-swap-idx="'+i+'" onclick="changerRecette('+i+',this)" title="Autre recette">↺</button>' +
-'<span class="din-handle" draggable="true" ondragstart="dragStart(event,'+i+')" title="Glisser pour intervertir">⠿</span>' +
+'<span class="din-handle" draggable="true" ondragstart="dragStart(event,'+i+')" ontouchstart="touchDragStart(event,'+i+')" ontouchmove="touchDragMove(event)" ontouchend="touchDragEnd(event)" title="Glisser pour intervertir">⠿</span>' +
 '</span></div>' +
 '<div class="mc">'+j.din+'</div>' +
 '</div>' +
@@ -1268,6 +1268,51 @@ function dropDinner(event, i) {
     db.ref().update(updates).then(function(){ swapInProgress = false; })
                             .catch(function(){ swapInProgress = false; });
   }
+}
+
+// ===== TOUCH DRAG & DROP (mobile/tablette) =====
+var touchDragIdx = null;
+function touchDragStart(event, i) {
+  touchDragIdx = i;
+  event.preventDefault();
+  document.getElementById('day-'+i).style.opacity = '0.5';
+}
+function touchDragMove(event) {
+  if (touchDragIdx === null) return;
+  event.preventDefault();
+  var touch = event.touches[0];
+  document.querySelectorAll('.day.drag-over').forEach(function(d){ d.classList.remove('drag-over'); });
+  var el = document.elementFromPoint(touch.clientX, touch.clientY);
+  while (el && (!el.id || !el.id.startsWith('day-'))) el = el.parentElement;
+  if (el && el.id !== 'day-'+touchDragIdx) el.classList.add('drag-over');
+}
+function touchDragEnd(event) {
+  if (touchDragIdx === null) return;
+  event.preventDefault();
+  var touch = event.changedTouches[0];
+  document.getElementById('day-'+touchDragIdx).style.opacity = '';
+  document.querySelectorAll('.day.drag-over').forEach(function(d){ d.classList.remove('drag-over'); });
+  var el = document.elementFromPoint(touch.clientX, touch.clientY);
+  while (el && (!el.id || !el.id.startsWith('day-'))) el = el.parentElement;
+  if (el) {
+    var dst = parseInt(el.id.replace('day-', ''));
+    if (!isNaN(dst) && dst !== touchDragIdx) {
+      var src = touchDragIdx;
+      var d = J[src].din, n = J[src].dn;
+      J[src].din = J[dst].din; J[src].dn = J[dst].dn;
+      J[dst].din = d; J[dst].dn = n;
+      rW();
+      if (db) {
+        swapInProgress = true;
+        var updates = {};
+        updates['menus/'+src] = {din:J[src].din, dn:J[src].dn};
+        updates['menus/'+dst] = {din:J[dst].din, dn:J[dst].dn};
+        db.ref().update(updates).then(function(){ swapInProgress = false; })
+                                .catch(function(){ swapInProgress = false; });
+      }
+    }
+  }
+  touchDragIdx = null;
 }
 
 // ===== TOAST =====
