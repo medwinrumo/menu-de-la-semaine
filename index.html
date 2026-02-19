@@ -1570,6 +1570,7 @@ var recetteEnCours = null;
 var filtresTags = new Set();
 var filtreFavoris = false;
 var tagPickerOpen = null;
+var tagPickerDirtyKey = null; // clé dont les tags ont changé mais Firebase pas encore écrit
 var svcDropdownOpen = null;
 
 function toggleSvcDropdown(k) {
@@ -1619,16 +1620,19 @@ function toggleTagCard(k, tag) {
   var idx = tags.indexOf(tag);
   if (idx !== -1) tags.splice(idx, 1); else tags.push(tag);
   r.tags = tags;
-  if (r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/tags').set(tags);
   buildTagFilterPanel();
-  // Ne pas reconstruire l'area pendant que le picker est ouvert
-  // (ça détruirait le picker lui-même)
   var picker = document.getElementById('tpicker-'+k);
   if (picker) {
+    // Picker ouvert : mise à jour visuelle uniquement, PAS d'écriture Firebase
+    // (l'écriture Firebase déclenche le listener qui appelle afficherRecettesPerso
+    //  et détruit le picker)
+    tagPickerDirtyKey = k;
     picker.querySelectorAll('.tag-picker-chip').forEach(function(chip){
       chip.classList.toggle('has', tags.includes(chip.dataset.tag));
     });
   } else {
+    // Picker fermé : écriture Firebase immédiate
+    if (r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/tags').set(tags);
     renderCardTags(k);
   }
 }
@@ -1674,8 +1678,14 @@ function fermePickerTag() {
     tagPickerOpen = null;
   }
   document.removeEventListener('click', fermePickerOutside);
-  // Mettre à jour les badges après fermeture
   if (wasOpen) renderCardTags(wasOpen);
+  // Écriture Firebase différée : maintenant que le picker est fermé,
+  // le listener peut reconstruire la liste sans problème
+  if (tagPickerDirtyKey) {
+    var r = recettesPersoMap[tagPickerDirtyKey];
+    if (r && r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/tags').set(r.tags);
+    tagPickerDirtyKey = null;
+  }
 }
 function changerService(k, newType) {
   var r = recettesPersoMap[k];
