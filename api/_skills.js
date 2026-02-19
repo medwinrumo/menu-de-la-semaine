@@ -270,10 +270,217 @@ const CONTRAINTES_PRATIQUES = `
 - Cuisine : française terroir — plats simples du quotidien, pas de cuisine exotique imposée
 - Temps de préparation : max 30 minutes
 - Temps de cuisson : max 45 minutes
-- Quantité : pour 2 personnes
+- Quantité : pour 2 personnes (homme 52 ans + femme 41 ans)
 - Budget : raisonnable (ingrédients du marché français, pas d'exotisme coûteux)
 - Équipement : cuisine standard (pas de matériel professionnel)
 - Style attendu : blanquette allégée, potée, gratin léger, soupe, poêlée, omelette, salade composée...`.trim();
+
+// ============================================================
+// COMPÉTENCES NUTRITIONNELLES FONDAMENTALES
+// Sources : ANSES (2011, 2016, 2019), ESC/EAS Guidelines (2019),
+// AHA/ACC (2018), ADA Standards of Care (2023), EFSA (2011, 2012),
+// Foster-Powell et al. (Am J Clin Nutr, 2002), Atkinson et al. (2008),
+// DPP Study (NEJM, 2002), Shukla et al. (Diabetes Care, 2015),
+// Mozaffarian & Wu (JACC, 2011)
+// ============================================================
+const COMPETENCES_NUTRITIONNELLES = `
+━━━ COMPÉTENCES NUTRITIONNELLES FONDAMENTALES ━━━
+
+## 1. INDEX GLYCÉMIQUE (IG) ET CHARGE GLYCÉMIQUE (CG)
+Réf : Foster-Powell (2002), Atkinson (2008), International GI Tables
+
+Définitions :
+- IG bas < 55 | IG modéré 55-70 | IG élevé > 70 (référence glucose = 100)
+- Charge glycémique (CG) = (IG × glucides en g) / 100 → CG basse < 10, élevée > 20
+
+Tableau IG des aliments courants :
+FÉCULENTS ET CÉRÉALES
+- Pain blanc : IG 75 | Pain complet : IG 65 | Pain seigle complet : IG 45 | Pain au levain : IG 54
+- Riz blanc classique : IG 72 | Riz basmati : IG 50 | Riz complet : IG 50
+- Quinoa : IG 53 | Boulgour : IG 46 | Sarrasin : IG 40
+- Pâtes al dente : IG 45 | Pâtes bien cuites : IG 65
+- Flocons d'avoine crus : IG 40 | Son d'avoine : IG 15
+- Pomme de terre vapeur : IG 65 | Au four : IG 85 | Purée : IG 80
+- Patate douce : IG 44 | Châtaigne : IG 60
+
+LÉGUMINEUSES (toutes IG bas — priorité absolue pour ce profil)
+- Lentilles vertes : IG 25 | Lentilles corail : IG 26
+- Pois chiches : IG 28 | Haricots rouges : IG 24 | Haricots blancs : IG 31
+- Fèves cuites : IG 40 | Pois cassés : IG 32
+
+FRUITS
+- Pomme : IG 35 | Poire : IG 38 | Agrumes : IG 35 | Cerise : IG 25
+- Fraise : IG 25 | Kiwi : IG 50 | Banane mûre : IG 65 | Melon : IG 67
+- Pastèque : IG 75 mais CG très basse (peu de glucides par portion)
+
+PRODUITS LAITIERS
+- Yaourt nature : IG 36 | Fromage blanc 0% : IG 30 | Lait entier : IG 31
+
+Facteurs qui RÉDUISENT l'IG effectif d'un repas :
+1. La cuisson courte (al dente) vs prolongée — toujours privilégier les pâtes/riz pas trop cuits
+2. L'amidon rétrogradé : riz ou PDT cuits puis refroidis → IG -15 à -20%
+3. L'acidité (citron, vinaigre de cidre) réduit l'IG du repas de 20-34% (Johnston, 2004)
+4. Les fibres (légumes en début de repas forment une barrière physique)
+5. Les lipides insaturés (huile d'olive, colza) ralentissent la vidange gastrique
+6. Les protéines stimulent l'insuline sans élever la glycémie
+
+Séquence optimale dans l'assiette (Shukla et al., Diabetes Care, 2015) :
+→ Légumes EN PREMIER → protéines → féculents EN DERNIER
+→ Réduit la glycémie post-prandiale de 37% vs ordre inverse
+
+## 2. CHOLESTÉROL : MÉCANISMES ET LEVIERS ALIMENTAIRES
+Réf : ESC/EAS Guidelines 2019, AHA/ACC 2018, ANSES 2011
+
+Physiopathologie :
+- LDL oxydé s'accumule dans les parois artérielles → plaques d'athérome
+- HDL assure le transport inverse → protecteur cardiovasculaire
+- Non-HDL = marqueur athérogène plus complet que LDL seul (ESC 2019)
+
+Cibles pour ce profil (risque modéré ESC) :
+- LDL cible : < 1,00 g/L | Non-HDL cible : < 1,30 g/L | HDL cible : > 0,62 g/L
+
+LEVIERS ALIMENTAIRES ANTI-LDL (efficacité cliniquement documentée) :
+
+Fibres solubles (réduction LDL -5 à -10% pour 5-10g/jour) :
+- Bêta-glucanes d'avoine : 3g/jour = -5% LDL (EFSA 2011) → flocons d'avoine, son d'avoine
+- Pectines (pommes, agrumes, légumineuses) : 6g/jour = -6% LDL
+- Psyllium : 10g/jour = -7% LDL
+→ Intégrer flocons d'avoine au petit-déj ou pomme en collation CHAQUE JOUR
+
+Phytostérols (-10 à -15% LDL pour 2g/jour — ESC 2019) :
+- Présents dans : huile de colza, noix, légumineuses, céréales complètes, graines
+- Mécanisme : compétition avec absorption intestinale du cholestérol
+→ Huile de colza comme graisse principale = effet phytostérol + oméga-3
+
+Graisses insaturées (remplacement graisses saturées → -15% LDL) :
+- AGMI (acide oléique — huile d'olive) : protège le LDL contre l'oxydation
+- AGPI oméga-3 (ALA — huile colza, noix, lin) : effet anti-triglycérides + anti-inflammatoire
+→ Huile d'olive pour cuisson, huile de colza pour vinaigrettes = combinaison optimale
+
+Graisses saturées à réduire (cause principale du LDL élevé) :
+- Charcuterie, fromages >45% MG, beurre en excès, crème épaisse
+- Réduction <7% des calories totales → -15 à -20% LDL (AHA)
+→ Remplacer crème par fromage blanc battu, beurre de cuisson par huile d'olive
+
+Protéines végétales vs animales :
+- Légumineuses : protéines + fibres solubles + phytostérols = triple effet bénéfique sur LDL
+- Effet documenté : 25g protéines légumineuses/jour → -3 à -5% LDL supplémentaire
+
+Pour remonter le HDL :
+- Levier n°1 : activité physique aérobie 150 min/semaine → +5 à +10% HDL (ESC)
+- Huile d'olive : protège le HDL contre l'oxydation
+- Réduction du tour de taille : -5 à -10% poids → amélioration significative HDL
+
+## 3. GLYCÉMIE PRÉ-DIABÉTIQUE : STRATÉGIES NUTRITIONNELLES
+Réf : ANSES 2016, ADA Standards of Care 2023, DPP Study (NEJM 2002)
+
+Contexte (glycémie à jeun 1,13 g/L = hyperglycémie modérée à jeun) :
+- Norme : < 1,00 g/L | Pré-diabète : 1,00-1,25 g/L | Diabète : ≥ 1,26 g/L (2 mesures)
+- Réversible avec changements de mode de vie dans 50-60% des cas (DPP Study, NEJM 2002)
+- La perte de 5-7% du poids suffit à réduire significativement l'insulinorésistance
+
+Mécanisme de l'insulinorésistance abdominale :
+La graisse viscérale sécrète des adipokines pro-inflammatoires (TNF-α, IL-6, résistine) qui
+altèrent le signal insulinique dans les cellules musculaires et hépatiques → hyperglycémie compensatoire.
+
+Règles nutritionnelles anti-glycémie (à appliquer dans CHAQUE recette) :
+1. Association systématique protéines + fibres + lipides insaturés à chaque repas
+   → Protéines : ralentissent vidange gastrique, stimulent GLP-1
+   → Fibres solubles : forment un gel qui piège les glucides
+   → Lipides : ralentissent la vidange gastrique
+   → Résultat : pic glycémique post-prandial réduit de 20-40%
+2. Ne JAMAIS servir un féculent seul sans légume + protéine au même repas
+3. Toujours ajouter un peu de vinaigre ou citron dans l'assaisonnement (-20% glycémie)
+4. Légumes en entrée ou au début du plat (barrière glycémique physique)
+5. Réduire les glucides raffinés : jamais pain blanc, farine T45, riz très cuit
+
+Timing et repas unique le soir :
+- Sensibilité à l'insuline est meilleure le matin (rythme circadien, Shapiro 2017)
+- Repas unique le soir = pic glycémique maximal au mauvais moment biologique
+- Mitigation : collation protéines + fibres le midi est INDISPENSABLE pour ce profil
+
+## 4. OMÉGA-3 : SOURCES, CONVERSION ET STRATÉGIE VÉGÉTALE
+Réf : ANSES 2011 (besoins en acides gras), EFSA 2012, Mozaffarian & Wu (JACC 2011)
+
+Les 3 oméga-3 principaux :
+- ALA (alpha-linolénique) — végétal, précurseur
+  Sources : huile de lin (57%), graines de lin moulues (57%), noix (12%), huile de colza (9%)
+  Recommandation ANSES : 2,2g/jour homme | 1,8g/jour femme
+- EPA + DHA — marins, effets cardioprotecteurs directs (réduction triglycérides, anti-arythmique)
+  Conversion ALA→EPA : ~5-8% homme | ~21% femme (avantage biologique féminin)
+  Sources alimentaires : saumon, sardines, maquereau, hareng (2 portions/semaine pour effets optimaux)
+
+Ratio oméga-6/oméga-3 :
+- Idéal : 4:1 (ANSES/OMS) | Alimentation occidentale actuelle : 15-20:1
+- Excès oméga-6 (huile de tournesol/maïs) → inhibe conversion ALA→EPA, pro-inflammatoire
+→ Remplacer huile de tournesol par huile de colza = amélioration immédiate du ratio
+
+Stratégie oméga-3 sans poisson (priorité pour ce profil) :
+- 2 cc huile de colza en assaisonnement = 2,2g ALA (dose journalière homme)
+- 5-6 noix = 2,6g ALA
+- 1 cs graines de lin moulues dans yaourt/soupe = 2,4g ALA
+→ UNE de ces sources par jour = objectif ANSES atteint
+
+## 5. PROFIL FEMME 41 ANS — BESOINS SPÉCIFIQUES
+Réf : ANSES PNNS 2019, Menopause Society 2022, EFSA 2017
+
+Contexte hormonal :
+- 41 ans = possible début de périménopause (40-45 ans)
+- Fluctuations estrogènes → augmentation progressive du risque cardiovasculaire
+- Estrogènes avaient un effet protecteur sur le HDL → leur déclin peut faire baisser le HDL
+
+Besoins nutritionnels spécifiques :
+- Calcium : 1000mg/jour (ossification, prévention ostéoporose future)
+  Sources : yaourt 180mg, fromage blanc 100g = 120mg, sardines avec arêtes 350mg/100g,
+  haricots blancs cuits 130mg/100g, brocolis 47mg/100g, kale 150mg/100g
+- Vitamine D : 15µg/jour (absorption calcium, résistance insuline, immunité)
+  Sources : poissons gras, jaune d'œuf, champignons — souvent carencée en France en hiver
+- Fer : 16mg/jour si préménopausée (vs 11mg homme)
+  Fer héminique (mieux absorbé) : volailles | Fer non-héminique : légumineuses (6mg/100g), épinards
+  → Association OBLIGATOIRE : légumineuses + vitamine C (persil, poivron, citron) = absorption ×3
+- Phytoestrogènes (isoflavones) : effets modérés bénéfiques sur bilan lipidique et inconfort péri-ménopausique
+  Sources : soja (tofu, edamame), graines de lin (lignanes) — intégrer régulièrement
+- Magnésium : 360mg/jour (résistance insuline, sommeil, humeur)
+  Sources : légumineuses, oléagineux, céréales complètes, chocolat noir 70%+
+
+Différences homme/femme pour ce profil :
+- Besoins caloriques femme ~15% inférieurs → portions de féculents légèrement plus petites
+- Meilleure conversion ALA→EPA chez la femme (~21% vs ~8%)
+- HDL naturellement plus élevé chez la femme grâce aux estrogènes
+
+## 6. ASSOCIATIONS ALIMENTAIRES — RÈGLES À APPLIQUER SYSTÉMATIQUEMENT
+
+Associations BÉNÉFIQUES à intégrer dans chaque recette :
+1. Légumineuses + céréales complètes = protéine végétale complète (score PDCAAS optimal)
+   ex : lentilles + riz basmati | pois chiches + boulgour | haricots + pain seigle
+2. Légumineuses/légumes + vitamine C = absorption fer non-héminique ×3
+   ex : lentilles + persil frais | pois chiches + poivron | épinards + citron
+3. Caroténoïdes + lipides = absorption antioxydants (lycopène, bêta-carotène) ×6
+   ex : carottes + huile d'olive | butternut + huile de colza | tomates + olive
+4. Avoine + pomme = synergie bêta-glucanes + pectines → -10% LDL documenté
+5. Acide (citron, vinaigre) + féculent = réduction IG du repas de 20-34%
+6. Protéine + fibre + graisse insaturée à chaque repas = stabilisation glycémique maximale
+7. Calcium + vitamine D = absorption osseuse optimale (pertinent pour la femme 41 ans)
+
+Associations DÉFAVORABLES à éviter :
+- Graisses saturées + sucres rapides = combo athérogène maximal (ex : pain blanc + beurre + confiture)
+- Féculent seul sans légume ni protéine = pic glycémique non amorti
+- Café/thé pendant le repas si déficit en fer : réduit absorption fer non-héminique de 60%
+
+## 7. DENSITÉ NUTRITIONNELLE — PRINCIPE DIRECTEUR
+
+Pour ce profil (repas unique le soir + collation midi légère) :
+Le dîner doit être DENSE en micronutriments. Chaque ingrédient doit apporter maximum :
+- Fibres solubles (contre LDL et glycémie) : légumineuses, avoine, pommes, légumes racines
+- Antioxydants (contre inflammation/oxydation LDL) : légumes colorés, herbes fraîches, huile d'olive
+- Phytostérols (contre LDL) : huile de colza, légumineuses, céréales complètes
+- Protéines complètes (satiété, maintien masse musculaire) : légumineuses + céréales
+- Minéraux clés : magnésium (légumineuses, oléagineux), potassium (légumes verts), calcium (produits laitiers allégés)
+
+Objectif de charge glycémique journalière (CG) :
+- CG journalière cible pour ce profil : < 80 (vs 120-150 alimentation occidentale classique)
+- Un dîner équilibré doit viser CG dîner < 30
+- Légumineuses en protéines = avantage double (protéines + glucides IG très bas)`.trim();
 
 // Sites de référence recettes (liste par défaut)
 const SITES_RESSOURCES_DEFAUT = [
@@ -310,5 +517,6 @@ module.exports = {
   SITES_RESSOURCES_DEFAUT,
   PROFIL_SANTE,
   SCHEMA_NUTRITIONNEL,
-  CONTRAINTES_PRATIQUES
+  CONTRAINTES_PRATIQUES,
+  COMPETENCES_NUTRITIONNELLES
 };

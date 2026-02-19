@@ -1,5 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES } = require('./_skills');
+const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES, COMPETENCES_NUTRITIONNELLES } = require('./_skills');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,55 +19,9 @@ module.exports = async function handler(req, res) {
 
     const systemPrompt = `Tu es NutriCoach, un assistant nutritionniste expert intégré dans une application de planification de menus santé. Tu es bienveillant, pédagogue et pratique.
 
-## TES COMPÉTENCES NUTRITIONNELLES
-
-**Nutrition préventive :**
-- Cholestérol : rôle du LDL/HDL, aliments protecteurs (fibres solubles, phytostérols, oméga-3), aliments à éviter (graisses saturées et trans)
-- Glycémie : index glycémique (IG), charge glycémique, pics d'insuline, rôle des fibres et des protéines
-- Inflammation : antioxydants, polyphénols, alimentation méditerranéenne
-
-**Index glycémique (IG bas) :**
-- Céréales : riz basmati (IG 50), quinoa (IG 53), boulgour (IG 46), pain complet (IG 65) vs pain blanc (IG 75)
-- Légumineuses : lentilles (IG 30), pois chiches (IG 35), haricots (IG 30) — les meilleures sources glucidiques
-- Légumes : quasi tous IG bas sauf pomme de terre cuite (IG 80), carottes cuites (IG 47)
-- Fruits : pomme (IG 38), poire (IG 38), agrumes (IG 35), banane mûre (IG 60)
-
-**Farines et céréales :**
-- Farine T45 (blanche) : IG 85 — à éviter au quotidien
-- Farine T80 (semi-complète) : IG 65 — acceptable
-- Farine T110/T150 (complète/intégrale) : IG 45-55 — recommandée
-- Farine de pois chiche : IG 35, riche en protéines et fibres
-- Farine de sarrasin : IG 40, sans gluten, riche en rutine (vasculaire)
-- Flocons d'avoine : IG 40, bêta-glucanes réducteurs de cholestérol
+${COMPETENCES_NUTRITIONNELLES}
 
 ${getInstructionsSaisonnieres(ctx)}
-
-**Bonnes graisses et oméga-3 :**
-- Végétaux : huile de colza (oméga-3 ALA), huile de lin, noix, graines de lin moulues, graines de chia
-- Animaux : poissons gras (sardines, maquereau, saumon, truite) — EPA/DHA directement utilisables
-- Ratio oméga-6/oméga-3 idéal : 4:1 (occidental actuel : 15:1)
-- Huile d'olive : excellente pour les graisses mono-insaturées, anti-inflammatoire
-
-**Protéines santé :**
-- Légumineuses : 20-25g/100g, fibres, faible IG, pas de cholestérol
-- Poissons blancs : cabillaud, colin, lieu — maigres, riches en iode
-- Poissons gras : saumon, sardines — oméga-3 + vitamine D
-- Volailles sans peau : poulet, dinde — protéines maigres
-- Œufs : protéine de référence, lécithine (bonne pour le foie), 1 par jour max en cas de cholestérol
-
-**Micronutriments clés :**
-- Fibres solubles (réduisent le cholestérol) : avoine, légumineuses, pommes, courgettes
-- Fibres insolubles (transit) : légumes verts, céréales complètes
-- Vitamine C (antioxydant) : poivrons, kiwi, agrumes, choux
-- Bêta-carotène : carottes, butternut, patate douce — précurseur vitamine A
-- Magnésium : légumineuses, noix, céréales complètes, chocolat noir 70%+
-- Potassium : légumes verts, légumineuses, bananes — régule la tension
-
-**Associations alimentaires :**
-- Fer non-héminique + Vitamine C = meilleure absorption (lentilles + poivron)
-- Huile + légumes = meilleure absorption des caroténoïdes (carottes + huile olive)
-- Acidité (citron, vinaigre) + féculent = réduction de l'IG
-- Protéines + fibres + graisses = ralentissement absorption glucose
 
 ${PROFIL_SANTE}
 

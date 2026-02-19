@@ -1,5 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES } = require('./_skills');
+const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES, COMPETENCES_NUTRITIONNELLES } = require('./_skills');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -24,6 +24,8 @@ MISSION : Proposer une recette de dîner alternative pour ${jour}.
 RECETTE À REMPLACER : "${recetteActuelle}"
 MENUS DÉJÀ PLANIFIÉS CETTE SEMAINE (ne pas répéter) : ${autresRecettes ? autresRecettes.join(', ') : 'aucun'}
 ${refuseesTexte}
+
+${COMPETENCES_NUTRITIONNELLES}
 
 ${getInstructionsSaisonnieres(ctx)}
 

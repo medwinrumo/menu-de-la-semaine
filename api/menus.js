@@ -1,5 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES } = require('./_skills');
+const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES, COMPETENCES_NUTRITIONNELLES } = require('./_skills');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,6 +20,8 @@ MISSION : Générer un programme de menus complet pour la semaine du ${dateDebut
 
 JOURS À COUVRIR (dans cet ordre) :
 ${jours.map((j, i) => `Jour ${i + 1} : ${j}`).join('\n')}
+
+${COMPETENCES_NUTRITIONNELLES}
 
 ${getInstructionsSaisonnieres(ctx)}
 
