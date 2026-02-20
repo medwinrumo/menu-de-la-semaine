@@ -206,6 +206,11 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .tp-filtres::-webkit-scrollbar{display:none}
 .tp-filtre{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--txt);font-size:.78rem;cursor:pointer;white-space:nowrap;transition:.15s;flex-shrink:0}
 .tp-filtre.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tp-badge{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;background:#fff;color:var(--acc);border-radius:10px;font-size:.65rem;font-weight:700;padding:0 4px;margin-left:4px;vertical-align:middle}
+.tp-filtre-ajouter{border-color:#ff9800;color:#e65100}
+.tp-filtre-ajouter.on{background:#ff9800;border-color:#ff9800;color:#fff}
+.tp-rsel{font-size:.75rem;border:1px solid #ddd;border-radius:6px;padding:3px 5px;background:#f8f8f8;cursor:pointer;max-width:110px;flex-shrink:0}
+.tp-btn-ok{padding:5px 12px;background:#4caf50;color:#fff;border:none;border-radius:var(--r2);font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .tp-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);border-radius:var(--r);border:1px solid var(--border);margin-bottom:7px}
 .tp-nom{flex:1;font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tp-rayon-badge{font-size:.72rem;color:var(--txt2);background:var(--bg);padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0}
@@ -481,12 +486,13 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <!-- ===== TOUS MES PRODUITS ===== -->
 <div id="tous-produits" class="pnl">
 <div class="shop">
-<h2>📦 Tous mes produits</h2>
-<p class="mr-sub">Vos produits habituels — ajoutés depuis la liste de courses. Un clic pour les remettre dans la liste cette semaine.</p>
+<h2>📦 Mes produits</h2>
+<p class="mr-sub">Votre catalogue personnel. Les nouveaux produits arrivent dans « ⏳ À ajouter » — confirmez ceux que vous voulez garder.</p>
 <div class="tp-bar">
   <input type="search" id="tp-search" class="mr-search-input" placeholder="🔍 Rechercher un produit…" oninput="afficherTousProduits()">
 </div>
 <div class="tp-filtres">
+  <button class="tp-filtre tp-filtre-ajouter" data-rayon="__ajouter__" onclick="selFiltreTP(this)">⏳ À ajouter <span id="tp-ajouter-count" class="tp-badge"></span></button>
   <button class="tp-filtre on" data-rayon="" onclick="selFiltreTP(this)">Tous</button>
   <button class="tp-filtre" data-rayon="legumes" onclick="selFiltreTP(this)">🥬 Légumes</button>
   <button class="tp-filtre" data-rayon="fruits" onclick="selFiltreTP(this)">🍎 Fruits</button>
@@ -671,7 +677,7 @@ c.appendChild(l);document.getElementById('add-nom').value='';
 if(db){var aRef=db.ref('courses/ajoutes').push({nom:n,rayon:r});l.dataset.ajoutesKey=aRef.key;}
 // Mémoriser dans "Tous mes produits" si pas déjà présent
 var dejaDansProduits=produitsHabituels.some(function(p){return p.nom.toLowerCase()===n.toLowerCase();});
-if(!dejaDansProduits&&db)db.ref('produits_habituels').push({nom:n,rayon:r});
+if(!dejaDansProduits&&db)db.ref('produits_habituels').push({nom:n,rayon:r,a_ajouter:true});
 mC();
 }
 mC();
@@ -2174,6 +2180,7 @@ var db=null;
 var ingredientsFirebase=null;
 var produitsHabituels=[];
 var tpFiltresActifs={};
+var tpVueAjouter=false;
 function fbKey(nom){return nom.replace(/[.#$[\]/]/g,'-').replace(/\s+/g,'_').substring(0,60);}
 
 function appliquerIngredientsFirebase(ingredients){
@@ -2360,7 +2367,7 @@ db.ref('/').on('value',function(snapshot){
   produitsHabituels = data.produits_habituels
     ? Object.keys(data.produits_habituels).map(function(key){
         var p=data.produits_habituels[key];
-        return p ? {nom:p.nom||'',rayon:p.rayon||'divers',_fbKey:key} : null;
+        return p ? {nom:p.nom||'',rayon:p.rayon||'divers',a_ajouter:!!p.a_ajouter,_fbKey:key} : null;
       }).filter(Boolean)
     : [];
   afficherTousProduits();
@@ -2374,76 +2381,84 @@ var TP_RAYON_LABELS={legumes:'🥬 Légumes',fruits:'🍎 Fruits',viandes:'🥩 
 function afficherTousProduits(){
   var search=(document.getElementById('tp-search').value||'').toLowerCase().trim();
   var liste=document.getElementById('tp-liste');
+  // Badge count sur le bouton "À ajouter"
+  var countAjouter=produitsHabituels.filter(function(p){return p.a_ajouter;}).length;
+  var badgeEl=document.getElementById('tp-ajouter-count');
+  if(badgeEl)badgeEl.textContent=countAjouter>0?countAjouter:'';
+  if(tpVueAjouter){
+    // === Vue "À ajouter" : inbox des nouveaux produits ===
+    var items=produitsHabituels.filter(function(p){return !!p.a_ajouter;});
+    if(!items.length){
+      liste.innerHTML='<p class="mr-empty">Aucun produit en attente. Ajoutez des produits manuellement dans l\'onglet Courses — ils arriveront ici automatiquement.</p>';
+      return;
+    }
+    var rayonOpts=Object.keys(TP_RAYON_LABELS).map(function(k){return '<option value="'+k+'">'+TP_RAYON_LABELS[k]+'</option>';}).join('');
+    liste.innerHTML=items.map(function(p){
+      var keyEsc=(p._fbKey||'').replace(/'/g,"\\'");
+      var opts=Object.keys(TP_RAYON_LABELS).map(function(k){return '<option value="'+k+'"'+(k===p.rayon?' selected':'')+'>'+TP_RAYON_LABELS[k]+'</option>';}).join('');
+      return '<div class="tp-item">'+
+        '<span class="tp-nom">'+p.nom+'</span>'+
+        '<select class="tp-rsel" id="rsel-'+p._fbKey+'">'+opts+'</select>'+
+        '<button class="tp-btn-ok" onclick="adopterProduit(\''+keyEsc+'\')" title="Confirmer dans le catalogue">✓</button>'+
+        '<button class="tp-btn-del" onclick="supprimerProduitHabitude(\''+keyEsc+'\')" title="Supprimer">✕</button>'+
+        '</div>';
+    }).join('');
+    return;
+  }
+  // === Vue normale : produits confirmés ===
   var items=produitsHabituels.filter(function(p){
+    if(p.a_ajouter)return false;
     if(Object.keys(tpFiltresActifs).length>0&&!tpFiltresActifs[p.rayon])return false;
     if(search&&!(p.nom||'').toLowerCase().includes(search))return false;
     return true;
   });
   if(!items.length){
-    liste.innerHTML='<p class="mr-empty">'+(produitsHabituels.length?'Aucun résultat pour cette recherche.':'Aucun produit enregistré. Ajoutez des produits manuellement via l\'onglet Courses — ils seront automatiquement mémorisés ici.')+'</p>';
+    var hasConfirmed=produitsHabituels.some(function(p){return !p.a_ajouter;});
+    var msg=hasConfirmed?'Aucun résultat.':(produitsHabituels.length?'Validez vos produits depuis ⏳ À ajouter.':'Aucun produit enregistré. Ajoutez des produits dans l\'onglet Courses.');
+    liste.innerHTML='<p class="mr-empty">'+msg+'</p>';
     return;
   }
-  // Trier par rayon puis par nom
   items=items.slice().sort(function(a,b){return a.rayon!==b.rayon?a.rayon.localeCompare(b.rayon):a.nom.localeCompare(b.nom);});
-  // Produits déjà dans la liste de courses (liste principale ou caddie)
-  var enListe={};
-  document.querySelectorAll('#liste-principale .sitem .sn, #caddie .sitem .sn').forEach(function(el){enListe[el.textContent.toLowerCase().trim()]=true;});
   liste.innerHTML=items.map(function(p){
-    var nomEsc=p.nom.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     var keyEsc=(p._fbKey||'').replace(/'/g,"\\'");
-    var dejaEnListe=!!enListe[p.nom.toLowerCase().trim()];
-    var btnAdd=dejaEnListe
-      ?''
-      :'<button class="tp-btn-add" onclick="ajouterDepuisProduits(\''+nomEsc+'\',\''+p.rayon+'\',this)">+ Ajouter</button>';
     return '<div class="tp-item">'+
       '<span class="tp-nom">'+p.nom+'</span>'+
       '<span class="tp-rayon-badge">'+(TP_RAYON_LABELS[p.rayon]||p.rayon)+'</span>'+
-      btnAdd+
-      '<button class="tp-btn-del" onclick="supprimerProduitHabitude(\''+keyEsc+'\')" title="Supprimer de mes produits">✕</button>'+
+      '<button class="tp-btn-del" onclick="supprimerProduitHabitude(\''+keyEsc+'\')" title="Supprimer du catalogue">✕</button>'+
       '</div>';
   }).join('');
 }
 
 function selFiltreTP(btn){
   var rayon=btn.dataset.rayon;
-  if(rayon===''){
-    // "Tous" → réinitialiser tous les filtres
+  document.querySelectorAll('.tp-filtre').forEach(function(b){b.classList.remove('on');});
+  if(rayon==='__ajouter__'){
+    tpVueAjouter=true;
     tpFiltresActifs={};
-    document.querySelectorAll('.tp-filtre').forEach(function(b){b.classList.remove('on');});
+    btn.classList.add('on');
+  }else if(rayon===''){
+    tpVueAjouter=false;
+    tpFiltresActifs={};
     btn.classList.add('on');
   }else{
-    // Toggler ce rayon
-    if(tpFiltresActifs[rayon]){
-      delete tpFiltresActifs[rayon];
-    }else{
-      tpFiltresActifs[rayon]=true;
-    }
-    // Mettre à jour l'état visuel
+    tpVueAjouter=false;
+    if(tpFiltresActifs[rayon]){delete tpFiltresActifs[rayon];}
+    else{tpFiltresActifs[rayon]=true;}
     btn.classList.toggle('on',!!tpFiltresActifs[rayon]);
-    // "Tous" est actif seulement si aucun filtre rayon sélectionné
     var btnTous=document.querySelector('.tp-filtre[data-rayon=""]');
     if(btnTous)btnTous.classList.toggle('on',Object.keys(tpFiltresActifs).length===0);
   }
   afficherTousProduits();
 }
 
-function ajouterDepuisProduits(nom,rayon,btn){
-  var nomLow=nom.toLowerCase();
-  var existe=false;
-  document.querySelectorAll('#liste-principale .sitem .sn').forEach(function(el){if(el.textContent.toLowerCase()===nomLow)existe=true;});
-  if(existe){toast('ℹ️ '+nom+' est déjà dans la liste de courses.');return;}
-  var c=document.querySelector('.si[data-cat="'+rayon+'"]');
-  if(!c)c=document.querySelector('.si[data-cat="epicerie"]');
-  if(c){
-    var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
-    var l=document.createElement('label');l.className='sitem';
-    l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nom+'</span><span class="sr">Ajouté manuellement</span>';
-    c.appendChild(l);
-    if(db){var tpRef=db.ref('courses/ajoutes').push({nom:nom,rayon:rayon});l.dataset.ajoutesKey=tpRef.key;}
-    mC();
-  }
-  if(btn)btn.remove();
-  toast('✅ '+nom+' ajouté à la liste de courses !');
+function adopterProduit(key){
+  var rsel=document.getElementById('rsel-'+key);
+  var upd={a_ajouter:null};
+  if(rsel)upd.rayon=rsel.value;
+  if(db)db.ref('produits_habituels/'+key).update(upd);
+  var p=produitsHabituels.find(function(x){return x._fbKey===key;});
+  if(p){p.a_ajouter=false;if(rsel)p.rayon=rsel.value;}
+  afficherTousProduits();
 }
 
 function supprimerProduitHabitude(key){
