@@ -207,7 +207,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .tp-filtre{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--txt);font-size:.78rem;cursor:pointer;white-space:nowrap;transition:.15s;flex-shrink:0}
 .tp-filtre.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 .tp-badge{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;background:#fff;color:var(--acc);border-radius:10px;font-size:.65rem;font-weight:700;padding:0 4px;margin-left:4px;vertical-align:middle}
-.tp-filtre-ajouter{border-color:#ff9800;color:#e65100}
+.tp-filtre-ajouter{border-color:#4caf50;color:#388e3c}
+.tp-filtre-ajouter.plein{border-color:#e53935;color:#c62828}
 .tp-filtre-ajouter.on{background:#ff9800;border-color:#ff9800;color:#fff}
 .tp-rsel{font-size:.75rem;border:1px solid #ddd;border-radius:6px;padding:3px 5px;background:#f8f8f8;cursor:pointer;max-width:110px;flex-shrink:0}
 .tp-btn-ok{padding:5px 12px;background:#4caf50;color:#fff;border:none;border-radius:var(--r2);font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
@@ -2385,6 +2386,8 @@ function afficherTousProduits(){
   var countAjouter=produitsHabituels.filter(function(p){return p.a_ajouter;}).length;
   var badgeEl=document.getElementById('tp-ajouter-count');
   if(badgeEl)badgeEl.textContent=countAjouter>0?countAjouter:'';
+  var btnAjouter=document.querySelector('.tp-filtre-ajouter');
+  if(btnAjouter)btnAjouter.classList.toggle('plein',countAjouter>0);
   if(tpVueAjouter){
     // === Vue "À ajouter" : inbox des nouveaux produits ===
     var items=produitsHabituels.filter(function(p){return !!p.a_ajouter;});
