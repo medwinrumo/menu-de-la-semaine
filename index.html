@@ -2231,6 +2231,12 @@ db.ref('/').on('value',function(snapshot){
       if(fbM.recette){
         var localNom=J[idx].recette?J[idx].recette.nom:null;
         if(localNom!==fbM.recette.nom){ J[idx].recette=fbM.recette; needRecipe=true; }
+        // Migration : recette présente mais dinerItems absent → créer dinerItems (ancienne semaine)
+        if(!J[idx].dinerItems){
+          J[idx].dinerItems=[{type:'plat principal',nom:fbM.recette.nom,recette:fbM.recette}];
+          needRW=true; needRecipe=true;
+          if(db)db.ref('menus/'+idx+'/dinerItems').set(J[idx].dinerItems);
+        }
       }
       // Mettre à jour l'onglet Recettes si recette ou dinerItems ont changé
       if(needRecipe){
