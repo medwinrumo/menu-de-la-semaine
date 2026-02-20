@@ -2250,7 +2250,7 @@ function appliquerDepuisFirebase(data, menus){
 }
 
 function reinitialiserSysteme() {
-  if (!confirm('⚠️ Réinitialiser le planning et la liste de courses ?\n\nVos recettes personnelles (Mes Recettes) seront conservées.')) return;
+  if (!confirm('⚠️ Réinitialiser le planning et la liste de courses ?\n\nConservés : Mes Recettes ✅  |  Mes Produits ✅\nEffacés : Planning de la semaine ❌  |  Liste de courses ❌')) return;
   if (!confirm('Dernière confirmation — effacer définitivement le planning et la liste de courses ?')) return;
   var ops = [];
   if (db) {
