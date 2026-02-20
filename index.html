@@ -37,6 +37,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .recipe{background:var(--card);border-radius:var(--r2);margin-bottom:20px;box-shadow:var(--sh);border:1px solid var(--border);padding:22px}
 .recipe-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px}
 .recipe-top h3{color:var(--acc);font-size:1.3rem;flex:1}
+.recipe-title-link{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;transition:.15s}
+.recipe-title-link:hover{opacity:.75}
 .recipe-top .r-ico{font-size:2.2rem;line-height:1;flex-shrink:0}
 .recipe-link{display:inline-block;margin-bottom:14px;font-size:.78rem;color:var(--acc);text-decoration:none;padding:3px 10px;background:var(--accL);border-radius:6px;word-break:break-all}
 .recipe-link:hover{text-decoration:underline}
@@ -944,6 +946,7 @@ function supprimerSource(fbKey) {
 // ===== PHASE 8 — PROFIL DYNAMIQUE + RECETTES PERSO =====
 var profilExtra = {};
 var recettesPerso = [];
+var _rmp = {}; // cache recettes semaine pour la modale (recipe modal pool)
 var recettesPersoMap = {}; // lookup rapide key → recette
 
 // Convertit n'importe quoi en tableau (string → split newlines, objet Firebase → Object.values)
@@ -1358,8 +1361,9 @@ function toggleRecetteJour(k) {
 
 function buildRecipeDiv(idx, r) {
   var nom = J[idx] ? J[idx].nom : '';
+  var rmKey = 'r'+idx+'_main'; _rmp[rmKey] = r;
   return '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>' +
-    '<div class="recipe-top"><h3>'+(r.nom)+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
+    '<div class="recipe-top"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKey+'\')">'+(r.nom)+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
     '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+nom+'</span></div>' +
     (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
     '<h4>Ingrédients</h4>' +
@@ -1474,12 +1478,13 @@ function buildMultiRecipeDiv(idx) {
   var html = '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>';
   var items = sortDI(J[idx] && J[idx].dinerItems ? J[idx].dinerItems : []);
   var typeLabels = {'entrée':'🥗 Entrée','plat principal':'🍽️ Plat principal','accompagnement':'🥦 Accompagnement','dessert':'🍮 Dessert','goûter':'☕ Goûter'};
-  items.forEach(function(item) {
+  items.forEach(function(item, diIdx) {
     var r = item.recette;
     if (!r) return;
     var tl = typeLabels[item.type] || item.type;
+    var rmKey = 'r'+idx+'_'+diIdx; _rmp[rmKey] = r;
     html += '<div style="margin:20px 0 8px"><span class="service-tag-badge lg">'+tl+'</span></div>' +
-      '<div class="recipe-top"><h3>'+r.nom+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
+      '<div class="recipe-top"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKey+'\')">'+(r.nom)+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
       '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+dayNom+'</span></div>' +
       (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
       '<h4>Ingrédients</h4><ul>'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
@@ -1487,8 +1492,9 @@ function buildMultiRecipeDiv(idx) {
   });
   if (J[idx].gou && J[idx].recetteGou) {
     var rg = J[idx].recetteGou;
+    var rmKeyG = 'r'+idx+'_gou'; _rmp[rmKeyG] = rg;
     html += '<div style="margin:20px 0 8px"><span class="service-tag-badge lg">☕ Goûter</span></div>' +
-      '<div class="recipe-top"><h3>'+rg.nom+'</h3><div class="r-ico">'+(rg.emoji||'☕')+'</div></div>' +
+      '<div class="recipe-top"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKeyG+'\')">'+(rg.nom)+'</h3><div class="r-ico">'+(rg.emoji||'☕')+'</div></div>' +
       '<h4>Ingrédients</h4><ul>'+toArr(rg.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
       '<h4>Préparation</h4><ol>'+toArr(rg.etapes).map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>';
   }
@@ -1607,6 +1613,34 @@ function voirRecettePerso(k) {
     infosSante: toArr(r.infosSante || [])
   };
   afficherModal(modalData);
+  var actions = document.querySelector('.modal-actions');
+  if (actions) actions.style.display = 'none';
+  var closeBtn = document.querySelector('.modal-close');
+  if (closeBtn) {
+    var origOnclick = closeBtn.onclick;
+    closeBtn.onclick = function() {
+      fermerModal();
+      if (actions) actions.style.display = '';
+      closeBtn.onclick = origOnclick;
+    };
+  }
+}
+
+function ouvrirRecetteModal(key) {
+  var r = _rmp[key];
+  if (!r) return;
+  afficherModal({
+    nom: r.nom,
+    emoji: r.emoji || '🥘',
+    prepTime: r.prepTime || '—',
+    cookTime: r.cookTime || '—',
+    url: r.url || null,
+    ingredients: toArr(r.ingredients || []),
+    etapes: toArr(r.etapes || []),
+    image: r.image || null,
+    astuces: toArr(r.astuces || []),
+    infosSante: toArr(r.infosSante || [])
+  });
   var actions = document.querySelector('.modal-actions');
   if (actions) actions.style.display = 'none';
   var closeBtn = document.querySelector('.modal-close');
