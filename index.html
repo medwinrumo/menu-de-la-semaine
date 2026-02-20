@@ -20,12 +20,12 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;justify-content:center;position:sticky;top:0;z-index:200;background:var(--bg);padding:10px 0}
 .tabs button{padding:9px 18px;background:var(--card);border:2px solid var(--border);border-radius:var(--r);color:var(--txt);font-size:.9rem;font-weight:600;cursor:pointer;transition:.2s}
 .tabs button:hover{border-color:var(--acc);color:var(--acc)}
-.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tabs button.on{background:#fde9e0;color:#1c1008;border-color:#fde9e0}
 .pnl{display:none}.pnl.on{display:block;animation:fu .25s ease}
 @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;margin-bottom:20px}
 .day{background:var(--card);border-radius:var(--r2);padding:16px;box-shadow:var(--sh);border:1px solid var(--border)}
-.day h3{color:var(--acc);font-size:.95rem;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid var(--acc)}
+.day h3{color:#1c1008;font-size:.95rem;margin:-16px -16px 10px;padding:9px 16px;background:#fde9e0;border-radius:calc(var(--r2) - 1px) calc(var(--r2) - 1px) 0 0;border-bottom:none}
 .meal{margin-bottom:8px;padding:8px 10px;background:var(--bg);border-radius:var(--r);border-left:3px solid var(--acc)}
 .ml{font-weight:700;color:var(--acc);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
 .mc{color:var(--txt);font-size:.85rem;line-height:1.45}
@@ -91,7 +91,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
   .grid{grid-template-columns:1fr}
   .tabs{position:fixed;bottom:0;left:0;right:0;top:auto;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;margin:0;padding:0;padding-bottom:env(safe-area-inset-bottom,0px);border-top:1px solid var(--border);box-shadow:0 -2px 10px rgba(0,0,0,.1);gap:0;z-index:300}
   .tabs button{flex:1;min-width:54px;padding:8px 2px 6px;font-size:.6rem;border-radius:0;border:none;border-top:3px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--bg)}
-  .tabs button.on{background:var(--accL);border-top-color:var(--acc);color:var(--acc)}
+  .tabs button.on{background:#fde9e0;border-top-color:#c8856a;color:#1c1008}
   .wrap{padding-bottom:64px}
   .sitem{flex-wrap:wrap}
   .sitem .sr{max-width:100%;text-align:left}
@@ -318,9 +318,9 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <button onclick="tab('recettes',this)">👨‍🍳 Recettes</button>
 <button onclick="tab('courses',this)">🛒 Courses</button>
 <button onclick="tab('mesrecettes',this)">📚 Mes recettes</button>
-<button onclick="tab('sources',this)">🔗 Sources</button>
 <button onclick="tab('tous-produits',this)">📦 Produits</button>
 <button onclick="tab('chat',this)">💬 NutriCoach</button>
+<button onclick="tab('sources',this)">🔗 Sources</button>
 </div>
 
 <!-- ===== APERÇU ===== -->
