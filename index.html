@@ -2155,7 +2155,7 @@ function chercherAutre() {
 var db=null;
 var ingredientsFirebase=null;
 var produitsHabituels=[];
-var tpFiltreActif='';
+var tpFiltresActifs={};
 function fbKey(nom){return nom.replace(/[.#$[\]/]/g,'-').replace(/\s+/g,'_').substring(0,60);}
 
 function appliquerIngredientsFirebase(ingredients){
@@ -2357,7 +2357,7 @@ function afficherTousProduits(){
   var search=(document.getElementById('tp-search').value||'').toLowerCase().trim();
   var liste=document.getElementById('tp-liste');
   var items=produitsHabituels.filter(function(p){
-    if(tpFiltreActif&&p.rayon!==tpFiltreActif)return false;
+    if(Object.keys(tpFiltresActifs).length>0&&!tpFiltresActifs[p.rayon])return false;
     if(search&&!(p.nom||'').toLowerCase().includes(search))return false;
     return true;
   });
@@ -2380,9 +2380,25 @@ function afficherTousProduits(){
 }
 
 function selFiltreTP(btn){
-  document.querySelectorAll('.tp-filtre').forEach(function(b){b.classList.remove('on');});
-  btn.classList.add('on');
-  tpFiltreActif=btn.dataset.rayon;
+  var rayon=btn.dataset.rayon;
+  if(rayon===''){
+    // "Tous" → réinitialiser tous les filtres
+    tpFiltresActifs={};
+    document.querySelectorAll('.tp-filtre').forEach(function(b){b.classList.remove('on');});
+    btn.classList.add('on');
+  }else{
+    // Toggler ce rayon
+    if(tpFiltresActifs[rayon]){
+      delete tpFiltresActifs[rayon];
+    }else{
+      tpFiltresActifs[rayon]=true;
+    }
+    // Mettre à jour l'état visuel
+    btn.classList.toggle('on',!!tpFiltresActifs[rayon]);
+    // "Tous" est actif seulement si aucun filtre rayon sélectionné
+    var btnTous=document.querySelector('.tp-filtre[data-rayon=""]');
+    if(btnTous)btnTous.classList.toggle('on',Object.keys(tpFiltresActifs).length===0);
+  }
   afficherTousProduits();
 }
 
