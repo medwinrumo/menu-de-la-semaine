@@ -201,9 +201,10 @@ Règle : codée ≠ validée. Une correction est supprimée de cette liste seule
 
 ### 🔵 Codées — en attente de validation
 - **#2** Sélecteur type service (Plat/Entrée/Accomp.) dans zone jour des cartes Mes Recettes
-- **#7** Bouton ✕ service : goRecette() reconstruit le contenu depuis J[] + rW() avant Firebase
+- **#7** Bouton ✕ service : goRecette() reconstruit le contenu depuis J[] + rW() avant Firebase + migration auto dinerItems
 - **#8a** truncNom coupe sur espace (pas en milieu de mot)
-- **#8b** Pas de "Ajouté manuellement" : supprimé écriture cours/ajoutes dans ingOk + nettoyage auto dans appliquerDepuisFirebase
+- **#8b** Pas de "Ajouté manuellement" depuis ingOk (supprimé écriture courses/ajoutes)
+- **#9** Onglet "Tous mes produits" : catalogue permanent filtrable par rayon + recherche + ajout en 1 clic à la liste de courses. ajP() mémorise aussi dans produits_habituels Firebase.
 
 ### 🟡 À faire (priorité basse)
 - **#5** Qualité des recettes générées par Claude → retravailler prompt api/menus.js
