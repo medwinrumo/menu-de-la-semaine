@@ -966,6 +966,7 @@ function supprimerSource(fbKey) {
 // ===== PHASE 8 — PROFIL DYNAMIQUE + RECETTES PERSO =====
 var profilExtra = {};
 var recettesPerso = [];
+var historiqueRecettes = []; // recettes générées ces 28 derniers jours
 var _rmp = {}; // cache recettes semaine pour la modale (recipe modal pool)
 var recettesPersoMap = {}; // lookup rapide key → recette
 
@@ -1152,7 +1153,7 @@ function genererSemaine(skipConfirm) {
   fetch('/api/menus', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({jours: joursDates, dateDebut: dateDebut, dateFin: dateFin, sitesExtra: sitesExtra, profilExtra: profilExtra, recettesPerso: recettesPerso})
+    body: JSON.stringify({jours: joursDates, dateDebut: dateDebut, dateFin: dateFin, sitesExtra: sitesExtra, profilExtra: profilExtra, recettesPerso: recettesPerso, historiqueRecettes: historiqueRecettes})
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
@@ -1210,6 +1211,20 @@ function appliquerNouveauxMenus(data) {
     db.ref('ingredients').remove();
     db.ref('courses/ajoutes').remove();
     db.ref('courses/achetes').remove();
+    // Sauvegarder les recettes dans l'historique (mémoire 28 jours)
+    var today = toDateStr(new Date());
+    data.jours.forEach(function(jour) {
+      if (jour.recette && jour.recette.nom) {
+        db.ref('historique_recettes').push({nom: jour.recette.nom, date: today});
+      }
+    });
+    // Nettoyer l'historique > 28 jours
+    var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 28);
+    var cutoffStr = toDateStr(cutoff);
+    db.ref('historique_recettes').once('value', function(snap) {
+      var h = snap.val() || {};
+      Object.keys(h).forEach(function(k) { if (h[k].date < cutoffStr) db.ref('historique_recettes/'+k).remove(); });
+    });
   }
 }
 
@@ -2509,6 +2524,10 @@ db.ref('/').on('value',function(snapshot){
     recettesPersoMap[r._fbKey || ('local-'+r.nom)] = r;
   });
   afficherRecettesPerso();
+  // Sync historique recettes (mémoire 28 jours)
+  historiqueRecettes = data.historique_recettes
+    ? Object.values(data.historique_recettes).filter(Boolean)
+    : [];
   // Sync produits_habituels
   produitsHabituels = data.produits_habituels
     ? Object.keys(data.produits_habituels).map(function(key){

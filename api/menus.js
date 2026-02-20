@@ -1,5 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, getProfilDynamique, getRecettesPerso, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES, COMPETENCES_NUTRITIONNELLES } = require('./_skills');
+const { getContexteSaisonnier, getInstructionsSaisonnieres, getSitesRessources, getProfilDynamique, getRecettesPerso, getHistoriqueRecettes, PROFIL_SANTE, SCHEMA_NUTRITIONNEL, CONTRAINTES_PRATIQUES, COMPETENCES_NUTRITIONNELLES, COMPETENCES_CULINAIRES } = require('./_skills');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,17 +9,19 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   try {
-    const { jours, dateDebut, dateFin, sitesExtra, profilExtra, recettesPerso } = req.body;
+    const { jours, dateDebut, dateFin, sitesExtra, profilExtra, recettesPerso, historiqueRecettes } = req.body;
     const ctx = getContexteSaisonnier();
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-    const prompt = `Tu es un nutritionniste expert en cuisine française saine.
+    const prompt = `Tu es à la fois un chef cuisinier français et un nutritionniste expert.
+Ta mission : créer des menus savoureux, gastronomiquement cohérents ET adaptés au profil santé.
 
-MISSION : Générer un programme de menus complet pour la semaine du ${dateDebut} au ${dateFin}.
-
-JOURS À COUVRIR (dans cet ordre) :
+SEMAINE DU ${dateDebut} AU ${dateFin}
+JOURS À COUVRIR :
 ${jours.map((j, i) => `Jour ${i + 1} : ${j}`).join('\n')}
+
+${COMPETENCES_CULINAIRES}
 
 ${COMPETENCES_NUTRITIONNELLES}
 
@@ -33,26 +35,32 @@ ${SCHEMA_NUTRITIONNEL}
 
 ${CONTRAINTES_PRATIQUES}
 
-${getSitesRessources(sitesExtra)}
-
 ${getRecettesPerso(recettesPerso)}
 
-CONTRAINTES DE VARIÉTÉ (obligatoire) :
+${getHistoriqueRecettes(historiqueRecettes)}
+
+━━━ RÈGLES DE COMPOSITION DES MENUS ━━━
+
+VARIÉTÉ PROTÉINES (obligatoire) :
 - Pas la même protéine deux jours consécutifs
-- Au moins 3 dîners légumineuses (lentilles, pois chiches, haricots secs) — PRIORITÉ
-- Au moins 2 dîners volaille (poulet ou dinde)
-- 1 à 2 dîners œufs (omelette, œufs cocotte...)
-- Poisson : 0 ou 1 maximum par semaine, uniquement si pertinent — PAS obligatoire
-- Recettes différentes chaque semaine (varier les plats, ne pas répéter tajine, curry lentilles, poulet rôti citron systématiquement)
+- 3 à 4 dîners légumineuses — PRIORITÉ ABSOLUE
+- 2 à 3 dîners volaille
+- 1 à 2 dîners œufs
+- Poisson : 0 ou 1 maximum, uniquement si pertinent
+
+QUALITÉ CULINAIRE (obligatoire) :
+- Partir TOUJOURS d'un plat du terroir français du répertoire ci-dessus et l'adapter au profil santé
+- Chaque recette doit avoir une base aromatique (mirepoix, soffritto, fondue d'oignons...)
+- Toujours un élément acide (citron, vinaigre de cidre, tomate) pour équilibrer
+- Herbes fraîches ajoutées EN FIN de cuisson
+- Les étapes doivent être précises et détaillées (4 à 6 étapes minimum)
+- Les ingrédients doivent former un plat cohérent et appétissant, pas une addition nutritive
 
 STRUCTURE PETIT-DÉJEUNER (léger, IG bas, varie chaque jour) :
-- Eau citronnée + [fruit de saison] + [oléagineux] + [fromage blanc OU yaourt OU œufs + pain seigle]
+- Eau citronnée + [fruit de saison] + [oléagineux] + [fromage blanc OU yaourt OU 2 œufs + pain seigle]
 
-STRUCTURE COLLATION MIDI (cru et rapide, varie chaque jour) :
-- Crudités + [houmous OU tzatziki OU guacamole]
-- OU fruits + oléagineux
-- OU smoothie vert (épinards, banane, lait végétal)
-- OU radis + œuf dur
+STRUCTURE COLLATION MIDI (rapide, cru, varie chaque jour) :
+- Bâtonnets légumes + houmous OU fruits + noix OU smoothie vert OU radis + œuf dur
 
 RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
 {
@@ -62,28 +70,29 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
       "id": 0,
       "nom": "${jours[0]}",
       "pdj": "Eau citronnée • Fromage blanc 3% + miel • 1 pomme • 6 amandes",
-      "col": "Bâtonnets carottes et concombre • Houmous",
-      "din": "Description planning max 10 mots • Féculent • Légume",
-      "dn": "Nom court 3 mots max",
+      "col": "Bâtonnets carottes et concombre • Houmous maison",
+      "din": "Blanquette de poulet légère aux poireaux • riz basmati",
+      "dn": "Blanquette poulet",
       "recette": {
-        "nom": "Nom complet de la recette",
-        "emoji": "🥘",
+        "nom": "Blanquette de poulet légère aux poireaux et champignons",
+        "emoji": "🍲",
         "prepTime": "20 min",
-        "cookTime": "30 min",
-        "url": "https://www.cuisineaz.com/recettes/...",
-        "ingredients": ["400g filet de saumon", "2 poireaux émincés", "..."],
-        "etapes": ["Étape 1 détaillée.", "Étape 2 détaillée.", "Étape 3 détaillée."],
+        "cookTime": "35 min",
+        "url": null,
+        "ingredients": ["2 cuisses de poulet (sans peau)", "2 poireaux émincés", "200g champignons de Paris", "1 carotte en rondelles", "1 oignon", "1 bouquet garni", "20cl bouillon de volaille", "2 cs crème légère 15%", "1 cs jus de citron", "persil plat frais"],
+        "etapes": ["Faire revenir l'oignon émincé dans l'huile d'olive à feu doux 5 min.", "Ajouter le poulet et dorer légèrement sur toutes les faces.", "Ajouter poireaux, carotte, champignons et bouquet garni. Couvrir de bouillon.", "Mijoter à couvert 30 min à feu doux.", "Retirer le poulet, réduire le bouillon de moitié à feu vif.", "Hors du feu, incorporer la crème légère et le citron. Parsemer de persil frais."],
         "coursesAAjouter": [
-          {"nom": "400g filet de saumon", "rayon": "viandes"},
-          {"nom": "2 poireaux", "rayon": "legumes"}
+          {"nom": "2 cuisses de poulet", "rayon": "viandes"},
+          {"nom": "2 poireaux", "rayon": "legumes"},
+          {"nom": "200g champignons de Paris", "rayon": "legumes"},
+          {"nom": "crème légère 15%", "rayon": "laitier"}
         ]
       }
     }
   ]
 }
 
-Génère les 7 jours en respectant exactement cette structure JSON.
-Pour chaque recette, le champ "url" doit pointer vers une recette réelle sur l'un des sites de référence fournis. Si aucune URL certaine n'est disponible pour cette recette précise, mets null.
+Génère les 7 jours. Le champ "url" doit être null sauf si tu es certain à 100% que l'URL existe.
 Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers`;
 
     const message = await client.messages.create({

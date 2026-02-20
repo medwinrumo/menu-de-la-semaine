@@ -482,6 +482,97 @@ Objectif de charge glycémique journalière (CG) :
 - Un dîner équilibré doit viser CG dîner < 30
 - Légumineuses en protéines = avantage double (protéines + glucides IG très bas)`.trim();
 
+// ============================================================
+// COMPÉTENCES CULINAIRES — Savoir-faire d'un chef français
+// Principe : partir d'un plat classique du terroir et l'adapter
+// au profil santé, plutôt qu'assembler des ingrédients de zéro.
+// ============================================================
+const COMPETENCES_CULINAIRES = `
+━━━ COMPÉTENCES CULINAIRES — CUISINER COMME UN CHEF ━━━
+
+## PRINCIPE FONDAMENTAL
+Ne jamais assembler des ingrédients au hasard.
+TOUJOURS partir d'un plat du terroir français existant et l'ADAPTER aux contraintes de santé.
+Exemples : Cassoulet → version légère sans saucisses grasses | Blanquette → sauce légère au bouillon sans crème épaisse | Daube → avec volaille au lieu de bœuf gras.
+
+## RÉPERTOIRE TERROIR FRANÇAIS — PLATS DE RÉFÉRENCE PAR PROTÉINE
+
+LÉGUMINEUSES (priorité absolue — 3 à 4 dîners/semaine) :
+- Lentilles du Puy mijotées : mirepoix (oignon/carotte/céleri) + laurier + thym + vinaigre de Xérès en fin → goût profond et équilibré
+- Cassoulet allégé : haricots tarbais + cuisse de poulet + tomates + bouquet garni (sans saucisses)
+- Soupe de pois chiches à la provençale : pois chiches + tomates + ail + romarin + huile d'olive + citron
+- Potée aux haricots blancs : haricots blancs + carottes + poireaux + navet + bouquet garni
+- Dal de lentilles corail façon française : lentilles corail + curcuma + gingembre + carotte + lait de coco léger + citron
+- Salade tiède de pois chiches rôtis : pois chiches + cumin + paprika fumé + poivrons + citron + persil plat
+- Brandade de haricots blancs : purée haricots blancs + ail confit + huile d'olive + zeste citron
+- Gratin de lentilles vertes : lentilles + champignons + échalotes + crème légère + gruyère (peu)
+- Tajine de pois chiches aux légumes d'hiver : pois chiches + carottes + navets + cannelle + cumin + coriandre
+- Haricots rouges mijotés façon bourguignonne : haricots rouges + oignons + carottes + concentré tomates + thym
+
+VOLAILLES (2 à 3 dîners/semaine) :
+- Blanquette de volaille légère : poulet + carottes + poireaux + champignons + fond de volaille réduit + crème légère + citron
+- Poulet basquaise : cuisses de poulet + poivrons + tomates + oignons + piment d'Espelette + huile d'olive
+- Poulet mijoté aux champignons : poulet + champignons de Paris + échalotes + thym + vin blanc + fond de volaille
+- Émincé de dinde à la moutarde ancienne : dinde + échalotes + moutarde à l'ancienne + crème légère 15%
+- Poulet rôti aux herbes de Provence : cuisse de poulet + ail + romarin + thym + huile d'olive + citron
+- Poulet aux poireaux et citron : blanc de poulet + fondue de poireaux + citron + estragon
+- Gratin de poulet et chou-fleur : poulet + chou-fleur + sauce béchamel légère (lait demi-écrémé + maïzena)
+- Sauté de dinde aux légumes du moment : dinde + légumes de saison + sauce soja légère + gingembre
+- Pot-au-feu de volaille : poulet entier + carottes + navets + poireaux + bouillon + os à moelle remplacé par noix
+
+ŒUFS (1 à 2 dîners/semaine) :
+- Frittata aux légumes de saison : œufs + légumes de saison + herbes fraîches + fromage de brebis léger
+- Œufs cocotte aux champignons : champignons + ail + persil + crème légère + œuf cassé dessus
+- Omelette soufflée aux herbes : œufs battés + estragon + ciboulette + fromage de brebis
+- Piperade basque légère : poivrons + tomates + oignons + piment d'Espelette + œufs brouillés
+- Quiche sans pâte aux légumes : œufs + lait demi-écrémé + légumes de saison + herbes
+
+POISSON (0 à 1 fois/semaine max, uniquement si pertinent) :
+- Papillote de cabillaud : cabillaud + poireaux + carottes + citron + aneth
+- Truite amandine allégée : truite + amandes effilées + huile d'olive + citron + persil
+
+## BASES AROMATIQUES FRANÇAISES (toujours utiliser l'une d'elles)
+- Mirepoix : oignon + carotte + céleri (base de 80% des plats mijotés français)
+- Soffritto léger : oignon + ail + tomate (cuisine du sud)
+- Fondue d'oignons : oignons caramélisés à l'huile d'olive (umami végétal naturel)
+- Bouquet garni : thym + laurier + persil (indispensable pour tout mijoté)
+
+## ACCORDS SAVEURS QUI FONCTIONNENT
+- Poulet + estragon + citron → fraîcheur, classique français
+- Poulet + champignons + thym → profondeur umami
+- Lentilles + cumin + citron + coriandre → équilibre acide/épicé
+- Lentilles + laurier + vinaigre de Xérès → sophistiqué, profond
+- Pois chiches + paprika fumé + citron → fumé + acidité
+- Haricots blancs + ail confit + romarin → douceur + parfum
+- Carottes + gingembre + coriandre → sucré + piquant
+- Poireaux + citron + estragon → doux + frais
+- Champignons + ail + persil plat → umami classique
+- Butternut + sauge + noix → automne/hiver, doux + terreux
+- Épinards + ail + noix de muscade → classique, chaud
+- Betterave + orange + vinaigre balsamique → sucré-acidulé
+
+## ACCORDS À ÉVITER
+- Légumineuses + produits laitiers gras (lourd, difficile à digérer)
+- Féculents × 2 dans le même plat (riz + pomme de terre = pic glycémique)
+- Trop d'épices exotiques ensemble (curry + cumin + gingembre + cannelle = confusion)
+- Herbes fraîches cuites longtemps (perdent leur intérêt — toujours ajouter en fin de cuisson)
+
+## TECHNIQUES LÉGÈRES DU CHEF FRANÇAIS SAIN
+1. DÉGLACER : après coloration de la viande, déglacer avec vin blanc sec ou jus de citron → concentre les sucs, crée une sauce sans matière grasse
+2. RÉDUIRE LE BOUILLON : remplace la crème pour lier une sauce (réduit de moitié = sauce nappante naturelle)
+3. ÉMULSIONNER : huile d'olive + moutarde + citron = vinaigrette qui "tient" sans mayonnaise
+4. CARAMÉLISER LES OIGNONS : 20 min à feu doux dans l'huile d'olive → sucré naturel + umami
+5. RÔTIR LES LÉGUMES : four 200°C + huile d'olive + sel + herbes → caramélisation = saveur de chef
+6. BLANCHIR-RAFRAÎCHIR : légumes verts blanchis 3 min + eau glacée = couleur vive + texture croquante
+7. LIAISON LÉGÈRE : 1 cs de fromage blanc battu en fin de sauce = onctuosité sans crème épaisse
+
+## LES 5 ÉQUILIBRES D'UNE GRANDE RECETTE
+1. SALÉ / ACIDE / SUCRÉ : toujours un élément acide (citron, vinaigre de cidre, tomate) pour "réveiller"
+2. TEXTURE : quelque chose de fondant + quelque chose de légèrement croquant (légume al dente, oléagineux)
+3. COULEUR : au moins 2 couleurs dans l'assiette (légume vert + légume orange/rouge)
+4. ARÔME : herbe fraîche ajoutée EN FIN de cuisson (persil, ciboulette, estragon, coriandre)
+5. UMAMI : champignons, concentré de tomates, miso léger, ou long mijotage pour la profondeur de goût`.trim();
+
 // Sites de référence recettes (liste par défaut)
 const SITES_RESSOURCES_DEFAUT = [
   { url: 'https://cuisinerigbas.com', desc: 'Cuisine IG bas quotidienne, plats mijotés, terroir adapté' },
@@ -528,13 +619,31 @@ function getProfilDynamique(profilExtra) {
 
 /**
  * Formate les recettes personnelles importées en bloc texte pour les prompts.
+ * PRIORITÉ ABSOLUE : si une recette personnelle convient au jour, l'utiliser en premier.
  * @param {Array} recettesPerso - tableau de recettes importées depuis Firebase recettes_perso/
  */
 function getRecettesPerso(recettesPerso) {
   if (!recettesPerso || !recettesPerso.length) return '';
-  return `━━━ RECETTES PERSONNELLES DE L'UTILISATEUR ━━━
-L'utilisateur a importé ces recettes — tu peux les proposer en priorité si elles correspondent :
-${recettesPerso.map(r => `- ${r.nom} : ${r.description || ''}`).join('\n')}`;
+  return `━━━ RECETTES PERSONNELLES — PRIORITÉ ABSOLUE ━━━
+L'utilisateur a une bibliothèque de recettes favorites importées.
+RÈGLE : Pour chaque dîner, cherche D'ABORD dans cette liste si une recette convient (saison, protéine, variété). Si oui, utilise-la. Si aucune ne convient, invente une recette en t'appuyant sur le répertoire culinaire ci-dessous.
+Recettes disponibles :
+${recettesPerso.map(r => `- "${r.nom}"${r.description ? ' : ' + r.description : ''}${r.tags && r.tags.length ? ' [' + r.tags.join(', ') + ']' : ''}`).join('\n')}`;
+}
+
+/**
+ * Formate l'historique des recettes récentes pour éviter les répétitions.
+ * @param {Array} historique - tableau d'objets { nom, date } des recettes des 4 dernières semaines
+ */
+function getHistoriqueRecettes(historique) {
+  if (!historique || !historique.length) return '';
+  const cutoff = Date.now() - 28 * 24 * 60 * 60 * 1000; // 28 jours
+  const recentes = historique.filter(h => new Date(h.date).getTime() > cutoff);
+  if (!recentes.length) return '';
+  return `━━━ RECETTES DÉJÀ SERVIES (NE PAS REPROPOSER) ━━━
+Ces recettes ont été servies récemment — ne les repropose PAS cette semaine :
+${recentes.map(h => `- "${h.nom}" (servi le ${h.date})`).join('\n')}
+Propose des plats différents en t'inspirant du répertoire culinaire.`;
 }
 
 module.exports = {
@@ -543,9 +652,11 @@ module.exports = {
   getSitesRessources,
   getProfilDynamique,
   getRecettesPerso,
+  getHistoriqueRecettes,
   SITES_RESSOURCES_DEFAUT,
   PROFIL_SANTE,
   SCHEMA_NUTRITIONNEL,
   CONTRAINTES_PRATIQUES,
-  COMPETENCES_NUTRITIONNELLES
+  COMPETENCES_NUTRITIONNELLES,
+  COMPETENCES_CULINAIRES
 };
