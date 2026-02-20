@@ -196,26 +196,21 @@ Extensibles via le chat NutriCoach → sauvegardés dans Firebase `sites_ressour
 
 ---
 
-## Corrections en cours / Backlog
+## Corrections — Backlog
+Règle : codée ≠ validée. Une correction est supprimée de cette liste seulement quand l'utilisateur confirme qu'elle fonctionne.
 
-### ✅ Réalisées (session actuelle)
-- **#2** Sélecteur type service (Plat/Entrée/Accomp.) dans zone jour des cartes Mes Recettes → fixed
-- **#6** Chat NutriCoach : recette en texte au lieu d'être appliquée → fixed (regex JSON robuste dans api/chat.js)
-- **#7** Bouton ✕ : recipeDiv pas vidé quand dinerItems ET recette null → fixed (clause else dans supprimerService + listener)
-- **#8** Liste de courses : label raccourci "Sam — Poulet…" (sans emoji, sans date) → fixed (rebuilderListeRecettes)
-- Suppression plat : disparaît puis réapparaît sans label "PLAT" → fixed (supprimerService vide din/dn/recette)
-- accepterRecette() sans label ni bouton ✕ → fixed (utilise dinerItems)
-- executerActionChat remplacer_repas sans label ni bouton ✕ → fixed
-- Chat NutriCoach : scroll bloqué, question invisible → fixed (CSS flex)
-- Champignons interdits en février → fixed (_skills.js toute l'année)
-- Liste de courses : "Ajouté manuellement" au lieu de "Jour — Recette" → fixed (rebuilderListeRecettes)
-- Ingrédients disparus au rechargement → fixed (reconstruits depuis data.menus)
-- Bouton ✕ absent sur menus API → fixed (dinerItems ajouté dans appliquerNouveauxMenus)
-- Modification ingrédient : mauvais rayon (légumes par défaut) → fixed (pré-sélection depuis courses)
-- Modification ingrédient : doublon grisé dans courses → fixed (update en place)
-
-### 🔴 À faire (priorité haute)
-*(toutes réalisées — voir section suivante)*
+### 🔵 Codées — en attente de validation
+- **#2** Sélecteur type service (Plat/Entrée/Accomp.) dans zone jour des cartes Mes Recettes
+- **#6** Chat NutriCoach : recette appliquée au planning (regex JSON robuste dans api/chat.js)
+- **#7** Bouton ✕ service : onglet Recettes affiche "Aucun dîner planifié" quand tout est supprimé
+- **#8** Liste de courses : label raccourci "Sam — Poulet…" (sans emoji, sans date)
+- Suppression plat : ne réapparaît plus sans label
+- accepterRecette() / executerActionChat : label PLAT + bouton ✕ présents
+- Chat NutriCoach : scroll fonctionnel, question visible
+- Champignons autorisés toute l'année
+- Liste de courses : ingrédients persistants + label "Jour — Recette" correct
+- Bouton ✕ présent sur menus générés par API
+- Modification ingrédient : bon rayon, update en place (pas de doublon)
 
 ### 🟡 À faire (priorité basse)
-- **#5** Qualité des recettes générées par Claude (pas appétissantes) → retravailler prompt api/menus.js
+- **#5** Qualité des recettes générées par Claude → retravailler prompt api/menus.js
