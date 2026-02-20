@@ -210,7 +210,6 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .tp-nom{flex:1;font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tp-rayon-badge{font-size:.72rem;color:var(--txt2);background:var(--bg);padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0}
 .tp-btn-add{padding:5px 12px;background:var(--acc);color:#fff;border:none;border-radius:var(--r2);font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
-.tp-btn-add:disabled{background:#c8e6c9;color:#388e3c;cursor:default;}
 .tp-btn-del{padding:5px 8px;background:none;border:1px solid var(--border);border-radius:var(--r2);font-size:.8rem;cursor:pointer;color:var(--txt2);flex-shrink:0}
 .mr-filtres{display:flex;gap:8px;align-items:center;margin-bottom:4px;flex-wrap:wrap}
 .btn-fav-filter{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:var(--card);color:var(--txt);font-size:.8rem;cursor:pointer;transition:.15s;white-space:nowrap}
@@ -626,9 +625,9 @@ function deb(cb){
 var it=cb.closest('.sitem');var nm=it.querySelector('.sn').textContent;
 var ajoutesKey=it.dataset.ajoutesKey||'';
 if(ajoutesKey){
-  // Produit ajouté manuellement → supprimer du DOM et de Firebase
+  // Produit ajouté manuellement → supprimer du DOM et de Firebase (1 seul update atomique)
   document.querySelectorAll('#liste-principale .sitem').forEach(function(o){if(o.querySelector('.sn').textContent===nm)o.remove();});
-  if(db){db.ref('courses/coches/'+fbKey(nm)).remove();db.ref('courses/ajoutes/'+ajoutesKey).remove();}
+  if(db){var upd={};upd['coches/'+fbKey(nm)]=null;upd['ajoutes/'+ajoutesKey]=null;db.ref('courses').update(upd);}
 }else{
   // Ingrédient recette → restaurer dans la liste principale
   document.querySelectorAll('#liste-principale .sitem').forEach(function(o){
@@ -647,9 +646,9 @@ function viderCaddie(){
     var nm=it.querySelector('.sn').textContent;
     var ajoutesKey=it.dataset.ajoutesKey||'';
     if(ajoutesKey){
-      // Produit ajouté manuellement → supprimer du DOM et de Firebase
+      // Produit ajouté manuellement → supprimer du DOM et de Firebase (1 seul update atomique)
       document.querySelectorAll('#liste-principale .sitem').forEach(function(o){if(o.querySelector('.sn').textContent===nm)o.remove();});
-      if(db){db.ref('courses/coches/'+fbKey(nm)).remove();db.ref('courses/ajoutes/'+ajoutesKey).remove();}
+      if(db){var upd={};upd['coches/'+fbKey(nm)]=null;upd['ajoutes/'+ajoutesKey]=null;db.ref('courses').update(upd);}
     }else{
       // Ingrédient recette → restaurer dans la liste principale
       document.querySelectorAll('#liste-principale .sitem').forEach(function(o){
@@ -2394,7 +2393,7 @@ function afficherTousProduits(){
     var keyEsc=(p._fbKey||'').replace(/'/g,"\\'");
     var dejaEnListe=!!enListe[p.nom.toLowerCase().trim()];
     var btnAdd=dejaEnListe
-      ?'<button class="tp-btn-add" disabled>✓ En liste</button>'
+      ?''
       :'<button class="tp-btn-add" onclick="ajouterDepuisProduits(\''+nomEsc+'\',\''+p.rayon+'\',this)">+ Ajouter</button>';
     return '<div class="tp-item">'+
       '<span class="tp-nom">'+p.nom+'</span>'+
@@ -2443,7 +2442,7 @@ function ajouterDepuisProduits(nom,rayon,btn){
     if(db){var tpRef=db.ref('courses/ajoutes').push({nom:nom,rayon:rayon});l.dataset.ajoutesKey=tpRef.key;}
     mC();
   }
-  if(btn){btn.textContent='✓ En liste';btn.disabled=true;}
+  if(btn)btn.remove();
   toast('✅ '+nom+' ajouté à la liste de courses !');
 }
 
