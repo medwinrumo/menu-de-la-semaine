@@ -149,6 +149,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:16px}
 .modal-overlay.on{display:flex}
 .modal{background:var(--card);border-radius:var(--r2);padding:24px;max-width:540px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.modal-overlay.fullscreen{padding:0;background:none}
+.modal-overlay.fullscreen .modal{max-width:100%;width:100%;max-height:100vh;height:100vh;border-radius:0;box-shadow:none;padding:20px 20px 32px}
 .modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
 .modal-head h2{color:var(--acc);font-size:1.2rem;flex:1}
 .modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--txt2);flex-shrink:0;margin-left:8px}
@@ -1325,13 +1327,6 @@ function afficherRecettesPerso(liste) {
       '<div class="recette-card-jour" id="rjour-'+k+'" style="display:none">' +
         '<label>le :</label>' +
         '<select id="rsel-'+k+'"><option value="">— Jour —</option>'+opts+'</select>' +
-        '<select id="rtype-'+k+'">' +
-          ['plat principal','entrée','accompagnement','dessert','goûter'].map(function(t){
-            var defType = (r.tags||[]).find(function(x){ return ['entrée','plat principal','accompagnement','dessert','goûter','soupe'].includes(x); }) || 'plat principal';
-            var labels = {'plat principal':'Plat','entrée':'Entrée','accompagnement':'Accomp.','dessert':'Dessert','goûter':'Goûter'};
-            return '<option value="'+t+'"'+(t===defType?' selected':'')+'>'+labels[t]+'</option>';
-          }).join('') +
-        '</select>' +
       '</div>' +
       '</div>';
   }).join('');
@@ -1641,12 +1636,14 @@ function ouvrirRecetteModal(key) {
     astuces: toArr(r.astuces || []),
     infosSante: toArr(r.infosSante || [])
   });
+  document.getElementById('recette-modal').classList.add('fullscreen');
   var actions = document.querySelector('.modal-actions');
   if (actions) actions.style.display = 'none';
   var closeBtn = document.querySelector('.modal-close');
   if (closeBtn) {
     var origOnclick = closeBtn.onclick;
     closeBtn.onclick = function() {
+      document.getElementById('recette-modal').classList.remove('fullscreen');
       fermerModal();
       if (actions) actions.style.display = '';
       closeBtn.onclick = origOnclick;
@@ -2176,7 +2173,9 @@ function afficherModal(data) {
 }
 
 function fermerModal() {
-  document.getElementById('recette-modal').classList.remove('on');
+  var m = document.getElementById('recette-modal');
+  m.classList.remove('on');
+  m.classList.remove('fullscreen');
   recetteEnCours = null;
 }
 
