@@ -679,11 +679,11 @@ function viderCaddie(){
       document.querySelectorAll('#liste-principale .sitem').forEach(function(o){if(o.querySelector('.sn').textContent===nm)o.remove();});
       if(db){var upd={};upd['coches/'+fbKey(nm)]=null;upd['ajoutes/'+ajoutesKey]=null;db.ref('courses').update(upd);}
     }else{
-      // Ingrédient recette → restaurer dans la liste principale
+      // Ingrédient recette → supprimer du DOM + marquer acheté dans Firebase
       document.querySelectorAll('#liste-principale .sitem').forEach(function(o){
-        if(o.querySelector('.sn').textContent===nm&&o.style.display==='none'){o.style.display='';o.querySelector('input').checked=false;}
+        if(o.querySelector('.sn').textContent===nm)o.remove();
       });
-      if(db)db.ref('courses/coches/'+fbKey(nm)).remove();
+      if(db){var upd={};upd['coches/'+fbKey(nm)]=null;upd['achetes/'+fbKey(nm)]=true;db.ref('courses').update(upd);}
     }
     it.remove();
   });
@@ -1209,6 +1209,7 @@ function appliquerNouveauxMenus(data) {
     });
     db.ref('ingredients').remove();
     db.ref('courses/ajoutes').remove();
+    db.ref('courses/achetes').remove();
   }
 }
 
@@ -2340,6 +2341,13 @@ function appliquerIngredientsFirebase(ingredients){
 function appliquerDepuisFirebase(data, menus){
   // 0. Reconstruire les items recettes depuis les données menus Firebase
   rebuilderListeRecettes(menus || {});
+  // Supprimer les ingrédients déjà achetés (marqués dans courses/achetes)
+  var achetes=data.achetes||{};
+  if(Object.keys(achetes).length>0){
+    document.querySelectorAll('#liste-principale .sitem').forEach(function(it){
+      if(achetes[fbKey(it.querySelector('.sn').textContent)])it.remove();
+    });
+  }
   var coches=data.coches||{};
   var ajoutes=data.ajoutes||{};
   // 1. Ajouter les produits manuels absents du DOM
