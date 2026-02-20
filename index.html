@@ -120,6 +120,17 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .ing-edit select{padding:4px 5px;border:1px solid var(--border);border-radius:4px;font-size:.7rem;background:var(--card);color:var(--txt2)}
 .ing-btn-ok{padding:5px 10px;background:var(--acc);color:#fff;border:none;border-radius:4px;font-size:.75rem;cursor:pointer;font-weight:600}
 .ing-btn-cancel{padding:5px 8px;background:var(--bg);color:var(--txt2);border:1px solid var(--border);border-radius:4px;font-size:.75rem;cursor:pointer}
+.recipe-titre-wrap{flex:1;display:flex;align-items:center;gap:6px}
+.recipe-titre-wrap h3{flex:1;margin:0}
+.edit-titre-btn{background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.35;padding:0;flex-shrink:0;transition:.15s}
+.edit-titre-btn:hover{opacity:1}
+.edit-titre-input{flex:1;font-size:1.1rem;font-weight:700;color:var(--acc);border:2px solid var(--acc);border-radius:6px;padding:4px 8px;background:var(--card);width:100%;font-family:inherit}
+.recipe ol li.etape-item{cursor:pointer;border-radius:4px;transition:.12s}
+.recipe ol li.etape-item:hover{background:var(--accL)}
+.recipe ol li.etape-item:hover::after{content:" ✏️";font-size:.65rem;opacity:.7}
+.etape-edit{display:flex;flex-direction:column;gap:4px;list-style:none;padding:2px 0}
+.etape-textarea{width:100%;padding:6px 8px;border:2px solid var(--acc);border-radius:4px;font-size:.83rem;background:var(--card);color:var(--txt);resize:vertical;font-family:inherit;line-height:1.4;box-sizing:border-box}
+.etape-btns{display:flex;gap:4px}
 .ing-changed{color:var(--acc);font-style:italic}
 .ing-hint{font-size:.72rem;color:var(--txt2);font-style:italic;margin:4px 0 8px;opacity:.7}
 .chat-wrap{display:flex;flex-direction:column;height:calc(70vh - 110px);min-height:400px;background:var(--card);border-radius:var(--r2);border:1px solid var(--border);overflow:hidden}
@@ -1359,13 +1370,13 @@ function buildRecipeDiv(idx, r) {
   var nom = J[idx] ? J[idx].nom : '';
   var rmKey = 'r'+idx+'_main'; _rmp[rmKey] = r;
   return '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>' +
-    '<div class="recipe-top"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKey+'\')">'+(r.nom)+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
+    '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKey+'\')">'+(r.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKey+'\',this)" title="Modifier le titre">✏️</button></div><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
     '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+nom+'</span></div>' +
     (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
     '<h4>Ingrédients</h4>' +
     '<ul>'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
     '<h4>Préparation</h4>' +
-    '<ol>'+toArr(r.etapes).map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>';
+    '<ol>'+toArr(r.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKey+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
 }
 
 // Ajoute un item recette dans la liste de courses (avec data-recipe pour tracking)
@@ -1480,19 +1491,19 @@ function buildMultiRecipeDiv(idx) {
     var tl = typeLabels[item.type] || item.type;
     var rmKey = 'r'+idx+'_'+diIdx; _rmp[rmKey] = r;
     html += '<div style="margin:20px 0 8px"><span class="service-tag-badge lg">'+tl+'</span></div>' +
-      '<div class="recipe-top"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKey+'\')">'+(r.nom)+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
+      '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKey+'\')">'+(r.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKey+'\',this)" title="Modifier le titre">✏️</button></div><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
       '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+dayNom+'</span></div>' +
       (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
       '<h4>Ingrédients</h4><ul>'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
-      '<h4>Préparation</h4><ol>'+toArr(r.etapes).map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>';
+      '<h4>Préparation</h4><ol>'+toArr(r.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKey+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
   });
   if (J[idx].gou && J[idx].recetteGou) {
     var rg = J[idx].recetteGou;
     var rmKeyG = 'r'+idx+'_gou'; _rmp[rmKeyG] = rg;
     html += '<div style="margin:20px 0 8px"><span class="service-tag-badge lg">☕ Goûter</span></div>' +
-      '<div class="recipe-top"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKeyG+'\')">'+(rg.nom)+'</h3><div class="r-ico">'+(rg.emoji||'☕')+'</div></div>' +
+      '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKeyG+'\')">'+(rg.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKeyG+'\',this)" title="Modifier le titre">✏️</button></div><div class="r-ico">'+(rg.emoji||'☕')+'</div></div>' +
       '<h4>Ingrédients</h4><ul>'+toArr(rg.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
-      '<h4>Préparation</h4><ol>'+toArr(rg.etapes).map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>';
+      '<h4>Préparation</h4><ol>'+toArr(rg.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKeyG+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
   }
   return html;
 }
@@ -1652,6 +1663,95 @@ function ouvrirRecetteModal(key) {
       closeBtn.onclick = origOnclick;
     };
   }
+}
+
+// ===== ÉDITION TITRE & ÉTAPES RECETTE SEMAINE =====
+function _rmpInfo(rmKey) {
+  var m = rmKey.match(/^r(\d+)_(.+)$/);
+  if (!m) return null;
+  var idx = parseInt(m[1]), part = m[2];
+  var r, fbPath;
+  if (part === 'main') {
+    r = J[idx] && J[idx].recette;
+    fbPath = 'menus/' + idx + '/recette';
+  } else if (part === 'gou') {
+    r = J[idx] && J[idx].recetteGou;
+    fbPath = 'menus/' + idx + '/recetteGou';
+  } else {
+    var di = parseInt(part);
+    r = J[idx] && J[idx].dinerItems && J[idx].dinerItems[di] && J[idx].dinerItems[di].recette;
+    fbPath = 'menus/' + idx + '/dinerItems/' + di + '/recette';
+  }
+  return r ? {r: r, fbPath: fbPath} : null;
+}
+
+function editRecetteTitre(rmKey, btn) {
+  var info = _rmpInfo(rmKey);
+  if (!info) return;
+  var wrap = btn.parentElement; // .recipe-titre-wrap
+  var h3 = wrap.querySelector('h3');
+  var oldNom = h3.textContent;
+  var inp = document.createElement('input');
+  inp.type = 'text'; inp.value = oldNom; inp.className = 'edit-titre-input';
+  inp.onclick = function(e) { e.stopPropagation(); };
+  h3.style.display = 'none'; btn.style.display = 'none';
+  wrap.insertBefore(inp, h3);
+  inp.focus(); inp.select();
+  function save() {
+    var newNom = inp.value.trim() || oldNom;
+    info.r.nom = newNom; _rmp[rmKey].nom = newNom;
+    h3.textContent = newNom; h3.style.display = ''; btn.style.display = '';
+    inp.remove();
+    if (newNom !== oldNom && db) db.ref(info.fbPath + '/nom').set(newNom);
+  }
+  function cancel() { h3.style.display = ''; btn.style.display = ''; inp.remove(); }
+  inp.onblur = save;
+  inp.onkeydown = function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); inp.onblur = null; save(); }
+    if (e.key === 'Escape') { inp.onblur = null; cancel(); }
+  };
+}
+
+function editEtape(li, rmKey, stepIdx) {
+  if (li.dataset.editing) return;
+  var info = _rmpInfo(rmKey);
+  if (!info) return;
+  var etapes = toArr(info.r.etapes);
+  var oldVal = etapes[stepIdx] || '';
+  li.dataset.editing = '1'; li.onclick = null; li.classList.remove('etape-item');
+  var textarea = document.createElement('textarea');
+  textarea.value = oldVal; textarea.className = 'etape-textarea'; textarea.rows = 3;
+  var btnOk = document.createElement('button');
+  btnOk.textContent = '✓'; btnOk.className = 'ing-btn-ok';
+  var btnAnn = document.createElement('button');
+  btnAnn.textContent = '✕'; btnAnn.className = 'ing-btn-cancel';
+  var btns = document.createElement('div'); btns.className = 'etape-btns';
+  btns.appendChild(btnOk); btns.appendChild(btnAnn);
+  li.innerHTML = ''; li.classList.add('etape-edit');
+  li.appendChild(textarea); li.appendChild(btns);
+  textarea.focus();
+  function save() {
+    var newVal = textarea.value.trim() || oldVal;
+    delete li.dataset.editing; li.classList.remove('etape-edit'); li.classList.add('etape-item');
+    li.innerHTML = newVal;
+    li.onclick = function() { editEtape(this, rmKey, stepIdx); };
+    if (newVal !== oldVal) {
+      if (info.r.etapes) info.r.etapes[stepIdx] = newVal;
+      _rmp[rmKey].etapes[stepIdx] = newVal;
+      if (db) db.ref(info.fbPath + '/etapes').set(toArr(info.r.etapes));
+    }
+  }
+  function cancel() {
+    delete li.dataset.editing; li.classList.remove('etape-edit'); li.classList.add('etape-item');
+    li.innerHTML = oldVal;
+    li.onclick = function() { editEtape(this, rmKey, stepIdx); };
+  }
+  btnOk.onclick = function(e) { e.stopPropagation(); save(); };
+  btnAnn.onclick = function(e) { e.stopPropagation(); cancel(); };
+  textarea.onkeydown = function(e) {
+    if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); save(); }
+    if (e.key === 'Escape') { cancel(); }
+  };
 }
 
 // ===== INTERVERTIR DÎNERS (deux-taps — tous appareils) =====
