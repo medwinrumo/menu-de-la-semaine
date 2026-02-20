@@ -101,9 +101,10 @@ Rayons disponibles pour ajouter_courses : legumes, fruits, viandes, laitier, fec
 
     let result = { reponse: text, action: null };
     try {
-      const jsonMatch = text.match(/^\{[\s\S]*\}$/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
+      const jsonStart = text.indexOf('{');
+      const jsonEnd = text.lastIndexOf('}');
+      if (jsonStart !== -1 && jsonEnd > jsonStart) {
+        const parsed = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
         if (parsed.reponse !== undefined) result = parsed;
       }
     } catch (e) { /* réponse texte simple */ }

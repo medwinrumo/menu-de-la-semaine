@@ -1245,6 +1245,13 @@ function afficherRecettesPerso(liste) {
       '<div class="recette-card-jour" id="rjour-'+k+'" style="display:none">' +
         '<label>le :</label>' +
         '<select id="rsel-'+k+'"><option value="">— Jour —</option>'+opts+'</select>' +
+        '<select id="rtype-'+k+'">' +
+          ['plat principal','entrée','accompagnement','dessert','goûter'].map(function(t){
+            var defType = (r.tags||[]).find(function(x){ return ['entrée','plat principal','accompagnement','dessert','goûter','soupe'].includes(x); }) || 'plat principal';
+            var labels = {'plat principal':'Plat','entrée':'Entrée','accompagnement':'Accomp.','dessert':'Dessert','goûter':'Goûter'};
+            return '<option value="'+t+'"'+(t===defType?' selected':'')+'>'+labels[t]+'</option>';
+          }).join('') +
+        '</select>' +
       '</div>' +
       '</div>';
   }).join('');
@@ -1315,25 +1322,27 @@ function rebuilderListeRecettes(menus) {
     var m = entry.m;
     if (!m) return;
     var jourNom = m.nom || 'Jour ' + idx;
+    var abbrev = jourNom.substring(0, 3); // "Sam", "Dim", "Lun"...
+    function truncNom(s) { return s && s.length > 16 ? s.substring(0, 16) + '…' : (s || ''); }
     // dinerItems (multi-services)
     var rawDI = m.dinerItems || null;
     var dinerItems = rawDI ? (Array.isArray(rawDI) ? rawDI : Object.values(rawDI).filter(Boolean)) : null;
     if (dinerItems && dinerItems.length) {
       dinerItems.forEach(function(dit) {
         if (!dit.recette) return;
-        var labelDit = '🍽️ ' + jourNom + ' — ' + dit.nom;
+        var labelDit = abbrev + ' — ' + truncNom(dit.nom);
         var ings = dit.recette.coursesAAjouter
           || toArr(dit.recette.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
         ings.forEach(function(item) { addCourseItem(item.nom, item.rayon, labelDit, dit.nom, idx); });
       });
     } else if (m.recette && m.recette.coursesAAjouter) {
       // Recette API (sans dinerItems)
-      var labelRec = '🍽️ ' + jourNom + ' — ' + m.recette.nom;
+      var labelRec = abbrev + ' — ' + truncNom(m.recette.nom);
       m.recette.coursesAAjouter.forEach(function(item) { addCourseItem(item.nom, item.rayon, labelRec, m.recette.nom, idx); });
     }
     // Goûter
     if (m.recetteGou && m.gou) {
-      var labelGou = '☕ Goûter ' + jourNom + ' — ' + m.gou;
+      var labelGou = abbrev + ' — ' + truncNom(m.gou);
       var gouIngs = m.recetteGou.coursesAAjouter
         || toArr(m.recetteGou.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
       gouIngs.forEach(function(item) { addCourseItem(item.nom, item.rayon, labelGou, m.gou, idx); });
@@ -1423,9 +1432,10 @@ function cuisinerCetteSemaine() {
       erreur = true;
       return;
     }
-    // Type lu depuis le sélecteur de la carte (avec auto-dérivation par défaut)
+    // Type lu depuis le sélecteur de type de la carte (priorité) ou depuis les tags
     var svcList = ['entrée','plat principal','accompagnement','dessert','goûter','soupe'];
-    var type = (r.tags||[]).find(function(t){ return svcList.includes(t); }) || 'plat principal';
+    var typeEl = document.getElementById('rtype-'+k);
+    var type = (typeEl && typeEl.value) ? typeEl.value : ((r.tags||[]).find(function(t){ return svcList.includes(t); }) || 'plat principal');
     selectionnes.push({recette: r, jourIdx: parseInt(sel.value), type: type});
   });
   if (erreur || !selectionnes.length) {
@@ -1961,6 +1971,8 @@ function supprimerService(idx, type) {
       recipeDiv.innerHTML = buildMultiRecipeDiv(idx);
     } else if (J[idx].recette) {
       recipeDiv.innerHTML = buildRecipeDiv(idx, J[idx].recette);
+    } else {
+      recipeDiv.innerHTML = '<button class="btn-back" onclick="goMenu()">← Retour au menu</button><p style="color:var(--txt2);text-align:center;margin:30px 0;font-size:.9rem">Aucun dîner planifié pour ce soir.</p>';
     }
     initIngredients();
   }
@@ -2213,6 +2225,8 @@ db.ref('/').on('value',function(snapshot){
             recipeDiv.innerHTML=buildMultiRecipeDiv(idx);
           } else if(J[idx].recette){
             recipeDiv.innerHTML=buildRecipeDiv(idx,J[idx].recette);
+          } else {
+            recipeDiv.innerHTML='<button class="btn-back" onclick="goMenu()">← Retour au menu</button><p style="color:var(--txt2);text-align:center;margin:30px 0;font-size:.9rem">Aucun dîner planifié pour ce soir.</p>';
           }
           initIngredients();
         }
