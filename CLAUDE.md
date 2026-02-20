@@ -95,16 +95,8 @@ Création du fichier de contexte projet.
 
 ## Phases restantes à développer
 
-### Phase 3 — Refonte complète du design 🔴 À FAIRE EN DERNIER
-- Design créé dans Google Stitch puis exporté en .zip
-- Le design Stitch remplace totalement le HTML/CSS
-- La logique JavaScript (Firebase, recettes, chat) est conservée
-- Éléments à prévoir dans Stitch :
-  * 4 onglets : Semaine / Recettes / Courses / NutriCoach
-  * Cartes journalières cliquables (7 jours)
-  * Cartes recettes avec ingrédients et étapes
-  * Liste de courses avec cases à cocher + section caddie
-  * Zone de chat nutritionnel
+### Phase 3 — Refonte complète du design ❌ ABANDONNÉE DÉFINITIVEMENT
+- Design actuel conservé tel quel. Application restera single-file (index.html).
 
 ### Phase 8 — Profil santé ✅ INTÉGRÉ (statique)
 - Profil complet intégré dans `api/_skills.js` depuis les fichiers Markdown fournis
@@ -182,9 +174,10 @@ Extensibles via le chat NutriCoach → sauvegardés dans Firebase `sites_ressour
 - Firebase Realtime Database (projet `menu-de-la-semaine-9bed7`, Europe West)
 - Vercel pour les fonctions serverless (dossier `api/`)
 - Les fichiers `api/_*.js` (préfixe underscore) = utilitaires, pas des routes HTTP
-- Application single-file (tout dans index.html) jusqu'à la Phase 3
+- Application single-file (tout dans index.html) — définitif
 - Anthropic SDK `@anthropic-ai/sdk ^0.39.0`
-- Variable globale `J[]` : tableau de 7 objets (un par jour, index 0=Sam → 6=Ven)
+- Variable globale `J[]` : tableau de 7 objets (un par jour, index 0=aujourd'hui → 6=aujourd'hui+6)
+- `J[i].date` : clé Firebase au format YYYY-MM-DD (semaine glissante depuis aujourd'hui)
 
 ## Profil utilisateur développeur
 - Débutant complet en développement web
