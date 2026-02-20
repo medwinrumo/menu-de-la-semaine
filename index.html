@@ -1609,12 +1609,14 @@ function voirRecettePerso(k) {
     infosSante: toArr(r.infosSante || [])
   };
   afficherModal(modalData);
+  document.getElementById('recette-modal').classList.add('fullscreen');
   var actions = document.querySelector('.modal-actions');
   if (actions) actions.style.display = 'none';
   var closeBtn = document.querySelector('.modal-close');
   if (closeBtn) {
     var origOnclick = closeBtn.onclick;
     closeBtn.onclick = function() {
+      document.getElementById('recette-modal').classList.remove('fullscreen');
       fermerModal();
       if (actions) actions.style.display = '';
       closeBtn.onclick = origOnclick;
