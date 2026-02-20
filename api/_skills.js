@@ -49,7 +49,7 @@ const LEGUMES_SAISON = {
   'aubergines':         [7,8,9],
   'maïs':               [7,8,9],
   'courges':            [9,10,11,12],
-  'champignons frais':  [9,10,11],
+  'champignons frais':  [1,2,3,4,5,6,7,8,9,10,11,12],
 };
 
 const FRUITS_SAISON = {
@@ -86,7 +86,7 @@ const CALENDRIER = {
     fruits:  'pommes (reinette, gala, golden), poires, clémentines, oranges, kiwi, citrons, pamplemousse, mandarine'
   },
   2:  {
-    legumes: 'poireaux, carottes, navets, céleri-rave, panais, butternut, chou blanc, chou de Bruxelles, chou frisé, endives, mâche, épinards, betterave, topinambour, ail, oignon',
+    legumes: 'poireaux, carottes, navets, céleri-rave, panais, butternut, chou blanc, chou de Bruxelles, chou frisé, endives, mâche, épinards, betterave, topinambour, champignons (de Paris, shiitake, pleurotes), ail, oignon',
     fruits:  'pommes, poires, oranges, kiwi, citrons, pamplemousse, clémentines (fin saison)'
   },
   3:  {

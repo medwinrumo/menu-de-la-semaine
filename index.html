@@ -120,8 +120,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .ing-btn-cancel{padding:5px 8px;background:var(--bg);color:var(--txt2);border:1px solid var(--border);border-radius:4px;font-size:.75rem;cursor:pointer}
 .ing-changed{color:var(--acc);font-style:italic}
 .ing-hint{font-size:.72rem;color:var(--txt2);font-style:italic;margin:4px 0 8px;opacity:.7}
-.chat-wrap{display:flex;flex-direction:column;height:calc(50vh - 110px);min-height:300px;background:var(--card);border-radius:var(--r2);border:1px solid var(--border);overflow:hidden}
-.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;justify-content:flex-end}
+.chat-wrap{display:flex;flex-direction:column;height:calc(70vh - 110px);min-height:400px;background:var(--card);border-radius:var(--r2);border:1px solid var(--border);overflow:hidden}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
 .msg{display:flex;flex-direction:column;max-width:88%}
 .msg-user{align-self:flex-end;align-items:flex-end}
 .msg-bot{align-self:flex-start;align-items:flex-start}
@@ -932,22 +932,18 @@ function executerActionChat(action) {
     var idx = action.jour_idx;
     var r = action.recette;
     if (J[idx]) {
-      J[idx].din = r.description || r.nom;
-      J[idx].dn = r.nom;
+      // Intègre la recette comme "plat principal" dans dinerItems
+      if (!J[idx].dinerItems) J[idx].dinerItems = [];
+      var found = false;
+      J[idx].dinerItems = J[idx].dinerItems.map(function(it) {
+        if (it.type === 'plat principal') { found = true; return {type:'plat principal', nom:r.nom, recette:r}; }
+        return it;
+      });
+      if (!found) J[idx].dinerItems.push({type:'plat principal', nom:r.nom, recette:r});
+      recomputeDin(idx);
       rW();
-      // Mettre à jour la carte dans l'onglet Recettes
       var recipeDiv = document.getElementById('recipe-'+idx);
-      if (recipeDiv && r.ingredients) {
-        recipeDiv.innerHTML =
-          '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>' +
-          '<div class="recipe-top"><h3>'+(r.nom)+'</h3><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
-          '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+J[idx].nom+'</span></div>' +
-          (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
-          '<h4>Ingrédients</h4>' +
-          '<ul>'+(r.ingredients||[]).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
-          '<h4>Préparation</h4>' +
-          '<ol>'+(r.etapes||[]).map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>';
-      }
+      if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
       if (r.coursesAAjouter) {
         r.coursesAAjouter.forEach(function(item){
           var c = document.querySelector('.si[data-cat="'+item.rayon+'"]');
@@ -957,7 +953,7 @@ function executerActionChat(action) {
         });
         mC();
       }
-      if(db) db.ref('menus/'+idx).set({nom:J[idx].nom,din:J[idx].din,dn:J[idx].dn});
+      if(db) db.ref('menus/'+idx).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems});
       ajouterMsg('bot','✅ Planning mis à jour !','msg-action');
     }
   } else if (action.type === 'generer_semaine') {
@@ -1912,7 +1908,12 @@ function supprimerService(idx, type) {
   if (!J[idx] || !J[idx].dinerItems) return;
   var arr = Array.isArray(J[idx].dinerItems) ? J[idx].dinerItems : Object.values(J[idx].dinerItems).filter(Boolean);
   J[idx].dinerItems = arr.filter(function(it){ return it.type !== type; });
-  if (!J[idx].dinerItems.length) J[idx].dinerItems = null;
+  if (!J[idx].dinerItems.length) {
+    J[idx].dinerItems = null;
+    J[idx].recette = null;
+    J[idx].din = '';
+    J[idx].dn = '';
+  }
   recomputeDin(idx);
   var recipeDiv = document.getElementById('recipe-'+idx);
   if (recipeDiv) {
@@ -2019,12 +2020,18 @@ function accepterRecette() {
   if (!recetteEnCours) return;
   var idx = recetteEnCours.idx;
   var data = recetteEnCours.data;
-  J[idx].din = data.description;
-  J[idx].dn = data.nom;
-  J[idx].recette = data;
+  // Intègre la recette comme "plat principal" dans dinerItems
+  if (!J[idx].dinerItems) J[idx].dinerItems = [];
+  var found = false;
+  J[idx].dinerItems = J[idx].dinerItems.map(function(it) {
+    if (it.type === 'plat principal') { found = true; return {type:'plat principal', nom:data.nom, recette:data}; }
+    return it;
+  });
+  if (!found) J[idx].dinerItems.push({type:'plat principal', nom:data.nom, recette:data});
+  recomputeDin(idx);
   rW();
   var recipeDiv = document.getElementById('recipe-'+idx);
-  if (recipeDiv) { recipeDiv.innerHTML = buildRecipeDiv(idx, data); initIngredients(); }
+  if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
   if (data.coursesAAjouter) {
     data.coursesAAjouter.forEach(function(item) {
       var c = document.querySelector('.si[data-cat="'+item.rayon+'"]');
@@ -2037,7 +2044,7 @@ function accepterRecette() {
     });
     mC();
   }
-  if (db) db.ref('menus/'+idx).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:data});
+  if (db) db.ref('menus/'+idx).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems});
   fermerModal();
 }
 
