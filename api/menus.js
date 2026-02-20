@@ -44,7 +44,7 @@ ${getHistoriqueRecettes(historiqueRecettes)}
 VARIÉTÉ PROTÉINES (obligatoire) :
 - Pas la même protéine deux jours consécutifs
 - 3 à 4 dîners légumineuses — PRIORITÉ ABSOLUE
-- 2 à 3 dîners volaille
+- 2 dîners volaille MAXIMUM (pas plus, pas un jour sur deux)
 - 1 à 2 dîners œufs
 - Poisson : 0 ou 1 maximum, uniquement si pertinent
 

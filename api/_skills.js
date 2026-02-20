@@ -243,7 +243,7 @@ DÎNER (repas principal, apports nutritionnels majeurs) :
 
 ━━━ RÈGLES PROTÉINES (ordre de priorité) ━━━
 1. Légumineuses (lentilles, pois chiches, haricots secs) : PRIORITÉ ABSOLUE — 3 à 4 fois/semaine
-2. Volailles (poulet, dinde sans peau) : 2 à 3 fois/semaine
+2. Volailles (poulet, dinde sans peau) : 2 fois/semaine MAXIMUM
 3. Œufs : 1 à 2 fois/semaine
 4. Poisson blanc ou gras : MAXIMUM 1 FOIS TOUTES LES 2 SEMAINES (habitude à construire progressivement, pas une priorité)
 5. Viande rouge/charcuterie : JAMAIS dans les recettes proposées
@@ -509,7 +509,7 @@ LÉGUMINEUSES (priorité absolue — 3 à 4 dîners/semaine) :
 - Tajine de pois chiches aux légumes d'hiver : pois chiches + carottes + navets + cannelle + cumin + coriandre
 - Haricots rouges mijotés façon bourguignonne : haricots rouges + oignons + carottes + concentré tomates + thym
 
-VOLAILLES (2 à 3 dîners/semaine) :
+VOLAILLES (2 dîners/semaine MAXIMUM) :
 - Blanquette de volaille légère : poulet + carottes + poireaux + champignons + fond de volaille réduit + crème légère + citron
 - Poulet basquaise : cuisses de poulet + poivrons + tomates + oignons + piment d'Espelette + huile d'olive
 - Poulet mijoté aux champignons : poulet + champignons de Paris + échalotes + thym + vin blanc + fond de volaille
