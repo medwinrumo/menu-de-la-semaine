@@ -961,17 +961,7 @@ function executerActionChat(action) {
       rW();
       var recipeDiv = document.getElementById('recipe-'+idx);
       if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
-      if (r.coursesAAjouter) {
-        r.coursesAAjouter.forEach(function(item){
-          var c = document.querySelector('.si[data-cat="'+item.rayon+'"]');
-          if(c){var l=document.createElement('label');l.className='sitem';
-            l.dataset.recipe = r.nom;
-            l.dataset.jourIdx = String(idx);
-            l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">💬 '+J[idx].nom+' — '+r.nom+'</span>';
-            c.appendChild(l);}
-        });
-        mC();
-      }
+      rebuilderListeRecettes(J);
       if(db) db.ref('menus/'+idx).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems});
       ajouterMsg('bot','✅ Planning mis à jour !','msg-action');
     }
@@ -1093,6 +1083,7 @@ function appliquerNouveauxMenus(data) {
       J[i].din = jour.din;
       J[i].dn = jour.dn;
       J[i].recette = jour.recette;
+      J[i].dinerItems = jour.recette ? [{type:'plat principal', nom:jour.recette.nom, recette:jour.recette}] : null;
     }
   });
 
@@ -1114,36 +1105,17 @@ function appliquerNouveauxMenus(data) {
   });
   initIngredients();
 
-  // 5. Ajouter les nouvelles courses (sans dupliquer)
-  data.jours.forEach(function(jour, jourIdx) {
-    if (!jour.recette || !jour.recette.coursesAAjouter) return;
-    jour.recette.coursesAAjouter.forEach(function(item) {
-      var existe = false;
-      document.querySelectorAll('#liste-principale .sitem .sn').forEach(function(el) {
-        if (el.textContent.toLowerCase() === item.nom.toLowerCase()) existe = true;
-      });
-      if (!existe) {
-        var c = document.querySelector('.si[data-cat="'+item.rayon+'"]');
-        if (c) {
-          var l = document.createElement('label');
-          l.className = 'sitem';
-          l.dataset.recipe = jour.recette.nom;
-          l.dataset.jourIdx = String(jourIdx);
-          l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">'+jour.nom+' — '+jour.recette.nom+'</span>';
-          c.appendChild(l);
-        }
-      }
-    });
-  });
-  mC();
+  // 5. Reconstruire la liste de courses depuis J[]
+  rebuilderListeRecettes(J);
 
   // 6. Sauvegarder dans Firebase
   if (db) {
     data.jours.forEach(function(jour, i) {
-      db.ref('menus/'+i).set({nom:jour.nom, pdj:jour.pdj, col:jour.col, din:jour.din, dn:jour.dn, recette:jour.recette||null});
+      db.ref('menus/'+i).set({nom:jour.nom, pdj:jour.pdj, col:jour.col, din:jour.din, dn:jour.dn, recette:jour.recette||null, dinerItems:J[i].dinerItems||null});
     });
     if (data.semaine) db.ref('semaine').set(data.semaine);
     db.ref('ingredients').remove();
+    db.ref('courses/ajoutes').remove();
   }
 }
 
@@ -1312,6 +1284,64 @@ function buildRecipeDiv(idx, r) {
     '<ol>'+toArr(r.etapes).map(function(e){return '<li>'+e+'</li>';}).join('')+'</ol>';
 }
 
+// Ajoute un item recette dans la liste de courses (avec data-recipe pour tracking)
+function addCourseItem(nom, rayon, label, recipeKey, jourIdx) {
+  var existe = false;
+  document.querySelectorAll('#liste-principale .sitem .sn').forEach(function(el) {
+    if (el.textContent.toLowerCase() === nom.toLowerCase()) existe = true;
+  });
+  if (existe) return;
+  var c = document.querySelector('.si[data-cat="'+rayon+'"]');
+  if (!c) c = document.querySelector('.si[data-cat="epicerie"]');
+  if (!c) return;
+  var ph = c.closest('.scat').querySelector('.ph');
+  if (ph) ph.remove();
+  var l = document.createElement('label');
+  l.className = 'sitem';
+  l.dataset.recipe = recipeKey;
+  l.dataset.jourIdx = String(jourIdx);
+  l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nom+'</span><span class="sr">'+label+'</span>';
+  c.appendChild(l);
+}
+
+// Reconstruit tous les items recettes dans la liste de courses depuis J[] ou data.menus
+function rebuilderListeRecettes(menus) {
+  document.querySelectorAll('#liste-principale .sitem[data-recipe]').forEach(function(l){ l.remove(); });
+  var entries = Array.isArray(menus)
+    ? menus.map(function(m, i){ return {idx:i, m:m}; })
+    : Object.keys(menus || {}).map(function(k){ return {idx:parseInt(k), m:menus[k]}; });
+  entries.forEach(function(entry) {
+    var idx = entry.idx;
+    var m = entry.m;
+    if (!m) return;
+    var jourNom = m.nom || 'Jour ' + idx;
+    // dinerItems (multi-services)
+    var rawDI = m.dinerItems || null;
+    var dinerItems = rawDI ? (Array.isArray(rawDI) ? rawDI : Object.values(rawDI).filter(Boolean)) : null;
+    if (dinerItems && dinerItems.length) {
+      dinerItems.forEach(function(dit) {
+        if (!dit.recette) return;
+        var labelDit = '🍽️ ' + jourNom + ' — ' + dit.nom;
+        var ings = dit.recette.coursesAAjouter
+          || toArr(dit.recette.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
+        ings.forEach(function(item) { addCourseItem(item.nom, item.rayon, labelDit, dit.nom, idx); });
+      });
+    } else if (m.recette && m.recette.coursesAAjouter) {
+      // Recette API (sans dinerItems)
+      var labelRec = '🍽️ ' + jourNom + ' — ' + m.recette.nom;
+      m.recette.coursesAAjouter.forEach(function(item) { addCourseItem(item.nom, item.rayon, labelRec, m.recette.nom, idx); });
+    }
+    // Goûter
+    if (m.recetteGou && m.gou) {
+      var labelGou = '☕ Goûter ' + jourNom + ' — ' + m.gou;
+      var gouIngs = m.recetteGou.coursesAAjouter
+        || toArr(m.recetteGou.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
+      gouIngs.forEach(function(item) { addCourseItem(item.nom, item.rayon, labelGou, m.gou, idx); });
+    }
+  });
+  mC();
+}
+
 function devinerRayon(ing) {
   var s = ing.toLowerCase();
   var map = [
@@ -1333,7 +1363,7 @@ function devinerRayon(ing) {
   return 'epicerie';
 }
 
-function ajouterProduit(nom, rayon, label, recipeKey, jourIdx) {
+function ajouterProduit(nom, rayon, label) {
   if (!nom) return;
   var nomLow = nom.toLowerCase();
   var existe = false;
@@ -1348,11 +1378,8 @@ function ajouterProduit(nom, rayon, label, recipeKey, jourIdx) {
   if (ph) ph.remove();
   var l = document.createElement('label');
   l.className = 'sitem';
-  if (recipeKey) l.dataset.recipe = recipeKey;
-  if (jourIdx !== undefined && jourIdx !== null) l.dataset.jourIdx = String(jourIdx);
   l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nom+'</span><span class="sr">'+(label||'🍽️ Recette semaine')+'</span>';
   c.appendChild(l);
-  if (db) db.ref('courses/ajoutes').push({nom:nom, rayon:rayon});
   mC();
 }
 
@@ -1448,20 +1475,6 @@ function cuisinerCetteSemaine() {
       }
     }
 
-    // Ajouter les ingrédients à la liste de courses
-    (J[idx].dinerItems || []).forEach(function(dit) {
-      if (!dit.recette) return;
-      var labelDit = '🍽️ ' + (J[idx].nom || '') + ' — ' + dit.nom;
-      toArr(dit.recette.ingredients).forEach(function(ing) {
-        ajouterProduit(ing, devinerRayon(ing), labelDit, dit.nom, idx);
-      });
-    });
-    if (J[idx].recetteGou) {
-      toArr(J[idx].recetteGou.ingredients || []).forEach(function(ing) {
-        ajouterProduit(ing, devinerRayon(ing), '☕ Goûter ' + (J[idx].nom || ''));
-      });
-    }
-
     if (db) db.ref('menus/'+idx).set({
       nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
       dinerItems: J[idx].dinerItems||null,
@@ -1469,6 +1482,7 @@ function cuisinerCetteSemaine() {
     });
   });
 
+  rebuilderListeRecettes(J);
   rW();
   initIngredients();
 
@@ -1933,15 +1947,7 @@ function supprimerService(idx, type) {
   // Capturer la recette supprimée avant de filtrer
   var serviceSuppr = arr.find(function(it){ return it.type === type; });
   J[idx].dinerItems = arr.filter(function(it){ return it.type !== type; });
-  // Supprimer ses ingrédients de la liste de courses (par data-recipe + data-jour-idx)
-  if (serviceSuppr && serviceSuppr.nom) {
-    document.querySelectorAll('#liste-principale .sitem').forEach(function(label) {
-      if (label.dataset.recipe === serviceSuppr.nom && label.dataset.jourIdx === String(idx)) {
-        label.remove();
-      }
-    });
-    mC();
-  }
+  // La liste de courses sera reconstruite par rebuilderListeRecettes après l'écriture Firebase
   if (!J[idx].dinerItems.length) {
     J[idx].dinerItems = null;
     J[idx].recette = null;
@@ -1958,6 +1964,7 @@ function supprimerService(idx, type) {
     }
     initIngredients();
   }
+  rebuilderListeRecettes(J);
   if (db) db.ref('menus/'+idx).set({
     nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
     dinerItems: J[idx].dinerItems||null,
@@ -2066,20 +2073,7 @@ function accepterRecette() {
   rW();
   var recipeDiv = document.getElementById('recipe-'+idx);
   if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
-  if (data.coursesAAjouter) {
-    data.coursesAAjouter.forEach(function(item) {
-      var c = document.querySelector('.si[data-cat="'+item.rayon+'"]');
-      if (c) {
-        var l = document.createElement('label');
-        l.className = 'sitem';
-        l.dataset.recipe = data.nom;
-        l.dataset.jourIdx = String(idx);
-        l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">↺ '+J[idx].nom+' — '+data.nom+'</span>';
-        c.appendChild(l);
-      }
-    });
-    mC();
-  }
+  rebuilderListeRecettes(J);
   if (db) db.ref('menus/'+idx).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems});
   fermerModal();
 }
@@ -2114,7 +2108,9 @@ function appliquerIngredientsFirebase(ingredients){
   });
 }
 
-function appliquerDepuisFirebase(data){
+function appliquerDepuisFirebase(data, menus){
+  // 0. Reconstruire les items recettes depuis les données menus Firebase
+  rebuilderListeRecettes(menus || {});
   var coches=data.coches||{};
   var ajoutes=data.ajoutes||{};
   // 1. Ajouter les produits manuels absents du DOM
@@ -2224,7 +2220,7 @@ db.ref('/').on('value',function(snapshot){
     });
     if(needRW) rW();
   }
-  appliquerDepuisFirebase(data.courses || {});
+  appliquerDepuisFirebase(data.courses || {}, data.menus || {});
   appliquerIngredientsFirebase(data.ingredients || null);
   if(data.sites_ressources) {
     sitesExtra = Object.keys(data.sites_ressources).map(function(key) {
