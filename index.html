@@ -576,20 +576,20 @@ function sortDI(arr) {
   var a = Array.isArray(arr) ? arr : Object.values(arr).filter(Boolean);
   return a.slice().sort(function(a,b){ return (SERVICE_ORDER[a.type]||99)-(SERVICE_ORDER[b.type]||99); });
 }
+function toDateStr(d){var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+dd;}
 (function() {
   var today = new Date();
-  var daysSinceSat = (today.getDay() + 1) % 7;
-  var joursNoms = ['Samedi','Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
+  var joursNomsFr = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   var moisFr = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
   var moisCourt = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
   for (var i = 0; i < 7; i++) {
-    var d = new Date(today); d.setDate(today.getDate() - daysSinceSat + i);
-    J[i].nom = joursNoms[i] + ' ' + d.getDate() + ' ' + moisFr[d.getMonth()];
+    var d = new Date(today); d.setDate(today.getDate() + i);
+    J[i].nom = joursNomsFr[d.getDay()] + ' ' + d.getDate() + ' ' + moisFr[d.getMonth()];
+    J[i].date = toDateStr(d);
   }
-  var sat = new Date(today); sat.setDate(today.getDate() - daysSinceSat);
-  var ven = new Date(sat); ven.setDate(sat.getDate() + 6);
+  var fin = new Date(today); fin.setDate(today.getDate() + 6);
   var el = document.getElementById('wk-label');
-  if (el) el.textContent = '📅 Samedi ' + sat.getDate() + ' ' + moisCourt[sat.getMonth()] + ' → Vendredi ' + ven.getDate() + ' ' + moisCourt[ven.getMonth()] + ' ' + ven.getFullYear();
+  if (el) el.textContent = '📅 ' + joursNomsFr[today.getDay()] + ' ' + today.getDate() + ' ' + moisCourt[today.getMonth()] + ' → ' + joursNomsFr[fin.getDay()] + ' ' + fin.getDate() + ' ' + moisCourt[fin.getMonth()] + ' ' + fin.getFullYear();
 })();
 function rW(){
 var g=document.getElementById('weekgrid');g.innerHTML='';
@@ -1055,7 +1055,7 @@ function executerActionChat(action) {
       var recipeDiv = document.getElementById('recipe-'+idx);
       if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
       rebuilderListeRecettes(J);
-      if(db) db.ref('menus/'+idx).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems});
+      if(db) db.ref('menus/'+J[idx].date).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems});
       ajouterMsg('bot','✅ Planning mis à jour !','msg-action');
     }
   } else if (action.type === 'generer_semaine') {
@@ -1125,29 +1125,23 @@ function executerActionChat(action) {
 
 // ===== PHASE 7 — GÉNÉRER LA SEMAINE =====
 function genererSemaine(skipConfirm) {
-  if (!skipConfirm && !confirm('Générer de nouveaux menus pour la semaine prochaine ?\nLes menus actuels seront remplacés.')) return;
+  if (!skipConfirm && !confirm('Générer de nouveaux menus pour les 7 prochains jours ?\nLes menus actuels seront remplacés.')) return;
   var btn = document.getElementById('btn-gen');
   btn.disabled = true;
   btn.textContent = '⏳ Génération en cours…';
 
   var today = new Date();
-  var day = today.getDay();
-  var daysUntilSat = ((6 - day) + 7) % 7;
-  if (daysUntilSat === 0) daysUntilSat = 7;
-
-  var joursNoms = ['Samedi','Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
+  var joursNomsFr = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   var moisFr = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 
   var joursDates = [];
   for (var i = 0; i < 7; i++) {
-    var d = new Date(today);
-    d.setDate(today.getDate() + daysUntilSat + i);
-    joursDates.push(joursNoms[i] + ' ' + d.getDate());
+    var d = new Date(today); d.setDate(today.getDate() + i);
+    joursDates.push(joursNomsFr[d.getDay()] + ' ' + d.getDate());
   }
-  var sat = new Date(today); sat.setDate(today.getDate() + daysUntilSat);
-  var ven = new Date(sat); ven.setDate(sat.getDate() + 6);
-  var dateDebut = sat.getDate() + ' ' + moisFr[sat.getMonth()] + ' ' + sat.getFullYear();
-  var dateFin = ven.getDate() + ' ' + moisFr[ven.getMonth()] + ' ' + ven.getFullYear();
+  var fin = new Date(today); fin.setDate(today.getDate() + 6);
+  var dateDebut = today.getDate() + ' ' + moisFr[today.getMonth()] + ' ' + today.getFullYear();
+  var dateFin = fin.getDate() + ' ' + moisFr[fin.getMonth()] + ' ' + fin.getFullYear();
 
   fetch('/api/menus', {
     method: 'POST',
@@ -1205,9 +1199,8 @@ function appliquerNouveauxMenus(data) {
   // 6. Sauvegarder dans Firebase
   if (db) {
     data.jours.forEach(function(jour, i) {
-      db.ref('menus/'+i).set({nom:jour.nom, pdj:jour.pdj, col:jour.col, din:jour.din, dn:jour.dn, recette:jour.recette||null, dinerItems:J[i].dinerItems||null});
+      if (J[i] && J[i].date) db.ref('menus/'+J[i].date).set({nom:jour.nom, pdj:jour.pdj, col:jour.col, din:jour.din, dn:jour.dn, recette:jour.recette||null, dinerItems:J[i].dinerItems||null});
     });
-    if (data.semaine) db.ref('semaine').set(data.semaine);
     db.ref('ingredients').remove();
     db.ref('courses/ajoutes').remove();
   }
@@ -1575,7 +1568,7 @@ function cuisinerCetteSemaine() {
       }
     }
 
-    if (db) db.ref('menus/'+idx).set({
+    if (db) db.ref('menus/'+J[idx].date).set({
       nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
       dinerItems: J[idx].dinerItems||null,
       gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null
@@ -1671,16 +1664,17 @@ function _rmpInfo(rmKey) {
   if (!m) return null;
   var idx = parseInt(m[1]), part = m[2];
   var r, fbPath;
+  var dateKey = J[idx] && J[idx].date;
   if (part === 'main') {
     r = J[idx] && J[idx].recette;
-    fbPath = 'menus/' + idx + '/recette';
+    fbPath = 'menus/' + dateKey + '/recette';
   } else if (part === 'gou') {
     r = J[idx] && J[idx].recetteGou;
-    fbPath = 'menus/' + idx + '/recetteGou';
+    fbPath = 'menus/' + dateKey + '/recetteGou';
   } else {
     var di = parseInt(part);
     r = J[idx] && J[idx].dinerItems && J[idx].dinerItems[di] && J[idx].dinerItems[di].recette;
-    fbPath = 'menus/' + idx + '/dinerItems/' + di + '/recette';
+    fbPath = 'menus/' + dateKey + '/dinerItems/' + di + '/recette';
   }
   return r ? {r: r, fbPath: fbPath} : null;
 }
@@ -2189,7 +2183,7 @@ function supprimerService(idx, type) {
   }
   rebuilderListeRecettes(J);
   rW();
-  if (db) db.ref('menus/'+idx).set({
+  if (db) db.ref('menus/'+J[idx].date).set({
     nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
     dinerItems: J[idx].dinerItems||null,
     gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null
@@ -2200,7 +2194,7 @@ function supprimerGouteur(idx) {
   if (!J[idx]) return;
   J[idx].gou = null;
   J[idx].recetteGou = null;
-  if (db) db.ref('menus/'+idx).set({
+  if (db) db.ref('menus/'+J[idx].date).set({
     nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
     dinerItems: J[idx].dinerItems||null,
     gou: null, recetteGou: null
@@ -2299,7 +2293,7 @@ function accepterRecette() {
   var recipeDiv = document.getElementById('recipe-'+idx);
   if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
   rebuilderListeRecettes(J);
-  if (db) db.ref('menus/'+idx).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems});
+  if (db) db.ref('menus/'+J[idx].date).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems});
   fermerModal();
 }
 
@@ -2412,10 +2406,11 @@ db.ref('/').on('value',function(snapshot){
   // Sync menus modifiés
   if (data.menus && !swapInProgress) {
     var needRW=false;
-    Object.keys(data.menus).forEach(function(i){
-      var idx=parseInt(i);
-      var fbM=data.menus[i];
-      if(!J[idx]||!fbM) return;
+    Object.keys(data.menus).forEach(function(dateKey){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+      var idx=J.findIndex(function(j){return j.date===dateKey;});
+      var fbM=data.menus[dateKey];
+      if(idx===-1||!fbM) return;
       // Sync din/dn si changé
       if(J[idx].din!==fbM.din){
         J[idx].din=fbM.din;
@@ -2442,7 +2437,7 @@ db.ref('/').on('value',function(snapshot){
         if(!J[idx].dinerItems){
           J[idx].dinerItems=[{type:'plat principal',nom:fbM.recette.nom,recette:fbM.recette}];
           needRW=true; needRecipe=true;
-          if(db)db.ref('menus/'+idx+'/dinerItems').set(J[idx].dinerItems);
+          if(db)db.ref('menus/'+J[idx].date+'/dinerItems').set(J[idx].dinerItems);
         }
       }
       // Mettre à jour l'onglet Recettes si recette ou dinerItems ont changé
