@@ -678,6 +678,15 @@ function editerIngredient(li) {
   input.value = ingData[id];
   input.focus();
   input.select();
+  // Pré-sélectionner le rayon depuis la liste de courses
+  var selEl = document.getElementById('sel-'+id);
+  var ancienText = ingData[id].toLowerCase();
+  document.querySelectorAll('#liste-principale .sitem .sn').forEach(function(sn) {
+    if (sn.textContent.toLowerCase() === ancienText) {
+      var si = sn.closest('.si');
+      if (si && si.dataset.cat) selEl.value = si.dataset.cat;
+    }
+  });
 }
 
 function ingKey(e, id) {
@@ -710,25 +719,33 @@ function ingOk(id) {
     db.ref('ingredients/' + recipeIdx + '/' + fbKey(ancien)).set({original: ancien, nouveau: nouveau});
   }
 
-  document.querySelectorAll('#liste-principale .sitem').forEach(function(el) {
-    var nm = el.querySelector('.sn').textContent.toLowerCase();
-    var mots = ancien.toLowerCase().split(' ').filter(function(m){return m.length > 3;});
-    if (mots.some(function(m){return nm.includes(m);})) {
-      el.style.opacity = '0.4';
-      el.title = '→ Remplacé par : ' + nouveau;
+  // Mettre à jour l'ingrédient en place dans la liste de courses
+  var mots = ancien.toLowerCase().split(' ').filter(function(m){return m.length > 3;});
+  var updated = false;
+  document.querySelectorAll('#liste-principale .sitem').forEach(function(label) {
+    var sn = label.querySelector('.sn');
+    if (!sn) return;
+    var nm = sn.textContent.toLowerCase();
+    if (mots.length > 0 && mots.some(function(m){return nm.includes(m);})) {
+      sn.textContent = nouveau;
+      label.title = '';
+      label.style.opacity = '';
+      updated = true;
     }
   });
-
-  var c = document.querySelector('.si[data-cat="'+rayon+'"]');
-  if (c) {
-    var ph = c.closest('.scat').querySelector('.ph');
-    if (ph) ph.remove();
-    var l = document.createElement('label');
-    l.className = 'sitem';
-    l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nouveau+'</span><span class="sr">✏️ Ingrédient modifié</span>';
-    c.appendChild(l);
+  // Si non trouvé dans les courses, ajouter comme nouvel item
+  if (!updated) {
+    var c = document.querySelector('.si[data-cat="'+rayon+'"]');
+    if (c) {
+      var ph = c.closest('.scat').querySelector('.ph');
+      if (ph) ph.remove();
+      var l = document.createElement('label');
+      l.className = 'sitem';
+      l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nouveau+'</span><span class="sr">✏️ '+ancien+' → '+nouveau+'</span>';
+      c.appendChild(l);
+      if (db) db.ref('courses/ajoutes').push({nom:nouveau, rayon:rayon});
+    }
   }
-  if (db) db.ref('courses/ajoutes').push({nom:nouveau, rayon:rayon});
   mC();
 }
 
@@ -948,7 +965,9 @@ function executerActionChat(action) {
         r.coursesAAjouter.forEach(function(item){
           var c = document.querySelector('.si[data-cat="'+item.rayon+'"]');
           if(c){var l=document.createElement('label');l.className='sitem';
-            l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">💬 '+J[idx].nom+'</span>';
+            l.dataset.recipe = r.nom;
+            l.dataset.jourIdx = String(idx);
+            l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">💬 '+J[idx].nom+' — '+r.nom+'</span>';
             c.appendChild(l);}
         });
         mC();
@@ -1096,7 +1115,7 @@ function appliquerNouveauxMenus(data) {
   initIngredients();
 
   // 5. Ajouter les nouvelles courses (sans dupliquer)
-  data.jours.forEach(function(jour) {
+  data.jours.forEach(function(jour, jourIdx) {
     if (!jour.recette || !jour.recette.coursesAAjouter) return;
     jour.recette.coursesAAjouter.forEach(function(item) {
       var existe = false;
@@ -1108,7 +1127,9 @@ function appliquerNouveauxMenus(data) {
         if (c) {
           var l = document.createElement('label');
           l.className = 'sitem';
-          l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">'+jour.nom+'</span>';
+          l.dataset.recipe = jour.recette.nom;
+          l.dataset.jourIdx = String(jourIdx);
+          l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">'+jour.nom+' — '+jour.recette.nom+'</span>';
           c.appendChild(l);
         }
       }
@@ -1312,7 +1333,7 @@ function devinerRayon(ing) {
   return 'epicerie';
 }
 
-function ajouterProduit(nom, rayon, label) {
+function ajouterProduit(nom, rayon, label, recipeKey, jourIdx) {
   if (!nom) return;
   var nomLow = nom.toLowerCase();
   var existe = false;
@@ -1327,6 +1348,8 @@ function ajouterProduit(nom, rayon, label) {
   if (ph) ph.remove();
   var l = document.createElement('label');
   l.className = 'sitem';
+  if (recipeKey) l.dataset.recipe = recipeKey;
+  if (jourIdx !== undefined && jourIdx !== null) l.dataset.jourIdx = String(jourIdx);
   l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nom+'</span><span class="sr">'+(label||'🍽️ Recette semaine')+'</span>';
   c.appendChild(l);
   if (db) db.ref('courses/ajoutes').push({nom:nom, rayon:rayon});
@@ -1426,11 +1449,11 @@ function cuisinerCetteSemaine() {
     }
 
     // Ajouter les ingrédients à la liste de courses
-    var labelCourses = '🍽️ ' + (J[idx].nom || '');
     (J[idx].dinerItems || []).forEach(function(dit) {
       if (!dit.recette) return;
+      var labelDit = '🍽️ ' + (J[idx].nom || '') + ' — ' + dit.nom;
       toArr(dit.recette.ingredients).forEach(function(ing) {
-        ajouterProduit(ing, devinerRayon(ing), labelCourses);
+        ajouterProduit(ing, devinerRayon(ing), labelDit, dit.nom, idx);
       });
     });
     if (J[idx].recetteGou) {
@@ -1907,7 +1930,18 @@ function recomputeDin(idx) {
 function supprimerService(idx, type) {
   if (!J[idx] || !J[idx].dinerItems) return;
   var arr = Array.isArray(J[idx].dinerItems) ? J[idx].dinerItems : Object.values(J[idx].dinerItems).filter(Boolean);
+  // Capturer la recette supprimée avant de filtrer
+  var serviceSuppr = arr.find(function(it){ return it.type === type; });
   J[idx].dinerItems = arr.filter(function(it){ return it.type !== type; });
+  // Supprimer ses ingrédients de la liste de courses (par data-recipe + data-jour-idx)
+  if (serviceSuppr && serviceSuppr.nom) {
+    document.querySelectorAll('#liste-principale .sitem').forEach(function(label) {
+      if (label.dataset.recipe === serviceSuppr.nom && label.dataset.jourIdx === String(idx)) {
+        label.remove();
+      }
+    });
+    mC();
+  }
   if (!J[idx].dinerItems.length) {
     J[idx].dinerItems = null;
     J[idx].recette = null;
@@ -2038,7 +2072,9 @@ function accepterRecette() {
       if (c) {
         var l = document.createElement('label');
         l.className = 'sitem';
-        l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">↺ '+J[idx].nom+'</span>';
+        l.dataset.recipe = data.nom;
+        l.dataset.jourIdx = String(idx);
+        l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">↺ '+J[idx].nom+' — '+data.nom+'</span>';
         c.appendChild(l);
       }
     });
