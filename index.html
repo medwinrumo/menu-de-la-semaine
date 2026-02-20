@@ -210,6 +210,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .tp-nom{flex:1;font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tp-rayon-badge{font-size:.72rem;color:var(--txt2);background:var(--bg);padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0}
 .tp-btn-add{padding:5px 12px;background:var(--acc);color:#fff;border:none;border-radius:var(--r2);font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.tp-btn-add:disabled{background:#c8e6c9;color:#388e3c;cursor:default;}
 .tp-btn-del{padding:5px 8px;background:none;border:1px solid var(--border);border-radius:var(--r2);font-size:.8rem;cursor:pointer;color:var(--txt2);flex-shrink:0}
 .mr-filtres{display:flex;gap:8px;align-items:center;margin-bottom:4px;flex-wrap:wrap}
 .btn-fav-filter{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:var(--card);color:var(--txt);font-size:.8rem;cursor:pointer;transition:.15s;white-space:nowrap}
@@ -623,22 +624,39 @@ if(db)db.ref('courses/coches/'+fbKey(it.querySelector('.sn').textContent)).set(t
 }
 function deb(cb){
 var it=cb.closest('.sitem');var nm=it.querySelector('.sn').textContent;
-document.querySelectorAll('#liste-principale .sitem').forEach(function(o){
-if(o.querySelector('.sn').textContent===nm&&o.style.display==='none'){o.style.display='';o.querySelector('input').checked=false;}
-});it.remove();
+var ajoutesKey=it.dataset.ajoutesKey||'';
+if(ajoutesKey){
+  // Produit ajouté manuellement → supprimer du DOM et de Firebase
+  document.querySelectorAll('#liste-principale .sitem').forEach(function(o){if(o.querySelector('.sn').textContent===nm)o.remove();});
+  if(db){db.ref('courses/coches/'+fbKey(nm)).remove();db.ref('courses/ajoutes/'+ajoutesKey).remove();}
+}else{
+  // Ingrédient recette → restaurer dans la liste principale
+  document.querySelectorAll('#liste-principale .sitem').forEach(function(o){
+    if(o.querySelector('.sn').textContent===nm&&o.style.display==='none'){o.style.display='';o.querySelector('input').checked=false;}
+  });
+  if(db)db.ref('courses/coches/'+fbKey(nm)).remove();
+}
+it.remove();
 var cd=document.getElementById('caddie');
 if(!cd.querySelector('.sitem'))cd.innerHTML='<p class="caddie-empty">Cochez les produits pour les ajouter ici.</p>';
-if(db)db.ref('courses/coches/'+fbKey(nm)).remove();
 mC();
 }
 function viderCaddie(){
   var cd=document.getElementById('caddie');
   cd.querySelectorAll('.sitem').forEach(function(it){
     var nm=it.querySelector('.sn').textContent;
-    document.querySelectorAll('#liste-principale .sitem').forEach(function(o){
-      if(o.querySelector('.sn').textContent===nm&&o.style.display==='none'){o.style.display='';o.querySelector('input').checked=false;}
-    });
-    if(db)db.ref('courses/coches/'+fbKey(nm)).remove();
+    var ajoutesKey=it.dataset.ajoutesKey||'';
+    if(ajoutesKey){
+      // Produit ajouté manuellement → supprimer du DOM et de Firebase
+      document.querySelectorAll('#liste-principale .sitem').forEach(function(o){if(o.querySelector('.sn').textContent===nm)o.remove();});
+      if(db){db.ref('courses/coches/'+fbKey(nm)).remove();db.ref('courses/ajoutes/'+ajoutesKey).remove();}
+    }else{
+      // Ingrédient recette → restaurer dans la liste principale
+      document.querySelectorAll('#liste-principale .sitem').forEach(function(o){
+        if(o.querySelector('.sn').textContent===nm&&o.style.display==='none'){o.style.display='';o.querySelector('input').checked=false;}
+      });
+      if(db)db.ref('courses/coches/'+fbKey(nm)).remove();
+    }
     it.remove();
   });
   if(!cd.querySelector('.sitem'))cd.innerHTML='<p class="caddie-empty">Cochez les produits pour les ajouter ici.</p>';
@@ -651,7 +669,7 @@ var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
 var l=document.createElement('label');l.className='sitem';
 l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+n+'</span><span class="sr">Ajouté manuellement</span>';
 c.appendChild(l);document.getElementById('add-nom').value='';
-if(db)db.ref('courses/ajoutes').push({nom:n,rayon:r});
+if(db){var aRef=db.ref('courses/ajoutes').push({nom:n,rayon:r});l.dataset.ajoutesKey=aRef.key;}
 // Mémoriser dans "Tous mes produits" si pas déjà présent
 var dejaDansProduits=produitsHabituels.some(function(p){return p.nom.toLowerCase()===n.toLowerCase();});
 if(!dejaDansProduits&&db)db.ref('produits_habituels').push({nom:n,rayon:r});
@@ -1027,13 +1045,14 @@ function executerActionChat(action) {
   } else if (action.type === 'ajouter_courses' && action.produits) {
     action.produits.forEach(function(item){
       var c=document.querySelector('.si[data-cat="'+item.rayon+'"]');
+      var l=null;
       if(c){
         var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
-        var l=document.createElement('label');l.className='sitem';
+        l=document.createElement('label');l.className='sitem';
         l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">💬 Ajouté par NutriCoach</span>';
         c.appendChild(l);
       }
-      if(db)db.ref('courses/ajoutes').push({nom:item.nom,rayon:item.rayon});
+      if(db){var ncRef=db.ref('courses/ajoutes').push({nom:item.nom,rayon:item.rayon});if(l)l.dataset.ajoutesKey=ncRef.key;}
     });
     mC();
     ajouterMsg('bot','✅ '+action.produits.length+' produit(s) ajouté(s) à votre liste !','msg-action');
@@ -2192,7 +2211,7 @@ function appliquerDepuisFirebase(data, menus){
     if(!dansDOM){
       var c=document.querySelector('.si[data-cat="'+item.rayon+'"]');
       if(c){var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
-        var l=document.createElement('label');l.className='sitem';
+        var l=document.createElement('label');l.className='sitem';l.dataset.ajoutesKey=key;
         l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">Ajouté manuellement</span>';
         c.appendChild(l);}
     }
@@ -2367,13 +2386,20 @@ function afficherTousProduits(){
   }
   // Trier par rayon puis par nom
   items=items.slice().sort(function(a,b){return a.rayon!==b.rayon?a.rayon.localeCompare(b.rayon):a.nom.localeCompare(b.nom);});
+  // Produits déjà dans la liste de courses (liste principale ou caddie)
+  var enListe={};
+  document.querySelectorAll('#liste-principale .sitem .sn, #caddie .sitem .sn').forEach(function(el){enListe[el.textContent.toLowerCase().trim()]=true;});
   liste.innerHTML=items.map(function(p){
     var nomEsc=p.nom.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     var keyEsc=(p._fbKey||'').replace(/'/g,"\\'");
+    var dejaEnListe=!!enListe[p.nom.toLowerCase().trim()];
+    var btnAdd=dejaEnListe
+      ?'<button class="tp-btn-add" disabled>✓ En liste</button>'
+      :'<button class="tp-btn-add" onclick="ajouterDepuisProduits(\''+nomEsc+'\',\''+p.rayon+'\',this)">+ Ajouter</button>';
     return '<div class="tp-item">'+
       '<span class="tp-nom">'+p.nom+'</span>'+
       '<span class="tp-rayon-badge">'+(TP_RAYON_LABELS[p.rayon]||p.rayon)+'</span>'+
-      '<button class="tp-btn-add" onclick="ajouterDepuisProduits(\''+nomEsc+'\',\''+p.rayon+'\')">+ Ajouter</button>'+
+      btnAdd+
       '<button class="tp-btn-del" onclick="supprimerProduitHabitude(\''+keyEsc+'\')" title="Supprimer de mes produits">✕</button>'+
       '</div>';
   }).join('');
@@ -2402,7 +2428,7 @@ function selFiltreTP(btn){
   afficherTousProduits();
 }
 
-function ajouterDepuisProduits(nom,rayon){
+function ajouterDepuisProduits(nom,rayon,btn){
   var nomLow=nom.toLowerCase();
   var existe=false;
   document.querySelectorAll('#liste-principale .sitem .sn').forEach(function(el){if(el.textContent.toLowerCase()===nomLow)existe=true;});
@@ -2413,9 +2439,11 @@ function ajouterDepuisProduits(nom,rayon){
     var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
     var l=document.createElement('label');l.className='sitem';
     l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nom+'</span><span class="sr">Ajouté manuellement</span>';
-    c.appendChild(l);mC();
+    c.appendChild(l);
+    if(db){var tpRef=db.ref('courses/ajoutes').push({nom:nom,rayon:rayon});l.dataset.ajoutesKey=tpRef.key;}
+    mC();
   }
-  if(db)db.ref('courses/ajoutes').push({nom:nom,rayon:rayon});
+  if(btn){btn.textContent='✓ En liste';btn.disabled=true;}
   toast('✅ '+nom+' ajouté à la liste de courses !');
 }
 
