@@ -201,16 +201,9 @@ Règle : codée ≠ validée. Une correction est supprimée de cette liste seule
 
 ### 🔵 Codées — en attente de validation
 - **#2** Sélecteur type service (Plat/Entrée/Accomp.) dans zone jour des cartes Mes Recettes
-- **#6** Chat NutriCoach : recette appliquée au planning (regex JSON robuste dans api/chat.js)
-- **#7** Bouton ✕ service : onglet Recettes affiche "Aucun dîner planifié" quand tout est supprimé
-- **#8** Liste de courses : label raccourci "Sam — Poulet…" (sans emoji, sans date)
-- Suppression plat : ne réapparaît plus sans label
-- accepterRecette() / executerActionChat : label PLAT + bouton ✕ présents
-- Chat NutriCoach : scroll fonctionnel, question visible
-- Champignons autorisés toute l'année
-- Liste de courses : ingrédients persistants + label "Jour — Recette" correct
-- Bouton ✕ présent sur menus générés par API
-- Modification ingrédient : bon rayon, update en place (pas de doublon)
+- **#7** Bouton ✕ service : goRecette() reconstruit le contenu depuis J[] + rW() avant Firebase
+- **#8a** truncNom coupe sur espace (pas en milieu de mot)
+- **#8b** Pas de "Ajouté manuellement" : supprimé écriture cours/ajoutes dans ingOk + nettoyage auto dans appliquerDepuisFirebase
 
 ### 🟡 À faire (priorité basse)
 - **#5** Qualité des recettes générées par Claude → retravailler prompt api/menus.js

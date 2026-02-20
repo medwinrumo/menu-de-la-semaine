@@ -618,8 +618,18 @@ mC();
 function goRecette(idx){
   var btn=document.querySelectorAll('.tabs button')[1];
   tab('recettes',btn);
-  var e=document.getElementById('recipe-'+idx);
-  if(e)e.scrollIntoView({behavior:'instant',block:'start'});
+  var recipeDiv=document.getElementById('recipe-'+idx);
+  if(recipeDiv){
+    if(J[idx]&&((J[idx].dinerItems&&J[idx].dinerItems.length>0)||J[idx].recetteGou)){
+      recipeDiv.innerHTML=buildMultiRecipeDiv(idx);initIngredients();
+    }else if(J[idx]&&J[idx].recette){
+      recipeDiv.innerHTML=buildRecipeDiv(idx,J[idx].recette);initIngredients();
+    }else{
+      recipeDiv.innerHTML='<button class="btn-back" onclick="goMenu()">← Retour au menu</button><p style="color:var(--txt2);text-align:center;margin:30px 0;font-size:.9rem">Aucun dîner planifié pour ce soir.</p>';
+    }
+    if(ingredientsFirebase)appliquerIngredientsFirebase(ingredientsFirebase);
+  }
+  if(recipeDiv)recipeDiv.scrollIntoView({behavior:'instant',block:'start'});
 }
 function goMenu(){
   var btn=document.querySelector('.tabs button');
@@ -743,7 +753,6 @@ function ingOk(id) {
       l.className = 'sitem';
       l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nouveau+'</span><span class="sr">✏️ '+ancien+' → '+nouveau+'</span>';
       c.appendChild(l);
-      if (db) db.ref('courses/ajoutes').push({nom:nouveau, rayon:rayon});
     }
   }
   mC();
@@ -1323,7 +1332,7 @@ function rebuilderListeRecettes(menus) {
     if (!m) return;
     var jourNom = m.nom || 'Jour ' + idx;
     var abbrev = jourNom.substring(0, 3); // "Sam", "Dim", "Lun"...
-    function truncNom(s) { return s && s.length > 16 ? s.substring(0, 16) + '…' : (s || ''); }
+    function truncNom(s) { if(!s||s.length<=16)return s||''; var cut=s.lastIndexOf(' ',15); return s.substring(0,cut>0?cut:15)+'…'; }
     // dinerItems (multi-services)
     var rawDI = m.dinerItems || null;
     var dinerItems = rawDI ? (Array.isArray(rawDI) ? rawDI : Object.values(rawDI).filter(Boolean)) : null;
@@ -1977,12 +1986,12 @@ function supprimerService(idx, type) {
     initIngredients();
   }
   rebuilderListeRecettes(J);
+  rW();
   if (db) db.ref('menus/'+idx).set({
     nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
     dinerItems: J[idx].dinerItems||null,
     gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null
   });
-  rW();
 }
 
 function supprimerGouteur(idx) {
@@ -2101,6 +2110,7 @@ function chercherAutre() {
 
 // ===== FIREBASE =====
 var db=null;
+var ingredientsFirebase=null;
 function fbKey(nom){return nom.replace(/[.#$[\]/]/g,'-').replace(/\s+/g,'_').substring(0,60);}
 
 function appliquerIngredientsFirebase(ingredients){
@@ -2126,7 +2136,12 @@ function appliquerDepuisFirebase(data, menus){
   var coches=data.coches||{};
   var ajoutes=data.ajoutes||{};
   // 1. Ajouter les produits manuels absents du DOM
-  Object.values(ajoutes).forEach(function(item){
+  // Nettoyage migration : supprimer de Firebase les items ajoutes qui doublonnent un ingrédient recette
+  var recipeNoms={};
+  document.querySelectorAll('#liste-principale .sitem[data-recipe] .sn').forEach(function(el){recipeNoms[el.textContent.toLowerCase().trim()]=true;});
+  Object.keys(ajoutes).forEach(function(key){
+    var item=ajoutes[key];
+    if(recipeNoms[item.nom.toLowerCase().trim()]){if(db)db.ref('courses/ajoutes/'+key).remove();return;}
     var dansDOM=false;
     document.querySelectorAll('.sitem .sn').forEach(function(el){if(el.textContent===item.nom)dansDOM=true;});
     if(!dansDOM){
@@ -2235,7 +2250,8 @@ db.ref('/').on('value',function(snapshot){
     if(needRW) rW();
   }
   appliquerDepuisFirebase(data.courses || {}, data.menus || {});
-  appliquerIngredientsFirebase(data.ingredients || null);
+  ingredientsFirebase = data.ingredients || null;
+  appliquerIngredientsFirebase(ingredientsFirebase);
   if(data.sites_ressources) {
     sitesExtra = Object.keys(data.sites_ressources).map(function(key) {
       var s = data.sites_ressources[key];
