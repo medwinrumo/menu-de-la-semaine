@@ -440,10 +440,6 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <h2>🛒 Liste de courses</h2>
 <p class="shop-sub" id="courses-sub">Semaine du 14 au 20 février 2026</p>
 
-<div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap">
-  <button id="btn-filtre-manuel" class="btn-tag-filter" onclick="toggleFiltreManuel()" title="Afficher uniquement les produits ajoutés manuellement">✏️ Ajouté manuellement</button>
-</div>
-
 <div class="toggle-rayons" onclick="document.getElementById('rnav').classList.toggle('open')">📍 Navigation par rayon ▾</div>
 <div class="rayon-nav" id="rnav">
 <span onclick="sTo('cat-legumes')">🥬 Légumes</span>
@@ -708,7 +704,7 @@ document.querySelectorAll('.pnl').forEach(function(p){p.classList.remove('on')})
 document.querySelectorAll('.tabs button').forEach(function(b){b.classList.remove('on')});
 document.getElementById(id).classList.add('on');btn.classList.add('on');
 }
-function sTo(id){var e=document.getElementById(id);if(e)e.scrollIntoView({behavior:'smooth',block:'start'});}
+function sTo(id){if(filtreManuelActif)toggleFiltreManuel();var e=document.getElementById(id);if(e)e.scrollIntoView({behavior:'smooth',block:'start'});}
 
 function mC(){
   document.querySelectorAll('#liste-principale .scat').forEach(function(cat){
@@ -719,8 +715,6 @@ function mC(){
 var filtreManuelActif = false;
 function toggleFiltreManuel() {
   filtreManuelActif = !filtreManuelActif;
-  var btn = document.getElementById('btn-filtre-manuel');
-  if (btn) btn.classList.toggle('on', filtreManuelActif);
   // Synchroniser le span dans la nav rayon
   var navSpan = document.getElementById('rnav-manuel');
   if (navSpan) { navSpan.style.color = filtreManuelActif ? 'var(--acc)' : 'var(--txt2)'; navSpan.style.fontWeight = filtreManuelActif ? '700' : ''; }
