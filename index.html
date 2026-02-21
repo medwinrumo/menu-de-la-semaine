@@ -11,6 +11,7 @@
 :root{--bg:#faf0e6;--bg2:#fff8f0;--txt:#1c1008;--txt2:#7a6a50;--acc:#051428;--acc2:#0d2a50;--accL:rgba(5,20,40,.09);--border:rgba(160,120,70,.18);--card:#fffdf8;--sh:0 2px 8px rgba(180,130,70,.08);--sh2:0 4px 14px rgba(180,130,70,.12);--r:10px;--r2:14px}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1208;--bg2:#221a0e;--txt:#f0e8d8;--txt2:#a09070;--acc:#e5c08f;--acc2:#f0d0a0;--accL:rgba(229,192,143,.14);--border:rgba(229,192,143,.12);--card:#251d0e;--sh:0 2px 8px rgba(0,0,0,.18);--sh2:0 4px 14px rgba(0,0,0,.25)}}
 :root[data-theme="dark"]{--bg:#1a1208;--bg2:#221a0e;--txt:#f0e8d8;--txt2:#a09070;--acc:#e5c08f;--acc2:#f0d0a0;--accL:rgba(229,192,143,.14);--border:rgba(229,192,143,.12);--card:#251d0e;--sh:0 2px 8px rgba(0,0,0,.18);--sh2:0 4px 14px rgba(0,0,0,.25)}
+:root[data-theme="light"]{--bg:#faf0e6;--bg2:#fff8f0;--txt:#1c1008;--txt2:#7a6a50;--acc:#051428;--acc2:#0d2a50;--accL:rgba(5,20,40,.09);--border:rgba(160,120,70,.18);--card:#fffdf8;--sh:0 2px 8px rgba(180,130,70,.08);--sh2:0 4px 14px rgba(180,130,70,.12)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6}
 .wrap{max-width:1140px;margin:0 auto;padding:14px}
@@ -302,6 +303,9 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .tag-picker-chip{padding:3px 9px;border:1px solid var(--border);border-radius:12px;font-size:.68rem;cursor:pointer;background:var(--bg);color:var(--txt2);transition:.15s}
 .tag-picker-chip:hover{border-color:var(--acc);color:var(--acc)}
 .tag-picker-chip.has{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tag-mgr-move{background:none;border:none;cursor:pointer;color:var(--txt2);font-size:.6rem;padding:0 2px;opacity:.5;line-height:1}
+.tag-mgr-move:hover{opacity:1;color:var(--acc)}
+.tag-mgr-move-ph{display:inline-block;width:14px}
 .recette-card-img{width:100%;height:130px;object-fit:cover;border-radius:var(--r);margin-bottom:8px;display:block}
 .modal-img{width:100%;max-height:220px;object-fit:cover;border-radius:var(--r);margin-bottom:14px;display:block}
 .modal-astuces-box{margin-top:10px;padding:10px 12px;background:var(--accL);border-radius:var(--r);border-left:3px solid var(--acc)}
@@ -458,6 +462,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <span onclick="sTo('cat-sante')">💊 Santé</span>
 <span onclick="sTo('cat-corps')">🧴 Corps</span>
 <span onclick="sTo('cat-divers')">🏷️ Divers</span>
+<span id="rnav-manuel" onclick="toggleFiltreManuel()" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px;width:100%;text-align:center;color:var(--txt2)">✏️ Ajouté manuellement</span>
 </div>
 
 <div id="liste-principale">
@@ -648,6 +653,20 @@ g.innerHTML+=
 }
 rW();
 
+// Ingrédients toujours présents dans le placard → exclus automatiquement des courses
+var INGREDIENTS_PLACARD = [
+  'huile','sel','poivre','vinaigre','moutarde','mayonnaise',
+  'poivre noir','poivre blanc','poivre moulu','poivre concassé',
+  'sel fin','gros sel','fleur de sel','sel de mer','sel rose',
+  'huile d\'olive','huile de colza','huile de tournesol','huile de sésame','huile végétale','huile de coco',
+  'vinaigre blanc','vinaigre de cidre','vinaigre balsamique','vinaigre de vin',
+  'moutarde de dijon','moutarde à l\'ancienne'
+];
+function estIngredientPlacard(nom) {
+  var s = (nom || '').toLowerCase().trim();
+  return INGREDIENTS_PLACARD.some(function(p){ return s === p || s.startsWith(p + ' ') || s.startsWith(p + ','); });
+}
+
 function addIngredientsJour(idx){
   var j=J[idx];if(!j)return;
   var jourNom=j.nom||'Jour '+idx;var abbrev=jourNom.substring(0,3);
@@ -659,16 +678,16 @@ function addIngredientsJour(idx){
       if(!dit.recette)return;
       var labelDit=abbrev+' — '+truncNom(dit.nom);
       var ings=dit.recette.coursesAAjouter||toArr(dit.recette.ingredients||[]).map(function(ing){return {nom:ing,rayon:devinerRayon(ing)};});
-      ings.forEach(function(item){addCourseItem(item.nom,item.rayon,labelDit,dit.nom,idx);});
+      ings.forEach(function(item){if(!estIngredientPlacard(item.nom))addCourseItem(item.nom,item.rayon,labelDit,dit.nom,idx);});
     });
   } else if(j.recette&&j.recette.coursesAAjouter){
     var labelRec=abbrev+' — '+truncNom(j.recette.nom);
-    j.recette.coursesAAjouter.forEach(function(item){addCourseItem(item.nom,item.rayon,labelRec,j.recette.nom,idx);});
+    j.recette.coursesAAjouter.forEach(function(item){if(!estIngredientPlacard(item.nom))addCourseItem(item.nom,item.rayon,labelRec,j.recette.nom,idx);});
   }
   if(j.recetteGou&&j.gou){
     var labelGou=abbrev+' — '+truncNom(j.gou);
     var gouIngs=j.recetteGou.coursesAAjouter||toArr(j.recetteGou.ingredients||[]).map(function(ing){return {nom:ing,rayon:devinerRayon(ing)};});
-    gouIngs.forEach(function(item){addCourseItem(item.nom,item.rayon,labelGou,j.gou,idx);});
+    gouIngs.forEach(function(item){if(!estIngredientPlacard(item.nom))addCourseItem(item.nom,item.rayon,labelGou,j.gou,idx);});
   }
   mC();
 }
@@ -702,6 +721,12 @@ function toggleFiltreManuel() {
   filtreManuelActif = !filtreManuelActif;
   var btn = document.getElementById('btn-filtre-manuel');
   if (btn) btn.classList.toggle('on', filtreManuelActif);
+  // Synchroniser le span dans la nav rayon
+  var navSpan = document.getElementById('rnav-manuel');
+  if (navSpan) { navSpan.style.color = filtreManuelActif ? 'var(--acc)' : 'var(--txt2)'; navSpan.style.fontWeight = filtreManuelActif ? '700' : ''; }
+  // Fermer le panneau nav rayon
+  var rnav = document.getElementById('rnav');
+  if (rnav) rnav.classList.remove('open');
   document.querySelectorAll('#liste-principale .sitem').forEach(function(it){
     if (filtreManuelActif) {
       // Afficher uniquement les ajoutés manuellement
@@ -801,25 +826,33 @@ function goMenu(){
 initIngredients();
 
 // ===== THÈME CLAIR / SOMBRE =====
+function _themeEstSombre() {
+  var dt = document.documentElement.getAttribute('data-theme');
+  if (dt === 'dark') return true;
+  if (dt === 'light') return false;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches;
+}
+function _updateThemeBtn() {
+  var btn = document.getElementById('btn-theme');
+  if (btn) btn.textContent = _themeEstSombre() ? '☀️' : '🌙';
+}
 (function(){
   var t = localStorage.getItem('theme');
   if (t === 'dark') document.documentElement.setAttribute('data-theme','dark');
-  else if (t === 'light') document.documentElement.removeAttribute('data-theme');
-  var btn = document.getElementById('btn-theme');
-  if (btn) btn.textContent = (t === 'dark') ? '☀️' : '🌙';
+  else if (t === 'light') document.documentElement.setAttribute('data-theme','light');
+  _updateThemeBtn();
 })();
 function toggleTheme() {
-  var cur = document.documentElement.getAttribute('data-theme');
-  var isDark = cur === 'dark';
-  if (isDark) {
-    document.documentElement.removeAttribute('data-theme');
+  if (_themeEstSombre()) {
+    // Actuellement sombre → passer en clair
+    document.documentElement.setAttribute('data-theme','light');
     localStorage.setItem('theme','light');
-    document.getElementById('btn-theme').textContent = '🌙';
   } else {
+    // Actuellement clair → passer en sombre
     document.documentElement.setAttribute('data-theme','dark');
     localStorage.setItem('theme','dark');
-    document.getElementById('btn-theme').textContent = '☀️';
   }
+  _updateThemeBtn();
 }
 
 document.getElementById('chat-input').onkeydown = function(e){
@@ -1577,19 +1610,19 @@ function rebuilderListeRecettes(menus) {
         var labelDit = abbrev + ' — ' + truncNom(dit.nom);
         var ings = dit.recette.coursesAAjouter
           || toArr(dit.recette.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
-        ings.forEach(function(item) { addCourseItem(item.nom, item.rayon, labelDit, dit.nom, idx); });
+        ings.forEach(function(item) { if(!estIngredientPlacard(item.nom)) addCourseItem(item.nom, item.rayon, labelDit, dit.nom, idx); });
       });
     } else if (m.recette && m.recette.coursesAAjouter) {
       // Recette API (sans dinerItems)
       var labelRec = abbrev + ' — ' + truncNom(m.recette.nom);
-      m.recette.coursesAAjouter.forEach(function(item) { addCourseItem(item.nom, item.rayon, labelRec, m.recette.nom, idx); });
+      m.recette.coursesAAjouter.forEach(function(item) { if(!estIngredientPlacard(item.nom)) addCourseItem(item.nom, item.rayon, labelRec, m.recette.nom, idx); });
     }
     // Goûter
     if (m.recetteGou && m.gou) {
       var labelGou = abbrev + ' — ' + truncNom(m.gou);
       var gouIngs = m.recetteGou.coursesAAjouter
         || toArr(m.recetteGou.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
-      gouIngs.forEach(function(item) { addCourseItem(item.nom, item.rayon, labelGou, m.gou, idx); });
+      gouIngs.forEach(function(item) { if(!estIngredientPlacard(item.nom)) addCourseItem(item.nom, item.rayon, labelGou, m.gou, idx); });
     }
   });
   mC();
@@ -2226,9 +2259,13 @@ function renderGestionTags() {
   var content = document.getElementById('tag-mgr-content');
   if (!content) return;
   var html = taxonomieActive.map(function(g, gi) {
-    var chips = g.tags.map(function(t) {
+    var chips = g.tags.map(function(t, ti) {
       var ts = t.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return '<span class="tag-mgr-chip">'+t+
+      var canLeft = ti > 0, canRight = ti < g.tags.length - 1;
+      return '<span class="tag-mgr-chip">'+
+        (canLeft ? '<button class="tag-mgr-move" onclick="deplacerTag('+gi+','+ti+',-1)" title="Déplacer à gauche">◀</button>' : '<span class="tag-mgr-move-ph"></span>')+
+        t+
+        (canRight ? '<button class="tag-mgr-move" onclick="deplacerTag('+gi+','+ti+',1)" title="Déplacer à droite">▶</button>' : '<span class="tag-mgr-move-ph"></span>')+
         '<button class="tag-mgr-del" onclick="supprimerTagDuSysteme('+gi+',\''+ts+'\')" title="Supprimer">✕</button>'+
         '</span>';
     }).join('');
@@ -2253,6 +2290,16 @@ function renderGestionTags() {
       '</div>'+
     '</div>';
   content.innerHTML = html;
+}
+
+function deplacerTag(catIdx, tagIdx, direction) {
+  var tags = taxonomieActive[catIdx].tags;
+  var newIdx = tagIdx + direction;
+  if (newIdx < 0 || newIdx >= tags.length) return;
+  var tmp = tags[tagIdx]; tags[tagIdx] = tags[newIdx]; tags[newIdx] = tmp;
+  sauvegarderTaxonomieFirebase();
+  renderGestionTags();
+  buildTagFilterPanel();
 }
 
 function supprimerTagDuSysteme(catIdx, tag) {
