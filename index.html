@@ -991,9 +991,11 @@ function importerRecetteUrl() {
         .then(function() {
           document.getElementById('scrape-url-input').value = '';
           toast('✅ « ' + data.nom + ' » ajoutée à Mes recettes !');
-          // Naviguer vers "Mes recettes" pour confirmer visuellement
-          var btnMr = document.querySelectorAll('.tabs button')[3];
-          if (btnMr) btnMr.click();
+          // Naviguer vers "Mes recettes" hors de la chaîne pour ne pas polluer le catch
+          setTimeout(function() {
+            var btnMr = document.querySelectorAll('.tabs button')[3];
+            if (btnMr) btnMr.click();
+          }, 0);
         })
         .catch(function(err) {
           toast('❌ Erreur sauvegarde : ' + err.message);
@@ -1389,9 +1391,10 @@ function afficherRecettesPerso(liste) {
       return '<option value="'+idx+'">'+j.nom+'</option>';
     }).join('');
     var serviceTagsList = ['entrée','plat principal','accompagnement','dessert','goûter','soupe'];
-    var serviceTag = (r.tags||[]).find(function(t){ return serviceTagsList.includes(t); });
-    var tags = (r.tags||[]).filter(function(t){ return !serviceTagsList.includes(t); })
-                           .map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
+    var rtags = toArr(r.tags);
+    var serviceTag = rtags.find(function(t){ return serviceTagsList.includes(t); });
+    var tags = rtags.filter(function(t){ return !serviceTagsList.includes(t); })
+                    .map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
     return '<div class="recette-card" id="rcard-'+k+'">' +
       (r.image ? '<img class="recette-card-img" src="'+r.image+'" alt="'+r.nom+'" onerror="this.style.display=\'none\'">' : '') +
       '<div class="recette-card-header">' +
