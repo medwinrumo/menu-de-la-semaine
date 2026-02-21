@@ -63,13 +63,22 @@ Création du fichier de contexte projet.
 - Fonctions : `initIngredients()`, `ingOk(id)`, `ingAnnuler(id)`, `ingKey(e, id)`
 - CSS : `.ing-item`, `.ing-edit`, `.ing-btn-ok`, `.ing-btn-cancel`, `.ing-changed`, `.ing-hint`
 
-### Phase 6 — NutriCoach Chat ✅ TERMINÉ
+### Phase 6 — NutriCoach Chat ✅ TERMINÉ + enrichi
 - Onglet "💬 NutriCoach" avec chat mobile-first
 - 2 rôles : réponses nutrition + actions sur les menus
 - Historique conservé : `chatHisto[]` (12 derniers échanges)
-- Actions : `remplacer_repas` (jour_idx 0-6 = Sam→Ven) et `generer_semaine`
 - Fonctions : `envoyerChat()`, `ajouterMsg()`, `afficherTyping()`, `retirerTyping()`, `executerActionChat()`
 - Enter = envoyer, Shift+Enter = nouvelle ligne
+- Actions disponibles (toutes gérées dans `executerActionChat()`) :
+  - `remplacer_repas` (jour_idx 0-6 = Sam→Ven)
+  - `generer_semaine`
+  - `ajouter_courses`
+  - `ajouter_site`
+  - `ajouter_tag` / `supprimer_tag`
+  - `supprimer_recette`
+  - `modifier_profil` (champs : aime, naime_pas, restrictions, notes_sante, notes_nutrition)
+  - `creer_recette` → crée une recette et l'ajoute à "Mes Recettes"
+  - `creer_et_planifier` → crée + ajoute à la biblio + place dans le menu (avec `jour_idx`)
 
 ### Phase 7 — Génération semaine complète ✅ TERMINÉ
 - Bouton "🗓️ Générer la semaine" dans l'en-tête
@@ -101,50 +110,23 @@ Création du fichier de contexte projet.
 - Profil complet intégré dans `api/_skills.js` depuis les fichiers Markdown fournis
 - Résultats sanguins réels : glycémie 1,13 g/L, LDL 1,57, HDL 0,54
 - Sites ressources : 14 sites, extensibles via le chat NutriCoach (sauvegardés Firebase)
-- Actions chat : `remplacer_repas`, `generer_semaine`, `ajouter_courses`, `ajouter_site`
-- Évolution possible : permettre mise à jour du profil via l'interface (Phase 8b)
+- Mise à jour du profil via chat : action `modifier_profil` → Firebase `profil/`
+
+### Phase 9 — Améliorations UX liste de courses ✅ TERMINÉ
+- Filtre "✏️ Ajouté manuellement" : uniquement dans le menu "📍 Navigation par rayon"
+- Cliquer un rayon désactive automatiquement le filtre manuel (`sTo()`)
+- Le menu nav reste ouvert lors du toggle filtre (pas de fermeture automatique)
+- Date `#courses-sub` calculée dynamiquement au chargement (JS, pas hardcodée)
+
+### Phase 10 — Système de tags ✅ TERMINÉ
+- `TAG_TAXONOMY` : 4 catégories (Service, Protéine, Style, Nutrition)
+- Gestion des tags via modal (ouvrirGestionTags / fermerGestionTags)
+- Réorganisation par glisser-déposer : `⠿` + HTML5 DnD + touch events mobile
+  - `tagDndStart/Over/Drop/End` pour desktop
+  - `initTagDndTouch(content)` pour mobile (touchstart/touchmove/touchend)
+- Taxonomie personnalisée sauvegardée Firebase (`tag_taxonomy_custom`)
 
 ---
-
-## Prochaine session — Tests à effectuer
-
-Au début de la prochaine session, effectuer des tests complets de toutes les fonctionnalités :
-
-1. **Firebase / Base de données** ← bugs signalés par l'utilisateur
-   - Synchronisation multi-appareils (ouvrir sur 2 appareils simultanément)
-   - Persistance des cases cochées après fermeture/réouverture
-   - Persistance des produits ajoutés manuellement
-   - Suppression d'un produit du caddie (`deb()`)
-   - Comportement après `genererSemaine()` : la liste de courses se remet-elle à zéro proprement ?
-
-2. **Navigation**
-   - Cliquer sur un dîner → recette correspondante s'affiche
-   - Bouton retour → retour à l'onglet Semaine
-   - Navigation entre les 4 onglets
-
-3. **Remplacement de recette (Phase 4)**
-   - Bouton "↺" sur chaque jour
-   - Modal s'affiche avec la nouvelle recette
-   - "Accepter" → recette mise à jour dans le planning
-   - "Non merci" → cherche une autre alternative
-   - La liste de courses est mise à jour
-
-4. **Modification d'ingrédient (Phase 5)**
-   - Cliquer sur un ingrédient → champ éditable apparaît
-   - Modifier + valider → ingrédient mis à jour
-   - Annuler → retour à l'original
-
-5. **Génération semaine (Phase 7)**
-   - Bouton "🗓️ Générer la semaine"
-   - 7 jours générés avec légumes de saison (février = poireaux, carottes, navets...)
-   - Liste de courses mise à jour
-   - Firebase mis à jour
-
-6. **NutriCoach Chat (Phase 6)**
-   - Question nutrition → réponse texte
-   - Commande "Change le dîner de lundi" → action remplacer_repas
-   - Commande "Génère une nouvelle semaine" → action generer_semaine
-   - Vérifier que les légumes suggérés sont de saison
 
 ---
 
