@@ -249,6 +249,11 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .btn-tag-filter{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:var(--card);color:var(--txt);font-size:.8rem;cursor:pointer;transition:.15s;white-space:nowrap}
 .btn-tag-filter.has-active{background:var(--acc);color:#fff;border-color:var(--acc)}
 .tag-filter-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-bottom:12px;box-shadow:var(--sh2);display:none}
+.mr-sort-row{display:flex;gap:5px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.mr-sort-label{font-size:.73rem;color:var(--txt2);white-space:nowrap;margin-right:2px}
+.btn-tri{padding:4px 10px;border:1px solid var(--border);border-radius:14px;background:var(--card);color:var(--txt2);font-size:.76rem;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn-tri.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn-tri:hover:not(.on){background:var(--accL);color:var(--txt)}
 .tag-filter-section{margin-bottom:10px}
 .tag-filter-section:last-child{margin-bottom:0}
 .tag-filter-cat-title{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt2);display:block;margin-bottom:6px}
@@ -376,6 +381,13 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
     🏷️ Tags<span id="tag-filter-badge"></span> ▾
   </button>
   <span class="mr-count" id="mr-count"></span>
+</div>
+<div class="mr-sort-row" id="mr-sort-row" style="display:none">
+  <span class="mr-sort-label">Tri :</span>
+  <button class="btn-tri on" id="tri-az" onclick="setTriRecettes('az')">A → Z</button>
+  <button class="btn-tri" id="tri-za" onclick="setTriRecettes('za')">Z → A</button>
+  <button class="btn-tri" id="tri-recent" onclick="setTriRecettes('recent')">🕐 Récent</button>
+  <button class="btn-tri" id="tri-service" onclick="setTriRecettes('service')">🍽 Service</button>
 </div>
 <div class="tag-filter-panel" id="tag-filter-panel" style="display:none"></div>
 <div id="mes-recettes-liste">
@@ -1364,6 +1376,8 @@ function afficherRecettesPerso(liste) {
   var filtresEl = document.getElementById('mr-filtres');
   if (searchRow) searchRow.style.display = show ? '' : 'none';
   if (filtresEl) filtresEl.style.display = show ? 'flex' : 'none';
+  var sortRow = document.getElementById('mr-sort-row');
+  if (sortRow) sortRow.style.display = show ? '' : 'none';
   buildTagFilterPanel();
 
   var srcList = liste !== undefined ? liste : recettesPerso;
@@ -1375,8 +1389,17 @@ function afficherRecettesPerso(liste) {
     return;
   }
 
+  var SVC_ORDER = {'entrée':1,'soupe':2,'plat principal':3,'dessert':4,'goûter':5};
+  function getSvcOrder(r){ var t=toArr(r.tags).find(function(x){return SVC_ORDER[x]!==undefined;}); return t?SVC_ORDER[t]:99; }
   var sorted = srcList.slice().sort(function(a, b) {
-    if (!!b.favoris !== !!a.favoris) return b.favoris ? 1 : -1;
+    if (triRecettes === 'za') return (b.nom||'').localeCompare((a.nom||''), 'fr');
+    if (triRecettes === 'recent') return (b._fbKey||'').localeCompare(a._fbKey||'');
+    if (triRecettes === 'service') {
+      var sa=getSvcOrder(a), sb=getSvcOrder(b);
+      if (sa!==sb) return sa-sb;
+      return (a.nom||'').localeCompare((b.nom||''), 'fr');
+    }
+    // défaut : A→Z
     return (a.nom||'').localeCompare((b.nom||''), 'fr');
   });
 
@@ -1903,6 +1926,7 @@ function sauvegarderRecetteDiner(i) {
 var recetteEnCours = null;
 var filtresTags = new Set();
 var filtreFavoris = false;
+var triRecettes = 'az';
 var tagPickerOpen = null;
 var tagPickerDirtyKey = null; // clé dont les tags ont changé mais Firebase pas encore écrit
 var svcDropdownOpen = null;
@@ -2212,6 +2236,13 @@ function filtrerRecettes() {
   afficherRecettesPerso(visible);
 }
 
+function setTriRecettes(tri) {
+  triRecettes = tri;
+  document.querySelectorAll('.btn-tri').forEach(function(b){ b.classList.remove('on'); });
+  var btn = document.getElementById('tri-'+tri);
+  if (btn) btn.classList.add('on');
+  filtrerRecettes();
+}
 
 function renderCardTags(k) {
   var r = recettesPersoMap[k];
