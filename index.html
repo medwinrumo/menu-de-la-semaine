@@ -458,7 +458,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <span onclick="sTo('cat-sante')">💊 Santé</span>
 <span onclick="sTo('cat-corps')">🧴 Corps</span>
 <span onclick="sTo('cat-divers')">🏷️ Divers</span>
-<span id="rnav-manuel" onclick="toggleFiltreManuel()" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px;width:100%;text-align:center;color:var(--txt2)">✏️ Ajouté manuellement</span>
+<span id="rnav-manuel" onclick="toggleFiltreManuel()" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px;width:100%;text-align:center;color:var(--txt2);opacity:0.6">✏️ Ajouté manuellement</span>
 </div>
 
 <div id="liste-principale">
@@ -724,10 +724,7 @@ function toggleFiltreManuel() {
   filtreManuelActif = !filtreManuelActif;
   // Synchroniser le span dans la nav rayon
   var navSpan = document.getElementById('rnav-manuel');
-  if (navSpan) { navSpan.style.color = filtreManuelActif ? 'var(--acc)' : 'var(--txt2)'; navSpan.style.fontWeight = filtreManuelActif ? '700' : ''; }
-  // Fermer le panneau nav rayon
-  var rnav = document.getElementById('rnav');
-  if (rnav) rnav.classList.remove('open');
+  if (navSpan) { navSpan.style.color = filtreManuelActif ? 'var(--acc)' : 'var(--txt2)'; navSpan.style.fontWeight = filtreManuelActif ? '700' : ''; navSpan.style.opacity = filtreManuelActif ? '1' : '0.6'; }
   document.querySelectorAll('#liste-principale .sitem').forEach(function(it){
     if (filtreManuelActif) {
       // Afficher uniquement les ajoutés manuellement
