@@ -1384,7 +1384,7 @@ function afficherRecettesPerso(liste) {
   function getSvcOrder(r){ var t=toArr(r.tags).find(function(x){return SVC_ORDER[x]!==undefined;}); return t?SVC_ORDER[t]:99; }
   var sorted = srcList.slice().sort(function(a, b) {
     if (triRecettes === 'za') return (b.nom||'').localeCompare((a.nom||''), 'fr');
-    if (triRecettes === 'recent') return (b._fbKey||'').localeCompare(a._fbKey||'');
+    if (triRecettes === 'recent') { var ka=a._fbKey||'',kb=b._fbKey||''; return kb>ka?1:kb<ka?-1:0; }
     if (triRecettes === 'service') {
       var sa=getSvcOrder(a), sb=getSvcOrder(b);
       if (sa!==sb) return sa-sb;
