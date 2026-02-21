@@ -12,8 +12,7 @@ https://github.com/medwinrumo/menu-de-la-semaine
 
 ## Hébergement
 - Vercel (connecté au dépôt GitHub, déploiement automatique à chaque push)
-- URL actuelle : https://menus.medwinrumo.fr
-- URL finale souhaitée : https://menus.hebdo.fr
+- URL : https://menus.namour.eu
 - DNS géré par Squarespace (domaine Google Workspace)
 - Pour redéployer manuellement : dashboard Vercel → projet → bouton "Redeploy"
 
