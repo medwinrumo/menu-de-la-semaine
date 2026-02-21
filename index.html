@@ -24,7 +24,11 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .pnl{display:none}.pnl.on{display:block;animation:fu .25s ease}
 @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;margin-bottom:20px}
-.day{background:var(--card);border-radius:var(--r2);padding:16px;box-shadow:var(--sh);border:1px solid var(--border)}
+.day{background:var(--card);border-radius:var(--r2);padding:16px;box-shadow:var(--sh);border:1px solid var(--border);position:relative}
+.day-cb{position:absolute;top:10px;right:10px;cursor:pointer;width:16px;height:16px;accent-color:var(--acc)}
+.tp-sel-cb{cursor:pointer;accent-color:var(--acc);margin-right:8px;width:15px;height:15px;flex-shrink:0}
+#tp-send-btn{padding:5px 11px;background:var(--acc);color:#fff;border:none;border-radius:6px;font-size:.78rem;cursor:pointer}
+#tp-send-btn:hover{opacity:.85}
 .day h3{color:var(--acc);font-size:.95rem;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid var(--acc)}
 .meal{margin-bottom:8px;padding:8px 10px;background:var(--bg);border-radius:var(--r);border-left:3px solid var(--acc)}
 .ml{font-weight:700;color:var(--acc);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
@@ -509,7 +513,10 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <!-- ===== TOUS MES PRODUITS ===== -->
 <div id="tous-produits" class="pnl">
 <div class="shop">
-<h2>📦 Mes produits</h2>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+  <h2 style="margin:0">📦 Mes produits</h2>
+  <button id="tp-send-btn" onclick="envoyerProduitsSelectionnes()" title="Envoyer les produits sélectionnés dans la liste de courses" style="display:none">→ Courses</button>
+</div>
 <p class="mr-sub">Votre catalogue personnel. Les nouveaux produits arrivent dans « ⏳ À ajouter » — confirmez ceux que vous voulez garder.</p>
 <div class="tp-bar">
   <input type="search" id="tp-search" class="mr-search-input" placeholder="🔍 Rechercher un produit…" oninput="afficherTousProduits()">
@@ -602,6 +609,7 @@ var g=document.getElementById('weekgrid');g.innerHTML='';
 J.forEach(function(j,i){
 g.innerHTML+=
 '<div class="day" id="day-'+i+'">' +
+'<input type="checkbox" class="day-cb"'+(j.enCourses?' checked':'')+' title="Envoyer les ingrédients dans la liste de courses" onchange="toggleEnCourses('+i+',this.checked)">' +
 '<h3>'+j.nom+'</h3>'+
 '<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+(j.pdj||'')+'</div></div>'+
 '<div class="meal"><div class="ml">🥗 Midi</div><div class="mc">'+(j.col||'')+'</div></div>'+
@@ -626,6 +634,42 @@ g.innerHTML+=
 });
 }
 rW();
+
+function addIngredientsJour(idx){
+  var j=J[idx];if(!j)return;
+  var jourNom=j.nom||'Jour '+idx;var abbrev=jourNom.substring(0,3);
+  function truncNom(s){if(!s||s.length<=16)return s||'';var cut=s.lastIndexOf(' ',15);return s.substring(0,cut>0?cut:15)+'…';}
+  var rawDI=j.dinerItems;
+  var dinerItems=rawDI?(Array.isArray(rawDI)?rawDI:Object.values(rawDI).filter(Boolean)):null;
+  if(dinerItems&&dinerItems.length){
+    dinerItems.forEach(function(dit){
+      if(!dit.recette)return;
+      var labelDit=abbrev+' — '+truncNom(dit.nom);
+      var ings=dit.recette.coursesAAjouter||toArr(dit.recette.ingredients||[]).map(function(ing){return {nom:ing,rayon:devinerRayon(ing)};});
+      ings.forEach(function(item){addCourseItem(item.nom,item.rayon,labelDit,dit.nom,idx);});
+    });
+  } else if(j.recette&&j.recette.coursesAAjouter){
+    var labelRec=abbrev+' — '+truncNom(j.recette.nom);
+    j.recette.coursesAAjouter.forEach(function(item){addCourseItem(item.nom,item.rayon,labelRec,j.recette.nom,idx);});
+  }
+  if(j.recetteGou&&j.gou){
+    var labelGou=abbrev+' — '+truncNom(j.gou);
+    var gouIngs=j.recetteGou.coursesAAjouter||toArr(j.recetteGou.ingredients||[]).map(function(ing){return {nom:ing,rayon:devinerRayon(ing)};});
+    gouIngs.forEach(function(item){addCourseItem(item.nom,item.rayon,labelGou,j.gou,idx);});
+  }
+  mC();
+}
+
+function toggleEnCourses(idx,checked){
+  J[idx].enCourses=checked;
+  if(!checked){
+    document.querySelectorAll('#liste-principale .sitem[data-jourIdx="'+idx+'"]').forEach(function(l){l.remove();});
+    mC();
+  } else {
+    addIngredientsJour(idx);
+  }
+  if(db)db.ref('menus/'+J[idx].date+'/enCourses').set(checked||null);
+}
 
 function tab(id,btn){
 document.querySelectorAll('.pnl').forEach(function(p){p.classList.remove('on')});
@@ -1062,7 +1106,7 @@ function executerActionChat(action) {
       var recipeDiv = document.getElementById('recipe-'+idx);
       if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
       rebuilderListeRecettes(J);
-      if(db) db.ref('menus/'+J[idx].date).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems});
+      if(db) db.ref('menus/'+J[idx].date).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems, enCourses:J[idx].enCourses||null});
       ajouterMsg('bot','✅ Planning mis à jour !','msg-action');
     }
   } else if (action.type === 'generer_semaine') {
@@ -1419,11 +1463,16 @@ function rebuilderListeRecettes(menus) {
   document.querySelectorAll('#liste-principale .sitem[data-recipe]').forEach(function(l){ l.remove(); });
   var entries = Array.isArray(menus)
     ? menus.map(function(m, i){ return {idx:i, m:m}; })
-    : Object.keys(menus || {}).map(function(k){ return {idx:parseInt(k), m:menus[k]}; });
+    : Object.keys(menus || {}).map(function(k){
+        var idx=J.findIndex(function(j){return j.date===k;});
+        return {idx:idx, m:menus[k]};
+      });
   entries.forEach(function(entry) {
     var idx = entry.idx;
     var m = entry.m;
-    if (!m) return;
+    if (!m || idx === -1) return;
+    // N'ajouter que les jours cochés "→ Courses"
+    if (!J[idx] || !J[idx].enCourses) return;
     var jourNom = m.nom || 'Jour ' + idx;
     var abbrev = jourNom.substring(0, 3); // "Sam", "Dim", "Lun"...
     function truncNom(s) { if(!s||s.length<=16)return s||''; var cut=s.lastIndexOf(' ',15); return s.substring(0,cut>0?cut:15)+'…'; }
@@ -1593,7 +1642,8 @@ function cuisinerCetteSemaine() {
     if (db) db.ref('menus/'+J[idx].date).set({
       nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
       dinerItems: J[idx].dinerItems||null,
-      gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null
+      gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null,
+      enCourses: J[idx].enCourses||null
     });
   });
 
@@ -2208,7 +2258,8 @@ function supprimerService(idx, type) {
   if (db) db.ref('menus/'+J[idx].date).set({
     nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
     dinerItems: J[idx].dinerItems||null,
-    gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null
+    gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null,
+    enCourses: J[idx].enCourses||null
   });
 }
 
@@ -2219,7 +2270,8 @@ function supprimerGouteur(idx) {
   if (db) db.ref('menus/'+J[idx].date).set({
     nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
     dinerItems: J[idx].dinerItems||null,
-    gou: null, recetteGou: null
+    gou: null, recetteGou: null,
+    enCourses: J[idx].enCourses||null
   });
   rW();
 }
@@ -2315,7 +2367,7 @@ function accepterRecette() {
   var recipeDiv = document.getElementById('recipe-'+idx);
   if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
   rebuilderListeRecettes(J);
-  if (db) db.ref('menus/'+J[idx].date).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems});
+  if (db) db.ref('menus/'+J[idx].date).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems, enCourses:J[idx].enCourses||null});
   fermerModal();
 }
 
@@ -2334,6 +2386,7 @@ var ingredientsFirebase=null;
 var produitsHabituels=[];
 var tpFiltresActifs={};
 var tpVueAjouter=false;
+var tpSelectionnes={};
 function fbKey(nom){return nom.replace(/[.#$[\]/]/g,'-').replace(/\s+/g,'_').substring(0,60);}
 
 function appliquerIngredientsFirebase(ingredients){
@@ -2458,6 +2511,9 @@ db.ref('/').on('value',function(snapshot){
       var newGou=fbM.gou||null;
       if(J[idx].gou!==newGou){ J[idx].gou=newGou; needRW=true; }
       J[idx].recetteGou=fbM.recetteGou||null;
+      // Sync enCourses
+      var newEC=fbM.enCourses||false;
+      if(J[idx].enCourses!==newEC){ J[idx].enCourses=newEC; needRW=true; }
       // Sync recette
       if(fbM.recette){
         var localNom=J[idx].recette?J[idx].recette.nom:null;
@@ -2588,12 +2644,47 @@ function afficherTousProduits(){
   items=items.slice().sort(function(a,b){return a.rayon!==b.rayon?a.rayon.localeCompare(b.rayon):a.nom.localeCompare(b.nom);});
   liste.innerHTML=items.map(function(p){
     var keyEsc=(p._fbKey||'').replace(/'/g,"\\'");
+    var estCoche=!!tpSelectionnes[p._fbKey];
     return '<div class="tp-item">'+
+      '<input type="checkbox" class="tp-sel-cb"'+(estCoche?' checked':'')+' onchange="tpToggleSel(\''+keyEsc+'\',this.checked)">'+
       '<span class="tp-nom">'+p.nom+'</span>'+
       '<span class="tp-rayon-badge">'+(TP_RAYON_LABELS[p.rayon]||p.rayon)+'</span>'+
       '<button class="tp-btn-del" onclick="supprimerProduitHabitude(\''+keyEsc+'\')" title="Supprimer du catalogue">✕</button>'+
       '</div>';
   }).join('');
+  var sendBtn=document.getElementById('tp-send-btn');
+  if(sendBtn)sendBtn.style.display=Object.keys(tpSelectionnes).length>0?'':'none';
+}
+
+function tpToggleSel(key,checked){
+  if(checked)tpSelectionnes[key]=true;
+  else delete tpSelectionnes[key];
+  var btn=document.getElementById('tp-send-btn');
+  if(btn)btn.style.display=Object.keys(tpSelectionnes).length>0?'':'none';
+}
+
+function envoyerProduitsSelectionnes(){
+  var count=0;
+  Object.keys(tpSelectionnes).forEach(function(key){
+    var p=produitsHabituels.find(function(x){return x._fbKey===key;});
+    if(!p)return;
+    var c=document.querySelector('.si[data-cat="'+p.rayon+'"]');
+    if(!c)return;
+    var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
+    var dejaDansDOM=false;
+    document.querySelectorAll('.sitem .sn').forEach(function(el){if(el.textContent===p.nom)dejaDansDOM=true;});
+    if(!dejaDansDOM){
+      var l=document.createElement('label');l.className='sitem';
+      l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+p.nom+'</span><span class="sr">Mes produits</span>';
+      c.appendChild(l);
+      if(db){var aRef=db.ref('courses/ajoutes').push({nom:p.nom,rayon:p.rayon});l.dataset.ajoutesKey=aRef.key;}
+      count++;
+    }
+  });
+  tpSelectionnes={};
+  afficherTousProduits();
+  mC();
+  if(count>0){var tab=document.querySelectorAll('.tabs button')[2];if(tab)tab.click();}
 }
 
 function selFiltreTP(btn){
