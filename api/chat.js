@@ -74,6 +74,13 @@ Pour mettre à jour le profil de l'utilisateur (préférences, aversions, restri
 Champs valides : "aime" (plats/ingrédients appréciés), "naime_pas" (à éviter), "restrictions" (allergies, intolérances), "notes_sante" (évolutions du bilan de santé), "notes_nutrition" (notes libres nutrition)
 Exemples : "Je déteste le fenouil" → champ "naime_pas", valeur "fenouil" | "J'adore les lentilles" → champ "aime", valeur "lentilles" | "Je suis intolérant au gluten" → champ "restrictions", valeur "intolérance gluten"
 
+Pour créer une nouvelle recette et l'ajouter à la bibliothèque "Mes Recettes" (quand l'utilisateur décrit ou demande une recette à sauvegarder) :
+{"reponse":"J'ai créé cette recette et je l'ai ajoutée à ta bibliothèque Mes Recettes.","action":{"type":"creer_recette","recette":{"nom":"Nom complet de la recette","emoji":"🥘","description":"Description courte 1-2 phrases","prepTime":"15 min","cookTime":"30 min","ingredients":["200g de poulet","2 gousses d'ail","1 c.s. huile d'olive"],"etapes":["Étape 1 détaillée","Étape 2 détaillée","Étape 3 détaillée"],"astuces":["Conseil pratique"],"infosSante":["Point nutritionnel pertinent"],"tags":["plat principal","volaille","terroir français"]}}}
+
+Pour créer une nouvelle recette, l'ajouter à la bibliothèque ET la planifier dans le menu de la semaine :
+{"reponse":"J'ai créé cette recette, ajoutée à ta bibliothèque et planifiée pour lundi.","action":{"type":"creer_et_planifier","jour_idx":2,"recette":{"nom":"Nom complet","emoji":"🥘","description":"Description courte","prepTime":"15 min","cookTime":"30 min","ingredients":["ingrédient 1","ingrédient 2"],"etapes":["Étape 1","Étape 2","Étape 3"],"astuces":["Conseil"],"infosSante":["Info santé"],"tags":["plat principal","légumineuses"],"coursesAAjouter":[{"nom":"ingrédient","rayon":"legumes"}]}}}
+Rappel jours (jour_idx) : 0=Samedi, 1=Dimanche, 2=Lundi, 3=Mardi, 4=Mercredi, 5=Jeudi, 6=Vendredi
+
 Rayons disponibles pour ajouter_courses : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers
 
 ## RÈGLES DE RÉPONSE

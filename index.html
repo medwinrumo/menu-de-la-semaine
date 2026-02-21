@@ -1285,6 +1285,50 @@ function executerActionChat(action) {
       if (db) db.ref('profil/' + action.champ).set(profilExtra[action.champ]);
       ajouterMsg('bot','✅ Profil mis à jour : « '+action.valeur+' » ajouté dans "'+action.champ+'"','msg-action');
     }
+  } else if (action.type === 'creer_recette' && action.recette) {
+    var nr = action.recette;
+    nr.favoris = false;
+    if (!nr.astuces) nr.astuces = [];
+    if (!nr.infosSante) nr.infosSante = [];
+    if (!nr.tags) nr.tags = [];
+    if (db) {
+      db.ref('recettes_perso').push(nr);
+    } else {
+      recettesPerso.push(nr);
+      afficherRecettesPerso();
+    }
+    ajouterMsg('bot', '✅ « ' + nr.nom + ' » créée et ajoutée à Mes Recettes !', 'msg-action');
+  } else if (action.type === 'creer_et_planifier' && action.recette) {
+    var nr2 = action.recette;
+    nr2.favoris = false;
+    if (!nr2.astuces) nr2.astuces = [];
+    if (!nr2.infosSante) nr2.infosSante = [];
+    if (!nr2.tags) nr2.tags = [];
+    // 1. Ajouter à la bibliothèque
+    if (db) {
+      db.ref('recettes_perso').push(nr2);
+    } else {
+      recettesPerso.push(nr2);
+      afficherRecettesPerso();
+    }
+    // 2. Planifier dans le menu
+    var pidx = action.jour_idx;
+    if (pidx !== undefined && J[pidx]) {
+      if (!J[pidx].dinerItems) J[pidx].dinerItems = [];
+      var pfound = false;
+      J[pidx].dinerItems = J[pidx].dinerItems.map(function(it) {
+        if (it.type === 'plat principal') { pfound = true; return {type:'plat principal', nom:nr2.nom, recette:nr2}; }
+        return it;
+      });
+      if (!pfound) J[pidx].dinerItems.push({type:'plat principal', nom:nr2.nom, recette:nr2});
+      recomputeDin(pidx);
+      rW();
+      var pRecipeDiv = document.getElementById('recipe-'+pidx);
+      if (pRecipeDiv) { pRecipeDiv.innerHTML = buildMultiRecipeDiv(pidx); initIngredients(); }
+      rebuilderListeRecettes(J);
+      if (db) db.ref('menus/'+J[pidx].date).set({nom:J[pidx].nom, din:J[pidx].din, dn:J[pidx].dn, recette:J[pidx].recette||null, dinerItems:J[pidx].dinerItems, enCourses:J[pidx].enCourses||null});
+    }
+    ajouterMsg('bot', '✅ « ' + nr2.nom + ' » créée, ajoutée à Mes Recettes' + (pidx !== undefined ? ' et planifiée !' : ' !'), 'msg-action');
   }
 }
 
