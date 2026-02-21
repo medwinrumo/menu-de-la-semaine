@@ -987,7 +987,18 @@ function importerRecetteUrl() {
     if (data.error) { toast('❌ ' + data.error); return; }
     data.favoris = false;
     if (db) {
-      db.ref('recettes_perso').push(data);
+      db.ref('recettes_perso').push(data)
+        .then(function() {
+          document.getElementById('scrape-url-input').value = '';
+          toast('✅ « ' + data.nom + ' » ajoutée à Mes recettes !');
+          // Naviguer vers "Mes recettes" pour confirmer visuellement
+          var btnMr = document.querySelectorAll('.tabs button')[3];
+          if (btnMr) btnMr.click();
+        })
+        .catch(function(err) {
+          toast('❌ Erreur sauvegarde : ' + err.message);
+        });
+      return; // la suite est dans le .then()
     } else {
       recettesPerso.push(data);
       afficherRecettesPerso();
@@ -1364,7 +1375,7 @@ function afficherRecettesPerso(liste) {
 
   var sorted = srcList.slice().sort(function(a, b) {
     if (!!b.favoris !== !!a.favoris) return b.favoris ? 1 : -1;
-    return a.nom.localeCompare(b.nom, 'fr');
+    return (a.nom||'').localeCompare((b.nom||''), 'fr');
   });
 
   if (!sorted.length) {
