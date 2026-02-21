@@ -162,8 +162,10 @@ function parseDuration(iso) {
 }
 
 function formatRecipe(r, url, ogImage) {
-  const instructions = r.recipeInstructions || [];
-  const etapes = instructions.map(function(step) {
+  // recipeInstructions peut être un objet unique (HowToStep), un tableau, ou une chaîne
+  const rawInstr = r.recipeInstructions;
+  const instrArr = Array.isArray(rawInstr) ? rawInstr : rawInstr ? [rawInstr] : [];
+  const etapes = instrArr.map(function(step) {
     if (typeof step === 'string') return step.trim();
     return (step.text || step.name || '').trim();
   }).filter(Boolean);
