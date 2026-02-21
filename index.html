@@ -617,6 +617,13 @@ function toDateStr(d){var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,
   var fin = new Date(today); fin.setDate(today.getDate() + 6);
   var el = document.getElementById('wk-label');
   if (el) el.textContent = '📅 ' + joursNomsFr[today.getDay()] + ' ' + today.getDate() + ' ' + moisCourt[today.getMonth()] + ' → ' + joursNomsFr[fin.getDay()] + ' ' + fin.getDate() + ' ' + moisCourt[fin.getMonth()] + ' ' + fin.getFullYear();
+  var sub = document.getElementById('courses-sub');
+  if (sub) {
+    var labelSub = today.getMonth() === fin.getMonth()
+      ? 'Semaine du ' + today.getDate() + ' au ' + fin.getDate() + ' ' + moisFr[fin.getMonth()] + ' ' + fin.getFullYear()
+      : 'Semaine du ' + today.getDate() + ' ' + moisFr[today.getMonth()] + ' au ' + fin.getDate() + ' ' + moisFr[fin.getMonth()] + ' ' + fin.getFullYear();
+    sub.textContent = labelSub;
+  }
 })();
 function rW(){
 var g=document.getElementById('weekgrid');g.innerHTML='';
