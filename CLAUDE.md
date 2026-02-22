@@ -126,6 +126,12 @@ Création du fichier de contexte projet.
   - `initTagDndTouch(content)` pour mobile (touchstart/touchmove/touchend)
 - Taxonomie personnalisée sauvegardée Firebase (`tag_taxonomy_custom`)
 
+### Améliorations UX — 22 février 2026 ✅ TERMINÉ
+- **Titre recette** : `.recipe-title-link` → underline fin solide (`text-decoration-thickness:1px`) au lieu de pointillé
+- **Bouton "Cuisiner cette semaine"** : `position:fixed` en bas d'écran, visible uniquement quand ≥ 1 recette cochée dans Mes Recettes
+  - Fonction `majBtnCuisiner()` appelée par `toggleRecetteJour()` et `tab()`
+  - `#mesrecettes.on` a `padding-bottom:70px` pour ne pas masquer la dernière recette
+
 ---
 
 ---
