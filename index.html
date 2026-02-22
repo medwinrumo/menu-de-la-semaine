@@ -713,7 +713,7 @@ function tab(id,btn){
 document.querySelectorAll('.pnl').forEach(function(p){p.classList.remove('on')});
 document.querySelectorAll('.tabs button').forEach(function(b){b.classList.remove('on')});
 document.getElementById(id).classList.add('on');btn.classList.add('on');
-var bc=document.getElementById('btn-cuisiner');if(bc)bc.style.display=(id==='mesrecettes')?'block':'none';
+majBtnCuisiner();
 }
 function sTo(id){if(filtreManuelActif)toggleFiltreManuel();var e=document.getElementById(id);if(e)e.scrollIntoView({behavior:'smooth',block:'start'});}
 
@@ -1594,6 +1594,14 @@ function toggleRecetteJour(k) {
   if (!cb || !jourDiv || !card) return;
   jourDiv.style.display = cb.checked ? 'flex' : 'none';
   card.classList.toggle('selected', cb.checked);
+  majBtnCuisiner();
+}
+function majBtnCuisiner() {
+  var bc = document.getElementById('btn-cuisiner');
+  if (!bc) return;
+  var tabActive = document.getElementById('mesrecettes').classList.contains('on');
+  var nbCoches = document.querySelectorAll('#mes-recettes-liste .recette-card-check:checked').length;
+  bc.style.display = (tabActive && nbCoches > 0) ? 'block' : 'none';
 }
 
 function buildRecipeDiv(idx, r) {
