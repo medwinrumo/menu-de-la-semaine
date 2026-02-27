@@ -120,9 +120,14 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;padding:10px 22px;border-radius:20px;font-size:.84rem;font-weight:600;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,.2);pointer-events:none;animation:fu .2s ease}
 .btn-back{margin-bottom:14px;padding:6px 14px;background:var(--accL);color:var(--acc);border:1px solid var(--acc);border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer}
 .btn-back:hover{background:var(--acc);color:#fff}
-.recipe ul li.ing-item{cursor:pointer;border-radius:4px;transition:.12s;padding-right:6px}
+.recipe ul li.ing-item{cursor:pointer;border-radius:4px;transition:.12s;padding-right:26px;position:relative}
 .recipe ul li.ing-item:hover{background:var(--accL);padding-left:22px}
 .recipe ul li.ing-item:hover::after{content:" ✏️";font-size:.65rem;opacity:.7}
+.ing-del-btn{position:absolute;right:2px;top:50%;transform:translateY(-50%);padding:1px 5px;background:none;border:none;color:transparent;cursor:pointer;font-size:.65rem;border-radius:3px;transition:.1s;line-height:1}
+.ing-item:hover .ing-del-btn{color:var(--txt2)}
+.ing-item:hover .ing-del-btn:hover{color:#c0392b;background:rgba(192,57,43,.1)}
+.ing-add-btn{display:block;margin:4px 0 0;padding:5px 10px;background:none;border:1px dashed var(--border);border-radius:var(--r);font-size:.78rem;color:var(--txt2);cursor:pointer;width:100%;text-align:left;transition:.15s;box-sizing:border-box}
+.ing-add-btn:hover{border-color:var(--acc);color:var(--acc);background:var(--accL)}
 .ing-edit{display:flex;gap:4px;align-items:center;flex-wrap:wrap;padding:3px 0 3px 0;list-style:none}
 .ing-edit input{flex:1;min-width:90px;padding:5px 8px;border:2px solid var(--acc);border-radius:4px;font-size:.82rem;background:var(--card);color:var(--txt)}
 .ing-edit select{padding:4px 5px;border:1px solid var(--border);border-radius:4px;font-size:.7rem;background:var(--card);color:var(--txt2)}
@@ -891,12 +896,24 @@ function initIngredients() {
   document.querySelectorAll('.recipe ul li').forEach(function(li) {
     li.classList.add('ing-item');
     li.onclick = function() { editerIngredient(this); };
+    ajouterBtnSupprimerIng(li);
+  });
+  // Bouton ＋ Ajouter après chaque ul d'ingrédients
+  document.querySelectorAll('.recipe ul[data-rmkey]').forEach(function(ul) {
+    if (!ul.nextElementSibling || !ul.nextElementSibling.classList.contains('ing-add-btn')) {
+      var btn = document.createElement('button');
+      btn.className = 'ing-add-btn';
+      btn.setAttribute('data-rmkey', ul.dataset.rmkey);
+      btn.textContent = '＋ Ajouter un ingrédient';
+      btn.onclick = function() { afficherFormAjoutIng(this); };
+      ul.parentNode.insertBefore(btn, ul.nextSibling);
+    }
   });
   document.querySelectorAll('.recipe h4').forEach(function(h4) {
-    if (h4.textContent.trim() === 'Ingrédients' && !h4.nextElementSibling.classList.contains('ing-hint')) {
+    if (h4.textContent.trim().startsWith('Ingrédients') && !h4.nextElementSibling.classList.contains('ing-hint')) {
       var hint = document.createElement('p');
       hint.className = 'ing-hint';
-      hint.textContent = '✏️ Cliquez sur un ingrédient pour le modifier';
+      hint.textContent = '✏️ Cliquez sur un ingrédient pour le modifier · ✕ pour supprimer';
       h4.parentNode.insertBefore(hint, h4.nextElementSibling);
     }
   });
@@ -906,7 +923,7 @@ function editerIngredient(li) {
   if (li.dataset.editing) return;
   var id = 'ing-' + (++ingCounter);
   li.id = id;
-  ingData[id] = li.textContent.trim();
+  ingData[id] = li.dataset.ing || li.textContent.replace(/✕\s*$/, '').trim();
   li.dataset.editing = '1';
   li.classList.remove('ing-item');
   li.onclick = null;
@@ -956,9 +973,11 @@ function ingOk(id) {
   if (!nouveau) { ingAnnuler(id); return; }
 
   li.textContent = nouveau;
+  li.dataset.ing = nouveau;
   li.classList.add('ing-item');
   if (nouveau !== ancien) li.classList.add('ing-changed');
   li.onclick = function() { editerIngredient(this); };
+  ajouterBtnSupprimerIng(li);
 
   if (nouveau === ancien) return;
 
@@ -1018,6 +1037,9 @@ function ingOk(id) {
     }
   }
   mC();
+  // Mettre à jour Mes Recettes si la recette y existe déjà
+  var rmKeyLi = li.closest('ul[data-rmkey]') && li.closest('ul[data-rmkey]').dataset.rmkey;
+  if (rmKeyLi) _sauverDansRecettesPerso(rmKeyLi);
 }
 
 function ingAnnuler(id) {
@@ -1027,8 +1049,139 @@ function ingAnnuler(id) {
   delete ingData[id];
   delete li.dataset.editing;
   li.textContent = ancien;
+  li.dataset.ing = ancien;
   li.classList.add('ing-item');
   li.onclick = function() { editerIngredient(this); };
+  ajouterBtnSupprimerIng(li);
+}
+
+// ── Bouton ✕ supprimer ingrédient ─────────────────────────────────────────────
+function ajouterBtnSupprimerIng(li) {
+  if (!li.dataset.ing) li.dataset.ing = li.textContent.replace(/✕\s*$/, '').trim();
+  if (li.querySelector('.ing-del-btn')) return;
+  var btn = document.createElement('button');
+  btn.className = 'ing-del-btn';
+  btn.textContent = '✕';
+  btn.title = 'Supprimer cet ingrédient';
+  btn.onclick = function(e) { e.stopPropagation(); supprimerIngredientLi(li); };
+  li.appendChild(btn);
+}
+
+function supprimerIngredientLi(li) {
+  var ingText = li.dataset.ing || li.textContent.replace(/✕\s*$/, '').trim();
+  if (!confirm('Supprimer « ' + ingText + ' » ?')) return;
+  var ul = li.closest('ul[data-rmkey]') || li.parentNode;
+  var rmKey = ul && ul.dataset ? ul.dataset.rmkey : null;
+  li.remove();
+  if (rmKey) {
+    var r = _rmp[rmKey];
+    if (r) {
+      r.ingredients = toArr(r.ingredients).filter(function(x) { return x !== ingText; });
+      var caa = toArr(r.coursesAAjouter || []);
+      r.coursesAAjouter = caa.filter(function(item) { return item.nom !== ingText; });
+    }
+    _saveIngChg(rmKey);
+    _sauverDansRecettesPerso(rmKey);
+  }
+  toast('🗑 Ingrédient supprimé');
+}
+
+// ── Bouton ＋ Ajouter un ingrédient ───────────────────────────────────────────
+function afficherFormAjoutIng(btn) {
+  var rmKey = btn.dataset.rmkey;
+  btn.style.display = 'none';
+  var opts = [
+    ['legumes','🥬 Légumes'],['fruits','🍎 Fruits'],['viandes','🥩 Viandes'],
+    ['laitier','🥚 Laitier'],['feculents','🌾 Féculents'],['epicerie','🫙 Épicerie'],
+    ['herbes','🌿 Herbes'],['oleagineux','🥜 Oléagineux'],['boulangerie','🍞 Boulangerie']
+  ].map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>';}).join('');
+  var form = document.createElement('div');
+  form.id = 'ing-add-form-' + rmKey;
+  form.className = 'ing-edit';
+  form.style.cssText = 'margin:4px 0';
+  form.innerHTML =
+    '<input id="inp-add-'+rmKey+'" type="text" placeholder="ex: 200g de lentilles…" onkeydown="if(event.key===\'Enter\'){event.preventDefault();confirmerAjoutIng(\''+rmKey+'\')}if(event.key===\'Escape\')annulerAjoutIng(\''+rmKey+'\')">'+
+    '<select id="sel-add-'+rmKey+'">'+opts+'</select>'+
+    '<button class="ing-btn-ok" onclick="confirmerAjoutIng(\''+rmKey+'\')">✓</button>'+
+    '<button class="ing-btn-cancel" onclick="annulerAjoutIng(\''+rmKey+'\')">✕</button>';
+  btn.parentNode.insertBefore(form, btn);
+  setTimeout(function(){ var inp = document.getElementById('inp-add-'+rmKey); if (inp) inp.focus(); }, 0);
+}
+
+function confirmerAjoutIng(rmKey) {
+  var inp = document.getElementById('inp-add-'+rmKey);
+  var sel = document.getElementById('sel-add-'+rmKey);
+  var ingText = inp ? inp.value.trim() : '';
+  var rayon = sel ? sel.value : 'epicerie';
+  if (!ingText) { annulerAjoutIng(rmKey); return; }
+  var ul = document.querySelector('.recipe ul[data-rmkey="'+rmKey+'"]');
+  if (ul) {
+    var li = document.createElement('li');
+    li.textContent = ingText;
+    li.dataset.ing = ingText;
+    li.classList.add('ing-item');
+    li.onclick = function() { editerIngredient(this); };
+    ul.appendChild(li);
+    ajouterBtnSupprimerIng(li);
+  }
+  var r = _rmp[rmKey];
+  if (r) {
+    var ings = toArr(r.ingredients); ings.push(ingText); r.ingredients = ings;
+    var caa = toArr(r.coursesAAjouter || []); caa.push({nom: ingText, rayon: rayon}); r.coursesAAjouter = caa;
+  }
+  var form = document.getElementById('ing-add-form-'+rmKey);
+  if (form) form.remove();
+  var addBtn = document.querySelector('.ing-add-btn[data-rmkey="'+rmKey+'"]');
+  if (addBtn) addBtn.style.display = '';
+  _saveIngChg(rmKey);
+  _sauverDansRecettesPerso(rmKey);
+  toast('✅ Ingrédient ajouté');
+}
+
+function annulerAjoutIng(rmKey) {
+  var form = document.getElementById('ing-add-form-'+rmKey);
+  if (form) form.remove();
+  var addBtn = document.querySelector('.ing-add-btn[data-rmkey="'+rmKey+'"]');
+  if (addBtn) addBtn.style.display = '';
+}
+
+// ── Persistance : menus Firebase ──────────────────────────────────────────────
+function _saveIngChg(rmKey) {
+  if (!db) return;
+  var m = rmKey.match(/^r(\d+)_/);
+  if (!m) return;
+  var dayIdx = parseInt(m[1]);
+  if (!J[dayIdx] || !J[dayIdx].date) return;
+  db.ref('menus/'+J[dayIdx].date).set({
+    nom:J[dayIdx].nom, pdj:J[dayIdx].pdj||null, col:J[dayIdx].col||null,
+    din:J[dayIdx].din||null, dn:J[dayIdx].dn||null,
+    recette:J[dayIdx].recette||null, dinerItems:J[dayIdx].dinerItems||null,
+    gou:J[dayIdx].gou||null, recetteGou:J[dayIdx].recetteGou||null, enCourses:J[dayIdx].enCourses||null
+  });
+}
+
+// ── Persistance : Mes Recettes ────────────────────────────────────────────────
+function _sauverDansRecettesPerso(rmKey) {
+  var r = _rmp[rmKey];
+  if (!r || !r.nom) return;
+  var existing = recettesPerso.find(function(rp) { return rp.nom.toLowerCase() === r.nom.toLowerCase(); });
+  if (existing && existing._fbKey && db) {
+    db.ref('recettes_perso/'+existing._fbKey+'/ingredients').set(toArr(r.ingredients));
+    if (r.coursesAAjouter) db.ref('recettes_perso/'+existing._fbKey+'/coursesAAjouter').set(toArr(r.coursesAAjouter));
+    existing.ingredients = toArr(r.ingredients);
+  } else if (!existing) {
+    var recette = {
+      nom: r.nom, emoji: r.emoji||'🥘', description: r.description||'',
+      prepTime: r.prepTime||'—', cookTime: r.cookTime||'—',
+      ingredients: toArr(r.ingredients), etapes: toArr(r.etapes||[]),
+      astuces: toArr(r.astuces||[]), infosSante: toArr(r.infosSante||[]),
+      tags: toArr(r.tags||[]), coursesAAjouter: toArr(r.coursesAAjouter||[]),
+      image: r.image||null, source:'Semaine', favoris: false
+    };
+    if (db) db.ref('recettes_perso').push(recette);
+    else { recettesPerso.push(recette); afficherRecettesPerso(); }
+    toast('📚 Recette sauvegardée dans Mes Recettes');
+  }
 }
 
 // ===== SITES RESSOURCES =====
@@ -1680,7 +1833,7 @@ function buildRecipeDiv(idx, r) {
     '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+nom+'</span></div>' +
     (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
     '<h4>Ingrédients</h4>' +
-    '<ul>'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
+    '<ul data-rmkey="'+rmKey+'">'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
     '<h4>Préparation <button class="btn-prep-detail" onclick="event.stopPropagation();chargerDetailPrep(\''+rmKey+'\',this)">🍳 Détails</button></h4>' +
     '<ol>'+toArr(r.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKey+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
 }
@@ -1805,7 +1958,7 @@ function buildMultiRecipeDiv(idx) {
       '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKey+'\')">'+(r.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKey+'\',this)" title="Modifier le titre">✏️</button><button class="btn-copy-recette" onclick="event.stopPropagation();copierRecette(\''+rmKey+'\')" title="Copier la recette">📋</button></div><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
       '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+dayNom+'</span></div>' +
       (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
-      '<h4>Ingrédients</h4><ul>'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
+      '<h4>Ingrédients</h4><ul data-rmkey="'+rmKey+'">'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
       '<h4>Préparation <button class="btn-prep-detail" onclick="event.stopPropagation();chargerDetailPrep(\''+rmKey+'\',this)">🍳 Détails</button></h4><ol>'+toArr(r.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKey+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
   });
   if (J[idx].gou && J[idx].recetteGou) {
@@ -1813,7 +1966,7 @@ function buildMultiRecipeDiv(idx) {
     var rmKeyG = 'r'+idx+'_gou'; _rmp[rmKeyG] = rg;
     html += '<div style="margin:20px 0 8px"><span class="service-tag-badge lg">☕ Goûter</span></div>' +
       '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKeyG+'\')">'+(rg.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKeyG+'\',this)" title="Modifier le titre">✏️</button><button class="btn-copy-recette" onclick="event.stopPropagation();copierRecette(\''+rmKeyG+'\')" title="Copier la recette">📋</button></div><div class="r-ico">'+(rg.emoji||'☕')+'</div></div>' +
-      '<h4>Ingrédients</h4><ul>'+toArr(rg.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
+      '<h4>Ingrédients</h4><ul data-rmkey="'+rmKeyG+'">'+toArr(rg.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
       '<h4>Préparation <button class="btn-prep-detail" onclick="event.stopPropagation();chargerDetailPrep(\''+rmKeyG+'\',this)">🍳 Détails</button></h4><ol>'+toArr(rg.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKeyG+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
   }
   return html;
