@@ -134,6 +134,9 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .edit-titre-btn:hover{opacity:1}
 .btn-copy-recette{background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.35;padding:0;flex-shrink:0;transition:.15s}
 .btn-copy-recette:hover{opacity:1}
+.btn-prep-detail{background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:.7rem;color:var(--txt2);padding:2px 7px;opacity:.65;vertical-align:middle;margin-left:8px;transition:.15s}
+.btn-prep-detail:hover{opacity:1;color:var(--acc);border-color:var(--acc)}
+.prep-detail-plan{font-size:.87rem;line-height:1.75;background:var(--bg2);border-radius:8px;padding:14px 16px;margin-top:8px;white-space:pre-wrap}
 .edit-titre-input{flex:1;font-size:1.1rem;font-weight:700;color:var(--acc);border:2px solid var(--acc);border-radius:6px;padding:4px 8px;background:var(--card);width:100%;font-family:inherit}
 .recipe ol li.etape-item{cursor:pointer;border-radius:4px;transition:.12s}
 .recipe ol li.etape-item:hover{background:var(--accL)}
@@ -1638,7 +1641,7 @@ function buildRecipeDiv(idx, r) {
     (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
     '<h4>Ingrédients</h4>' +
     '<ul>'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
-    '<h4>Préparation</h4>' +
+    '<h4>Préparation <button class="btn-prep-detail" onclick="event.stopPropagation();chargerDetailPrep(\''+rmKey+'\',this)">🍳 Détails</button></h4>' +
     '<ol>'+toArr(r.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKey+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
 }
 
@@ -1763,7 +1766,7 @@ function buildMultiRecipeDiv(idx) {
       '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+dayNom+'</span></div>' +
       (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
       '<h4>Ingrédients</h4><ul>'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
-      '<h4>Préparation</h4><ol>'+toArr(r.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKey+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
+      '<h4>Préparation <button class="btn-prep-detail" onclick="event.stopPropagation();chargerDetailPrep(\''+rmKey+'\',this)">🍳 Détails</button></h4><ol>'+toArr(r.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKey+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
   });
   if (J[idx].gou && J[idx].recetteGou) {
     var rg = J[idx].recetteGou;
@@ -1771,7 +1774,7 @@ function buildMultiRecipeDiv(idx) {
     html += '<div style="margin:20px 0 8px"><span class="service-tag-badge lg">☕ Goûter</span></div>' +
       '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKeyG+'\')">'+(rg.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKeyG+'\',this)" title="Modifier le titre">✏️</button><button class="btn-copy-recette" onclick="event.stopPropagation();copierRecette(\''+rmKeyG+'\')" title="Copier la recette">📋</button></div><div class="r-ico">'+(rg.emoji||'☕')+'</div></div>' +
       '<h4>Ingrédients</h4><ul>'+toArr(rg.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
-      '<h4>Préparation</h4><ol>'+toArr(rg.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKeyG+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
+      '<h4>Préparation <button class="btn-prep-detail" onclick="event.stopPropagation();chargerDetailPrep(\''+rmKeyG+'\',this)">🍳 Détails</button></h4><ol>'+toArr(rg.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKeyG+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
   }
   return html;
 }
@@ -2168,6 +2171,52 @@ function copierRecette(rmKey) {
   navigator.clipboard.writeText(lines.join('\n')).then(function() {
     toast('📋 Recette copiée !');
   }).catch(function() { toast('❌ Copie impossible'); });
+}
+
+function chargerDetailPrep(rmKey, btn) {
+  var r = _rmp[rmKey];
+  if (!r) return;
+  var h4 = btn.parentElement;
+
+  // Bascule retour vue standard
+  if (btn.dataset.mode === 'detail') {
+    var cur = h4.nextElementSibling;
+    if (cur) { cur.insertAdjacentHTML('afterend', btn.dataset.origHtml); cur.remove(); }
+    btn.textContent = '🍳 Détails';
+    btn.removeAttribute('data-mode');
+    btn.removeAttribute('data-orig-html');
+    return;
+  }
+
+  var ol = h4.nextElementSibling;
+  if (!ol) return;
+  btn.dataset.origHtml = ol.outerHTML;
+  btn.dataset.mode = 'detail';
+  btn.textContent = '⏳';
+  btn.disabled = true;
+  ol.innerHTML = '<li style="list-style:none;text-align:center;padding:20px;opacity:.6">⏳ Le chef prépare votre plan…</li>';
+
+  fetch('/api/preparation', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({nom:r.nom, prepTime:r.prepTime||'', cookTime:r.cookTime||'', ingredients:toArr(r.ingredients), etapes:toArr(r.etapes)})
+  })
+  .then(function(res){return res.json();})
+  .then(function(data){
+    if (data.error) throw new Error(data.error);
+    btn.textContent = '↩ Standard';
+    btn.disabled = false;
+    var cur2 = h4.nextElementSibling;
+    if (cur2) { cur2.insertAdjacentHTML('afterend', '<div class="prep-detail-plan">'+data.plan.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'); cur2.remove(); }
+  })
+  .catch(function(){
+    btn.textContent = '🍳 Détails';
+    btn.disabled = false;
+    btn.removeAttribute('data-mode');
+    var cur3 = h4.nextElementSibling;
+    if (cur3 && btn.dataset.origHtml) { cur3.insertAdjacentHTML('afterend', btn.dataset.origHtml); cur3.remove(); }
+    toast('❌ Erreur lors du chargement');
+  });
 }
 
 // ===== SAUVEGARDER RECETTE DU DÎNER =====
