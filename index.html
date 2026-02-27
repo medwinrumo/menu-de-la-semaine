@@ -246,6 +246,15 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 @media(prefers-color-scheme:dark){.service-tag-badge{background:rgba(251,146,60,.15);color:#fb923c}}
 .btn-fav{background:none;border:none;font-size:1rem;cursor:pointer;padding:0 2px;color:var(--txt2);opacity:.5;transition:.15s;line-height:1;flex-shrink:0}
 .btn-fav.active{opacity:1;color:#f59e0b}
+.recette-card-rating{padding:3px 0 2px 28px;display:flex;align-items:center;gap:1px;min-height:22px}
+.star-btn{background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--border);padding:0 2px;transition:.1s;line-height:1;flex-shrink:0}
+.star-btn.on{color:#f59e0b}
+.star-btn:hover{color:#f59e0b;transform:scale(1.15)}
+.recette-note-area{padding:3px 8px 3px 28px;font-size:.78rem;color:var(--txt2);cursor:pointer;border-radius:4px;transition:.1s;min-height:22px;word-break:break-word}
+.recette-note-area:hover{background:var(--accL);color:var(--acc)}
+.recette-note-area.has-note{color:var(--txt);font-style:italic}
+.note-edit-wrap{padding:4px 8px 6px 28px}
+.note-edit-area{width:100%;min-height:56px;padding:6px 8px;border:2px solid var(--acc);border-radius:6px;font-size:.82rem;background:var(--card);color:var(--txt);resize:vertical;box-sizing:border-box;margin-bottom:4px}
 @media(prefers-color-scheme:dark){.btn-fav{color:#8a9a9a}.btn-fav-filter,.btn-tag-filter{color:#e4eded}}
 .mr-search-row{margin-bottom:10px}
 .mr-search-input{width:100%;padding:9px 14px;border:2px solid var(--border);border-radius:20px;font-size:.88rem;background:var(--card);color:var(--txt);box-sizing:border-box;transition:.15s}
@@ -1755,6 +1764,11 @@ function afficherRecettesPerso(liste) {
       if (sa!==sb) return sa-sb;
       return (a.nom||'').localeCompare((b.nom||''), 'fr');
     }
+    if (triRecettes === 'etoiles') {
+      var ea=a.etoiles||0, eb=b.etoiles||0;
+      if (eb!==ea) return eb-ea;
+      return (a.nom||'').localeCompare((b.nom||''), 'fr');
+    }
     // défaut : A→Z
     return (a.nom||'').localeCompare((b.nom||''), 'fr');
   });
@@ -1787,6 +1801,10 @@ function afficherRecettesPerso(liste) {
       (r.description ? '<div class="recette-card-desc">'+(r.description)+'</div>' : '') +
       '<div style="padding:4px 0 2px 28px;display:flex;align-items:center;flex-wrap:wrap;gap:3px;min-height:22px" id="rtags-'+k+'">' +
         tags + '<button class="tags-edit-btn" onclick="ouvrePickerTag(\''+k+'\')" title="Modifier les tags">✏️</button>' +
+      '</div>' +
+      '<div class="recette-card-rating" id="rrating-'+k+'">' + renderEtoilesHtml(k, r.etoiles||0) + '</div>' +
+      '<div class="recette-note-area'+(r.note?' has-note':'')+'" id="rnote-'+k+'" onclick="editerNoteRecette(\''+k+'\')">' +
+        (r.note ? '📝 ' + r.note.replace(/</g,'&lt;').replace(/>/g,'&gt;') : '<span style="opacity:.5">📝 Ajouter une note…</span>') +
       '</div>' +
       '<div class="recette-card-jour" id="rjour-'+k+'" style="display:none">' +
         '<label>le :</label>' +
@@ -2845,7 +2863,8 @@ var TRI_OPTIONS = [
   {v:'az',      l:'A → Z'},
   {v:'za',      l:'Z → A'},
   {v:'recent',  l:'🕐 Récent'},
-  {v:'service', l:'🍽 Service'}
+  {v:'service', l:'🍽 Service'},
+  {v:'etoiles', l:'⭐ Étoiles'}
 ];
 
 function toggleTriDropdown() {
@@ -2882,6 +2901,73 @@ function setTriRecettes(tri) {
   if (btn) btn.classList.toggle('has-active', tri !== 'az');
   fermeTriDropdown();
   filtrerRecettes();
+}
+
+// ── Étoiles & Notes — Bibliothèque de recettes ───────────────────────────────
+function renderEtoilesHtml(k, n) {
+  var html = '<span style="font-size:.6rem;color:var(--txt2);margin-right:3px">Note :</span>';
+  for (var i = 1; i <= 3; i++) {
+    html += '<button class="star-btn'+(i<=n?' on':'')+'" onclick="event.stopPropagation();setEtoiles(\''+k+'\','+i+')" title="'+i+' étoile'+(i>1?'s':'')+'" >★</button>';
+  }
+  if (n > 0) html += '<button style="font-size:.6rem;background:none;border:none;cursor:pointer;color:var(--txt2);padding:0 2px;opacity:.55;line-height:1" onclick="event.stopPropagation();setEtoiles(\''+k+'\',0)" title="Effacer la note">✕</button>';
+  return html;
+}
+
+function setEtoiles(k, n) {
+  var r = recettesPersoMap[k];
+  if (!r) return;
+  r.etoiles = n || null;
+  var el = document.getElementById('rrating-'+k);
+  if (el) el.innerHTML = renderEtoilesHtml(k, n||0);
+  if (r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/etoiles').set(n||null);
+}
+
+function editerNoteRecette(k) {
+  var r = recettesPersoMap[k];
+  if (!r) return;
+  var el = document.getElementById('rnote-'+k);
+  if (!el || el.dataset.editing) return;
+  el.dataset.editing = '1';
+  var oldNote = r.note || '';
+  el.className = 'note-edit-wrap';
+  el.onclick = null;
+  el.innerHTML =
+    '<textarea class="note-edit-area" id="note-ta-'+k+'" placeholder="Votre note sur cette recette…" onkeydown="if(event.key===\'Escape\')annulerNote(\''+k+'\')">'+oldNote.replace(/</g,'&lt;')+'</textarea>' +
+    '<div style="display:flex;gap:6px">' +
+    '<button class="ing-btn-ok" onclick="sauvegarderNote(\''+k+'\')">✓ Enregistrer</button>' +
+    '<button class="ing-btn-cancel" onclick="annulerNote(\''+k+'\')">✕</button>' +
+    '</div>';
+  var ta = document.getElementById('note-ta-'+k);
+  if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+}
+
+function sauvegarderNote(k) {
+  var el = document.getElementById('rnote-'+k);
+  if (!el) return;
+  var ta = document.getElementById('note-ta-'+k);
+  var newNote = ta ? ta.value.trim() : '';
+  var r = recettesPersoMap[k];
+  if (r) r.note = newNote || null;
+  delete el.dataset.editing;
+  renderNoteEl(k, el, newNote);
+  if (r && r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/note').set(newNote||null);
+  toast(newNote ? '📝 Note sauvegardée' : '📝 Note supprimée');
+}
+
+function annulerNote(k) {
+  var el = document.getElementById('rnote-'+k);
+  if (!el) return;
+  var r = recettesPersoMap[k];
+  delete el.dataset.editing;
+  renderNoteEl(k, el, (r && r.note) || '');
+}
+
+function renderNoteEl(k, el, note) {
+  el.className = 'recette-note-area' + (note ? ' has-note' : '');
+  el.onclick = function() { editerNoteRecette(k); };
+  el.innerHTML = note
+    ? '📝 ' + note.replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    : '<span style="opacity:.5">📝 Ajouter une note…</span>';
 }
 
 function renderCardTags(k) {
