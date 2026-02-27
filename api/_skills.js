@@ -270,7 +270,14 @@ const CONTRAINTES_PRATIQUES = `
 - Cuisine : française terroir — plats simples du quotidien, pas de cuisine exotique imposée
 - Temps de préparation : max 30 minutes
 - Temps de cuisson : max 45 minutes
-- Quantité : pour 2 personnes (homme 52 ans + femme 41 ans)
+- Quantité : OBLIGATOIREMENT pour 2 personnes (homme 52 ans + femme 41 ans) — RÈGLE ABSOLUE sur les ingrédients :
+  • Viandes/volailles : 250-300g total (ex : 2 cuisses de poulet, 2 escalopes, 1 filet)
+  • Légumineuses sèches : 120-150g sec (ex : 120g de lentilles, 150g de pois chiches en boîte = ½ boîte)
+  • Légumes : 300-400g total
+  • Féculents : 120-150g sec (ex : 120g de pâtes, 150g de riz)
+  • Œufs : 3-4 maximum
+  • Fromage/crème : 30-50g maximum
+  Ne jamais indiquer "4 cuisses", "500g de viande", "1 boîte entière" pour 2 personnes.
 - Budget : raisonnable (ingrédients du marché français, pas d'exotisme coûteux)
 - Équipement : cuisine standard (pas de matériel professionnel)
 - Style attendu : blanquette allégée, potée, gratin léger, soupe, poêlée, omelette, salade composée...`.trim();
