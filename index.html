@@ -2192,6 +2192,17 @@ function chargerDetailPrep(rmKey, btn) {
   if (!ol) return;
   btn.dataset.origHtml = ol.outerHTML;
   btn.dataset.mode = 'detail';
+
+  function afficherPlan(plan) {
+    btn.textContent = '↩ Standard';
+    btn.disabled = false;
+    var cur2 = h4.nextElementSibling;
+    if (cur2) { cur2.insertAdjacentHTML('afterend', '<div class="prep-detail-plan">'+plan.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'); cur2.remove(); }
+  }
+
+  // Cache mémoire : plan déjà généré cette session → pas d'appel API
+  if (r._planDetail) { afficherPlan(r._planDetail); return; }
+
   btn.textContent = '⏳';
   btn.disabled = true;
   ol.innerHTML = '<li style="list-style:none;text-align:center;padding:20px;opacity:.6">⏳ Le chef prépare votre plan…</li>';
@@ -2204,10 +2215,8 @@ function chargerDetailPrep(rmKey, btn) {
   .then(function(res){return res.json();})
   .then(function(data){
     if (data.error) throw new Error(data.error);
-    btn.textContent = '↩ Standard';
-    btn.disabled = false;
-    var cur2 = h4.nextElementSibling;
-    if (cur2) { cur2.insertAdjacentHTML('afterend', '<div class="prep-detail-plan">'+data.plan.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'); cur2.remove(); }
+    r._planDetail = data.plan; // mise en cache mémoire
+    afficherPlan(data.plan);
   })
   .catch(function(){
     btn.textContent = '🍳 Détails';
