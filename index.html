@@ -683,7 +683,8 @@ function addIngredientsJour(idx){
     dinerItems.forEach(function(dit){
       if(!dit.recette)return;
       var labelDit=abbrev+' — '+truncNom(dit.nom);
-      var ings=dit.recette.coursesAAjouter||toArr(dit.recette.ingredients||[]).map(function(ing){return {nom:ing,rayon:devinerRayon(ing)};});
+      var caa=toArr(dit.recette.coursesAAjouter);
+      var ings=caa.length?caa:toArr(dit.recette.ingredients||[]).map(function(ing){return {nom:ing,rayon:devinerRayon(ing)};});
       ings.forEach(function(item){if(!estIngredientPlacard(item.nom))addCourseItem(item.nom,item.rayon,labelDit,dit.nom,idx);});
     });
   } else if(j.recette&&j.recette.coursesAAjouter){
@@ -1662,8 +1663,8 @@ function rebuilderListeRecettes(menus) {
       dinerItems.forEach(function(dit) {
         if (!dit.recette) return;
         var labelDit = abbrev + ' — ' + truncNom(dit.nom);
-        var ings = dit.recette.coursesAAjouter
-          || toArr(dit.recette.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
+        var caa2=toArr(dit.recette.coursesAAjouter);
+        var ings = caa2.length ? caa2 : toArr(dit.recette.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
         ings.forEach(function(item) { if(!estIngredientPlacard(item.nom)) addCourseItem(item.nom, item.rayon, labelDit, dit.nom, idx); });
       });
     } else if (m.recette && m.recette.coursesAAjouter) {
@@ -2098,15 +2099,9 @@ function selectSwap(i) {
     if (db) {
       swapInProgress = true;
       var updates = {};
-      // Utiliser les clés date (YYYY-MM-DD), pas les indices numériques
-      updates['menus/'+J[src].date+'/din'] = J[src].din;
-      updates['menus/'+J[src].date+'/dn'] = J[src].dn;
-      updates['menus/'+J[src].date+'/recette'] = J[src].recette||null;
-      updates['menus/'+J[src].date+'/dinerItems'] = J[src].dinerItems||null;
-      updates['menus/'+J[dst].date+'/din'] = J[dst].din;
-      updates['menus/'+J[dst].date+'/dn'] = J[dst].dn;
-      updates['menus/'+J[dst].date+'/recette'] = J[dst].recette||null;
-      updates['menus/'+J[dst].date+'/dinerItems'] = J[dst].dinerItems||null;
+      // Remplacement complet de l'enregistrement pour éviter les données orphelines (snap-back)
+      updates['menus/'+J[src].date] = {nom:J[src].nom, pdj:J[src].pdj||null, col:J[src].col||null, din:J[src].din||null, dn:J[src].dn||null, recette:J[src].recette||null, dinerItems:J[src].dinerItems||null, gou:J[src].gou||null, recetteGou:J[src].recetteGou||null, enCourses:J[src].enCourses||null};
+      updates['menus/'+J[dst].date] = {nom:J[dst].nom, pdj:J[dst].pdj||null, col:J[dst].col||null, din:J[dst].din||null, dn:J[dst].dn||null, recette:J[dst].recette||null, dinerItems:J[dst].dinerItems||null, gou:J[dst].gou||null, recetteGou:J[dst].recetteGou||null, enCourses:J[dst].enCourses||null};
       db.ref().update(updates).then(function(){ swapInProgress = false; })
                               .catch(function(){ swapInProgress = false; });
     }
