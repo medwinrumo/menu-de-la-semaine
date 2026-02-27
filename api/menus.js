@@ -9,11 +9,55 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   try {
-    const { jours, dateDebut, dateFin, sitesExtra, profilExtra, recettesPerso, historiqueRecettes } = req.body;
+    const { jours, dateDebut, dateFin, sitesExtra, profilExtra, recettesPerso, historiqueRecettes, mode } = req.body;
+    const isPdjCol = mode === 'pdj_col';
     const ctx = getContexteSaisonnier();
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+    // ── Mode Matin & Midi uniquement ─────────────────────────────────────────
+    if (isPdjCol) {
+      const promptPdjCol = `Tu es un nutritionniste expert spécialisé en alimentation IG bas et anti-cholestérol.
+Ta mission : proposer des petits-déjeuners et collations de midi variés et adaptés au profil santé.
+
+SEMAINE DU ${dateDebut} AU ${dateFin}
+JOURS À COUVRIR :
+${jours.map((j, i) => `Jour ${i + 1} : ${j}`).join('\n')}
+
+${getInstructionsSaisonnieres(ctx)}
+
+${PROFIL_SANTE}
+
+${getProfilDynamique(profilExtra)}
+
+STRUCTURE PETIT-DÉJEUNER (léger, IG bas, varie chaque jour) :
+- Eau citronnée + [fruit de saison] + [oléagineux] + [fromage blanc OU yaourt OU 2 œufs + pain seigle]
+
+STRUCTURE COLLATION MIDI (rapide, cru, varie chaque jour) :
+- Bâtonnets légumes + houmous OU fruits + noix OU smoothie vert OU radis + œuf dur
+
+RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
+{
+  "semaine": "Semaine du ${dateDebut} au ${dateFin}",
+  "jours": [
+    {"id": 0, "nom": "${jours[0]}", "pdj": "Eau citronnée • Fromage blanc 3% + miel • 1 pomme • 6 amandes", "col": "Bâtonnets carottes et concombre • Houmous maison"}
+  ]
+}
+
+Génère les 7 jours. Varie les petits-déjeuners et collations chaque jour, ne répète pas deux fois le même.`;
+
+      const msgPdjCol = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: promptPdjCol }]
+      });
+      const textPdjCol = msgPdjCol.content[0].text;
+      const matchPdjCol = textPdjCol.match(/\{[\s\S]*\}/);
+      if (!matchPdjCol) throw new Error('Format de réponse invalide');
+      return res.status(200).json(JSON.parse(matchPdjCol[0]));
+    }
+
+    // ── Mode complet (3 repas) ───────────────────────────────────────────────
     const prompt = `Tu es à la fois un chef cuisinier français et un nutritionniste expert.
 Ta mission : créer des menus savoureux, gastronomiquement cohérents ET adaptés au profil santé.
 

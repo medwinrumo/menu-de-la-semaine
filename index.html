@@ -164,9 +164,15 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 #btn-chat-send{padding:10px 16px;background:var(--acc);color:#fff;border:none;border-radius:14px;font-size:1.1rem;cursor:pointer;flex-shrink:0;transition:.15s}
 #btn-chat-send:hover{background:var(--acc2)}
 #btn-chat-send:disabled{opacity:.5;cursor:wait}
-.btn-gen{margin-top:12px;padding:9px 22px;background:#fde9e0;color:#1c1008;border:none;border-radius:20px;font-size:.85rem;font-weight:600;cursor:pointer;transition:.2s;display:inline-block}
+.gen-group{position:relative;display:inline-block;margin-top:12px}
+.btn-gen{padding:9px 22px;background:#fde9e0;color:#1c1008;border:none;border-radius:20px;font-size:.85rem;font-weight:600;cursor:pointer;transition:.2s;display:inline-block}
 .btn-gen:hover{background:#f5d5c8;transform:translateY(-2px)}
 .btn-gen:disabled{opacity:.6;cursor:wait;transform:none}
+.gen-popup{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg);border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.14);min-width:230px;z-index:200;overflow:hidden}
+.gen-popup.open{display:block}
+.gen-popup button{display:block;width:100%;padding:13px 18px;background:none;border:none;text-align:left;font-size:.9rem;cursor:pointer;color:var(--txt);transition:.15s;line-height:1.3}
+.gen-popup button:hover{background:var(--accL);color:var(--acc)}
+.gen-popup .gen-sep{border:none;border-top:1px solid var(--border);margin:0}
 .btn-swap{margin-top:10px;padding:7px 14px;background:var(--bg);color:var(--txt2);border:1px solid var(--border);border-radius:var(--r);font-size:.78rem;cursor:pointer;width:100%;transition:.15s;text-align:center}
 .btn-swap:hover{background:var(--accL);color:var(--acc);border-color:var(--acc)}
 .btn-swap:disabled{opacity:.5;cursor:wait}
@@ -331,7 +337,14 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <h1>🍽️ Planificateur Menus</h1>
 <div class="wk" id="wk-label">📅 Samedi 14 → Vendredi 20 février 2026</div>
 <br>
-<button id="btn-gen" class="btn-gen" onclick="genererSemaine()">🗓️ Générer la semaine</button>
+<div class="gen-group" id="gen-group">
+  <button id="btn-gen" class="btn-gen" onclick="toggleGenPopup(event)">🗓️ Générer la semaine ▾</button>
+  <div class="gen-popup" id="gen-popup">
+    <button onclick="genererSemaine(false,'pdj_col')">🌅 Matin &amp; Midi uniquement<br><small style="opacity:.65;font-weight:400">Petits-déjeuners + collations</small></button>
+    <hr class="gen-sep">
+    <button onclick="genererSemaine(false,'complet')">🍽️ Matin, Midi &amp; Soir<br><small style="opacity:.65;font-weight:400">Tous les repas + recettes dîners</small></button>
+  </div>
+</div>
 </header>
 <div class="tabs">
 <button class="on" onclick="tab('apercu',this)">📅 Semaine</button>
@@ -1364,8 +1377,22 @@ function executerActionChat(action) {
 }
 
 // ===== PHASE 7 — GÉNÉRER LA SEMAINE =====
-function genererSemaine(skipConfirm) {
-  if (!skipConfirm && !confirm('Générer de nouveaux menus pour les 7 prochains jours ?\nLes menus actuels seront remplacés.')) return;
+function toggleGenPopup(e) {
+  e.stopPropagation();
+  document.getElementById('gen-popup').classList.toggle('open');
+}
+document.addEventListener('click', function() {
+  var p = document.getElementById('gen-popup');
+  if (p) p.classList.remove('open');
+});
+
+function genererSemaine(skipConfirm, mode) {
+  mode = mode || 'complet';
+  document.getElementById('gen-popup').classList.remove('open');
+  var msgConfirm = mode === 'pdj_col'
+    ? 'Générer petits-déjeuners et collations pour les 7 prochains jours ?\nLes dîners actuels seront conservés.'
+    : 'Générer de nouveaux menus pour les 7 prochains jours ?\nLes menus actuels seront remplacés.';
+  if (!skipConfirm && !confirm(msgConfirm)) return;
   var btn = document.getElementById('btn-gen');
   btn.disabled = true;
   btn.textContent = '⏳ Génération en cours…';
@@ -1386,28 +1413,31 @@ function genererSemaine(skipConfirm) {
   fetch('/api/menus', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({jours: joursDates, dateDebut: dateDebut, dateFin: dateFin, sitesExtra: sitesExtra, profilExtra: profilExtra, recettesPerso: recettesPerso, historiqueRecettes: historiqueRecettes})
+    body: JSON.stringify({jours: joursDates, dateDebut: dateDebut, dateFin: dateFin, sitesExtra: sitesExtra, profilExtra: profilExtra, recettesPerso: recettesPerso, historiqueRecettes: historiqueRecettes, mode: mode})
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
-    appliquerNouveauxMenus(data);
+    appliquerNouveauxMenus(data, mode);
     btn.disabled = false;
-    btn.textContent = '🗓️ Générer la semaine';
+    btn.textContent = '🗓️ Générer la semaine ▾';
   })
   .catch(function() {
     alert('Erreur lors de la génération. Réessayez.');
     btn.disabled = false;
-    btn.textContent = '🗓️ Générer la semaine';
+    btn.textContent = '🗓️ Générer la semaine ▾';
   });
 }
 
-function appliquerNouveauxMenus(data) {
+function appliquerNouveauxMenus(data, mode) {
+  var isPdjCol = mode === 'pdj_col';
+
   // 1. Mettre à jour le tableau J
   data.jours.forEach(function(jour, i) {
-    if (J[i]) {
-      J[i].nom = jour.nom;
-      J[i].pdj = jour.pdj;
-      J[i].col = jour.col;
+    if (!J[i]) return;
+    J[i].nom = jour.nom;
+    J[i].pdj = jour.pdj;
+    J[i].col = jour.col;
+    if (!isPdjCol) {
       J[i].din = jour.din;
       J[i].dn = jour.dn;
       J[i].recette = jour.recette;
@@ -1423,41 +1453,51 @@ function appliquerNouveauxMenus(data) {
   // 3. Rafraîchir le planning
   rW();
 
-  // 4. Reconstruire la section Recettes
-  var recDiv = document.getElementById('recettes');
-  recDiv.innerHTML = '';
-  data.jours.forEach(function(jour, i) {
-    var r = jour.recette;
-    if (!r) return;
-    recDiv.innerHTML += '<div class="recipe" id="recipe-'+i+'">' + buildRecipeDiv(i, r) + '</div>';
-  });
-  initIngredients();
+  if (!isPdjCol) {
+    // 4. Reconstruire la section Recettes
+    var recDiv = document.getElementById('recettes');
+    recDiv.innerHTML = '';
+    data.jours.forEach(function(jour, i) {
+      var r = jour.recette;
+      if (!r) return;
+      recDiv.innerHTML += '<div class="recipe" id="recipe-'+i+'">' + buildRecipeDiv(i, r) + '</div>';
+    });
+    initIngredients();
 
-  // 5. Reconstruire la liste de courses depuis J[]
-  rebuilderListeRecettes(J);
+    // 5. Reconstruire la liste de courses depuis J[]
+    rebuilderListeRecettes(J);
+  }
 
   // 6. Sauvegarder dans Firebase
   if (db) {
     data.jours.forEach(function(jour, i) {
-      if (J[i] && J[i].date) db.ref('menus/'+J[i].date).set({nom:jour.nom, pdj:jour.pdj, col:jour.col, din:jour.din, dn:jour.dn, recette:jour.recette||null, dinerItems:J[i].dinerItems||null});
-    });
-    db.ref('ingredients').remove();
-    db.ref('courses/ajoutes').remove();
-    db.ref('courses/achetes').remove();
-    // Sauvegarder les recettes dans l'historique (mémoire 28 jours)
-    var today = toDateStr(new Date());
-    data.jours.forEach(function(jour) {
-      if (jour.recette && jour.recette.nom) {
-        db.ref('historique_recettes').push({nom: jour.recette.nom, date: today});
+      if (!J[i] || !J[i].date) return;
+      if (isPdjCol) {
+        // Mise à jour partielle : seulement pdj + col
+        db.ref('menus/'+J[i].date).update({pdj: jour.pdj||null, col: jour.col||null});
+      } else {
+        db.ref('menus/'+J[i].date).set({nom:jour.nom, pdj:jour.pdj, col:jour.col, din:jour.din, dn:jour.dn, recette:jour.recette||null, dinerItems:J[i].dinerItems||null});
       }
     });
-    // Nettoyer l'historique > 28 jours
-    var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 28);
-    var cutoffStr = toDateStr(cutoff);
-    db.ref('historique_recettes').once('value', function(snap) {
-      var h = snap.val() || {};
-      Object.keys(h).forEach(function(k) { if (h[k].date < cutoffStr) db.ref('historique_recettes/'+k).remove(); });
-    });
+    if (!isPdjCol) {
+      db.ref('ingredients').remove();
+      db.ref('courses/ajoutes').remove();
+      db.ref('courses/achetes').remove();
+      // Sauvegarder les recettes dans l'historique (mémoire 28 jours)
+      var today = toDateStr(new Date());
+      data.jours.forEach(function(jour) {
+        if (jour.recette && jour.recette.nom) {
+          db.ref('historique_recettes').push({nom: jour.recette.nom, date: today});
+        }
+      });
+      // Nettoyer l'historique > 28 jours
+      var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 28);
+      var cutoffStr = toDateStr(cutoff);
+      db.ref('historique_recettes').once('value', function(snap) {
+        var h = snap.val() || {};
+        Object.keys(h).forEach(function(k) { if (h[k].date < cutoffStr) db.ref('historique_recettes/'+k).remove(); });
+      });
+    }
   }
 }
 
