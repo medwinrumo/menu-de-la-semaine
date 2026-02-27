@@ -944,11 +944,33 @@ function ingOk(id) {
 
   if (nouveau === ancien) return;
 
-  // Sauvegarder la modification dans Firebase
+  // Sauvegarder la modification directement dans J[] + Firebase (persistance réelle)
   var recipeDiv = li.closest('.recipe');
   if (recipeDiv && db) {
-    var recipeIdx = recipeDiv.id.replace('recipe-', '');
-    db.ref('ingredients/' + recipeIdx + '/' + fbKey(ancien)).set({original: ancien, nouveau: nouveau});
+    var dayIdx = parseInt(recipeDiv.id.replace('recipe-', ''));
+    if (!isNaN(dayIdx) && J[dayIdx]) {
+      // Mettre à jour dans tous les dinerItems
+      (J[dayIdx].dinerItems || []).forEach(function(dit) {
+        if (!dit.recette) return;
+        var ings = toArr(dit.recette.ingredients || []);
+        var i = ings.indexOf(ancien);
+        if (i !== -1) { ings[i] = nouveau; dit.recette.ingredients = ings; }
+        var caa = toArr(dit.recette.coursesAAjouter || []);
+        caa.forEach(function(item) { if (item.nom === ancien) { item.nom = nouveau; item.rayon = rayon; } });
+        if (caa.length) dit.recette.coursesAAjouter = caa;
+      });
+      // Mettre à jour dans recette legacy et recetteGou si présents
+      [J[dayIdx].recette, J[dayIdx].recetteGou].forEach(function(r) {
+        if (!r) return;
+        var ings = toArr(r.ingredients || []);
+        var i = ings.indexOf(ancien);
+        if (i !== -1) { ings[i] = nouveau; r.ingredients = ings; }
+        var caa = toArr(r.coursesAAjouter || []);
+        caa.forEach(function(item) { if (item.nom === ancien) { item.nom = nouveau; item.rayon = rayon; } });
+        if (caa.length) r.coursesAAjouter = caa;
+      });
+      db.ref('menus/'+J[dayIdx].date).set({nom:J[dayIdx].nom, pdj:J[dayIdx].pdj||null, col:J[dayIdx].col||null, din:J[dayIdx].din||null, dn:J[dayIdx].dn||null, recette:J[dayIdx].recette||null, dinerItems:J[dayIdx].dinerItems||null, gou:J[dayIdx].gou||null, recetteGou:J[dayIdx].recetteGou||null, enCourses:J[dayIdx].enCourses||null});
+    }
   }
 
   // Mettre à jour l'ingrédient en place dans la liste de courses
