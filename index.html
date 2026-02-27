@@ -132,6 +132,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .recipe-titre-wrap h3{flex:1;margin:0}
 .edit-titre-btn{background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.35;padding:0;flex-shrink:0;transition:.15s}
 .edit-titre-btn:hover{opacity:1}
+.btn-copy-recette{background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.35;padding:0;flex-shrink:0;transition:.15s}
+.btn-copy-recette:hover{opacity:1}
 .edit-titre-input{flex:1;font-size:1.1rem;font-weight:700;color:var(--acc);border:2px solid var(--acc);border-radius:6px;padding:4px 8px;background:var(--card);width:100%;font-family:inherit}
 .recipe ol li.etape-item{cursor:pointer;border-radius:4px;transition:.12s}
 .recipe ol li.etape-item:hover{background:var(--accL)}
@@ -1631,7 +1633,7 @@ function buildRecipeDiv(idx, r) {
   var nom = J[idx] ? J[idx].nom : '';
   var rmKey = 'r'+idx+'_main'; _rmp[rmKey] = r;
   return '<button class="btn-back" onclick="goMenu()">← Retour au menu</button>' +
-    '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKey+'\')">'+(r.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKey+'\',this)" title="Modifier le titre">✏️</button></div><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
+    '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKey+'\')">'+(r.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKey+'\',this)" title="Modifier le titre">✏️</button><button class="btn-copy-recette" onclick="event.stopPropagation();copierRecette(\''+rmKey+'\')" title="Copier la recette">📋</button></div><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
     '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+nom+'</span></div>' +
     (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
     '<h4>Ingrédients</h4>' +
@@ -1757,7 +1759,7 @@ function buildMultiRecipeDiv(idx) {
     var tl = typeLabels[item.type] || item.type;
     var rmKey = 'r'+idx+'_'+diIdx; _rmp[rmKey] = r;
     html += '<div style="margin:20px 0 8px"><span class="service-tag-badge lg">'+tl+'</span></div>' +
-      '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKey+'\')">'+(r.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKey+'\',this)" title="Modifier le titre">✏️</button></div><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
+      '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKey+'\')">'+(r.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKey+'\',this)" title="Modifier le titre">✏️</button><button class="btn-copy-recette" onclick="event.stopPropagation();copierRecette(\''+rmKey+'\')" title="Copier la recette">📋</button></div><div class="r-ico">'+(r.emoji||'🥘')+'</div></div>' +
       '<div class="rmeta"><span><b>Prépa :</b> '+(r.prepTime||'—')+'</span><span><b>Cuisson :</b> '+(r.cookTime||'—')+'</span><span><b>📅</b> '+dayNom+'</span></div>' +
       (r.url ? '<a class="recipe-link" href="'+r.url+'" target="_blank" rel="noopener">🔗 Voir la recette originale</a>' : '<span class="recipe-link" style="opacity:.5;cursor:default">🔗 Source non disponible</span>') +
       '<h4>Ingrédients</h4><ul>'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
@@ -1767,7 +1769,7 @@ function buildMultiRecipeDiv(idx) {
     var rg = J[idx].recetteGou;
     var rmKeyG = 'r'+idx+'_gou'; _rmp[rmKeyG] = rg;
     html += '<div style="margin:20px 0 8px"><span class="service-tag-badge lg">☕ Goûter</span></div>' +
-      '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKeyG+'\')">'+(rg.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKeyG+'\',this)" title="Modifier le titre">✏️</button></div><div class="r-ico">'+(rg.emoji||'☕')+'</div></div>' +
+      '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKeyG+'\')">'+(rg.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKeyG+'\',this)" title="Modifier le titre">✏️</button><button class="btn-copy-recette" onclick="event.stopPropagation();copierRecette(\''+rmKeyG+'\')" title="Copier la recette">📋</button></div><div class="r-ico">'+(rg.emoji||'☕')+'</div></div>' +
       '<h4>Ingrédients</h4><ul>'+toArr(rg.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
       '<h4>Préparation</h4><ol>'+toArr(rg.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKeyG+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
   }
@@ -2138,6 +2140,34 @@ function toast(msg) {
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(function() { t.remove(); }, 2500);
+}
+
+function copierRecette(rmKey) {
+  var r = _rmp[rmKey];
+  if (!r) return;
+  var lines = [];
+  lines.push((r.emoji || '🥘') + ' ' + r.nom);
+  if (r.description) lines.push(r.description);
+  if (r.prepTime || r.cookTime) lines.push('Prépa : ' + (r.prepTime||'—') + ' · Cuisson : ' + (r.cookTime||'—'));
+  lines.push('');
+  lines.push('INGRÉDIENTS');
+  toArr(r.ingredients).forEach(function(ing) { lines.push('• ' + ing); });
+  lines.push('');
+  lines.push('PRÉPARATION');
+  toArr(r.etapes).forEach(function(e, i) { lines.push((i+1) + '. ' + e); });
+  if (toArr(r.astuces).length) {
+    lines.push('');
+    lines.push('ASTUCES');
+    toArr(r.astuces).forEach(function(a) { lines.push('💡 ' + a); });
+  }
+  if (toArr(r.infosSante).length) {
+    lines.push('');
+    lines.push('INFOS SANTÉ');
+    toArr(r.infosSante).forEach(function(s) { lines.push('✅ ' + s); });
+  }
+  navigator.clipboard.writeText(lines.join('\n')).then(function() {
+    toast('📋 Recette copiée !');
+  }).catch(function() { toast('❌ Copie impossible'); });
 }
 
 // ===== SAUVEGARDER RECETTE DU DÎNER =====
