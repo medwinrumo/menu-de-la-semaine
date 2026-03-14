@@ -27,7 +27,11 @@ Ta mission : classifier le contenu et extraire les données structurées.
 RÈGLE ABSOLUE : Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ni après.
 
 Si c'est une RECETTE, réponds :
-{"type":"recette","data":{"nom":"Nom complet de la recette","emoji":"🥘","description":"Description courte 1-2 phrases","prepTime":"20 min","cookTime":"30 min","ingredients":["200g de poulet","1 c.s. huile olive"],"etapes":["Étape 1 complète","Étape 2 complète"],"astuces":["Conseil pratique ou variante"],"infosSante":["Point santé ou nutritionnel"],"image":null,"source":"${fileName || 'import'}","tags":["plat principal","volaille","terroir français","IG bas"]}}
+{"type":"recette","data":{"nom":"Nom complet de la recette","emoji":"🥘","description":"Description courte 1-2 phrases","prepTime":"20 min","cookTime":"30 min","ingredients":["200g de poulet","1 c.s. huile olive"],"etapes":["Étape 1 complète","Étape 2 complète"],"astuces":["Conseil pratique ou variante"],"infosSante":["Point santé ou nutritionnel"],"image":null,"source":"${fileName || 'import'}","tags":["plat principal","volaille","terroir français","IG bas"],"coursesAAjouter":[{"nom":"Poulet","rayon":"viandes"},{"nom":"Huile d'olive","rayon":"epicerie"}]}}
+
+RÈGLE QUANTITÉS OBLIGATOIRE : Ajuste TOUTES les quantités pour exactement 3 personnes (pas 4, pas 6). Si la recette est pour 4 → multiplier par 0.75. Si pour 6 → multiplier par 0.5. Si pour 2 → multiplier par 1.5.
+
+RÈGLE coursesAAjouter : Fournis la liste des ingrédients à acheter (exclure sel, poivre, huile courante, vinaigre, moutarde — les condiments du placard). Chaque item : {"nom":"Nom court du produit sans quantité","rayon":"legumes"|"fruits"|"viandes"|"laitier"|"boulangerie"|"epicerie"|"boissons"|"surgeles"|"divers"}
 
 RÈGLES POUR LES TAGS (OBLIGATOIRE) :
 - Service (1 tag obligatoire) : "entrée" | "plat principal" | "dessert" | "goûter" | "soupe"
@@ -45,6 +49,9 @@ Cherche systématiquement les sections "Astuces", "Conseils", "Variantes", "Le p
 
 Si c'est un ARTICLE NUTRITION ou du contenu informatif, réponds :
 {"type":"note_nutrition","data":{"titre":"Titre court","points_cles":["Point clé 1","Point clé 2","Point clé 3"]}}
+
+Si c'est une PHOTO D'UN PLAT CUISINÉ (pas une recette écrite, pas un document) :
+{"type":"photo_plat","data":{"plat_identifie":"Nom du plat identifié","description":"Description courte de ce qu'on voit dans la photo"}}
 
 Si le contenu est illisible ou non pertinent :
 {"type":"erreur","data":{"message":"Explication courte du problème"}}`;

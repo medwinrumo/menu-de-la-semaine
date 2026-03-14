@@ -253,6 +253,8 @@ RÈGLES CRITIQUES :
 - Pour l'image : utilise "${ogImage || null}" ou null si non disponible
 - Pour les tags : ${TAG_RULES}
 - Si le contenu n'est pas une recette : {"erreur":"Explication"}
+- QUANTITÉS : Ajuste pour exactement 3 personnes (recette pour 4 → ×0.75, pour 6 → ×0.5, pour 2 → ×1.5)
+- Ajoute le champ "coursesAAjouter" : liste des ingrédients à acheter (exclure sel, poivre, huile courante, vinaigre, moutarde). Format : [{"nom":"Poulet","rayon":"viandes"},{"nom":"Carottes","rayon":"legumes"}]. Rayons possibles : legumes, fruits, viandes, laitier, boulangerie, epicerie, boissons, surgeles, divers
 
 Texte de la page :
 ${texte}`
