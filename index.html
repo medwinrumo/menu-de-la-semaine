@@ -3673,7 +3673,7 @@ function afficherTousProduits(){
     return '<div class="tp-item">'+
       '<input type="checkbox" class="tp-sel-cb" data-key="'+keyEsc+'"'+(estCoche?' checked':'')+' onchange="tpToggleSel(\''+keyEsc+'\',this.checked)">'+
       '<span class="tp-nom">'+p.nom+'</span>'+
-      '<span class="tp-rayon-badge">'+(TP_RAYON_LABELS[p.rayon]||p.rayon)+'</span>'+
+      '<select class="tp-rsel" onchange="changerRayonProduit(\''+keyEsc+'\',this.value)">'+Object.keys(TP_RAYON_LABELS).map(function(k){return '<option value="'+k+'"'+(k===p.rayon?' selected':'')+'>'+TP_RAYON_LABELS[k]+'</option>';}).join('')+'</select>'+
       '<button class="tp-btn-del" onclick="supprimerProduitHabitude(\''+keyEsc+'\')" title="Supprimer du catalogue">✕</button>'+
       '</div>';
   }).join('');
@@ -3747,6 +3747,12 @@ function adopterProduit(key){
   var p=produitsHabituels.find(function(x){return x._fbKey===key;});
   if(p){p.a_ajouter=false;if(rsel)p.rayon=rsel.value;}
   afficherTousProduits();
+}
+
+function changerRayonProduit(key,rayon){
+  var p=produitsHabituels.find(function(x){return x._fbKey===key;});
+  if(p)p.rayon=rayon;
+  if(db)db.ref('produits_habituels/'+key).update({rayon:rayon});
 }
 
 function supprimerProduitHabitude(key){
