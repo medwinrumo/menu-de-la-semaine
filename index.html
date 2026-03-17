@@ -31,7 +31,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .day{background:var(--card);border-radius:var(--r2);padding:16px;box-shadow:var(--sh);border:1px solid var(--border);position:relative}
 .day-cb{position:absolute;top:10px;right:10px;cursor:pointer;width:16px;height:16px;accent-color:var(--acc)}
 .tp-sel-cb{cursor:pointer;accent-color:var(--acc);margin-right:8px;width:15px;height:15px;flex-shrink:0}
-#tp-send-btn{padding:5px 11px;background:var(--acc);color:#fff;border:none;border-radius:6px;font-size:.78rem;cursor:pointer}
+#tp-send-btn{position:fixed;bottom:72px;right:16px;z-index:300;padding:10px 18px;background:var(--acc);color:#fff;border:none;border-radius:20px;font-size:.88rem;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.2)}
 #tp-send-btn:hover{opacity:.85}
 .day h3{color:var(--acc);font-size:.95rem;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid var(--acc)}
 .meal{margin-bottom:8px;padding:8px 10px;background:var(--bg);border-radius:var(--r);border-left:3px solid var(--acc)}
@@ -560,10 +560,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <!-- ===== TOUS MES PRODUITS ===== -->
 <div id="tous-produits" class="pnl">
 <div class="shop">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
-  <h2 style="margin:0">📦 Mes produits</h2>
-  <button id="tp-send-btn" onclick="envoyerProduitsSelectionnes()" title="Envoyer les produits sélectionnés dans la liste de courses" style="display:none">→ Courses</button>
-</div>
+<h2 style="margin:0 0 4px">📦 Mes produits</h2>
+<button id="tp-send-btn" onclick="envoyerProduitsSelectionnes()" title="Envoyer les produits sélectionnés dans la liste de courses" style="display:none">→ Courses</button>
 <p class="mr-sub">Votre catalogue personnel. Les nouveaux produits arrivent dans « ⏳ À ajouter » — confirmez ceux que vous voulez garder.</p>
 <div class="tp-bar">
   <input type="search" id="tp-search" class="mr-search-input" placeholder="🔍 Rechercher un produit…" oninput="afficherTousProduits()">
