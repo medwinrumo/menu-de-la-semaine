@@ -3670,7 +3670,7 @@ function afficherTousProduits(){
     var keyEsc=(p._fbKey||'').replace(/'/g,"\\'");
     var estCoche=!!tpSelectionnes[p._fbKey];
     return '<div class="tp-item">'+
-      '<input type="checkbox" class="tp-sel-cb"'+(estCoche?' checked':'')+' onchange="tpToggleSel(\''+keyEsc+'\',this.checked)">'+
+      '<input type="checkbox" class="tp-sel-cb" data-key="'+keyEsc+'"'+(estCoche?' checked':'')+' onchange="tpToggleSel(\''+keyEsc+'\',this.checked)">'+
       '<span class="tp-nom">'+p.nom+'</span>'+
       '<span class="tp-rayon-badge">'+(TP_RAYON_LABELS[p.rayon]||p.rayon)+'</span>'+
       '<button class="tp-btn-del" onclick="supprimerProduitHabitude(\''+keyEsc+'\')" title="Supprimer du catalogue">✕</button>'+
@@ -3688,9 +3688,10 @@ function tpToggleSel(key,checked){
 }
 
 function envoyerProduitsSelectionnes(){
-  // Phase 1 : collecter tous les produits à ajouter sans toucher au DOM
+  // Phase 1 : lire les cases cochées directement dans le DOM (évite les ratés iOS)
   var aAjouter=[];
-  Object.keys(tpSelectionnes).forEach(function(key){
+  document.querySelectorAll('.tp-sel-cb:checked').forEach(function(cb){
+    var key=cb.dataset.key;
     var p=produitsHabituels.find(function(x){return x._fbKey===key;});
     if(!p)return;
     var c=document.querySelector('.si[data-cat="'+p.rayon+'"]');
