@@ -423,7 +423,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <h2>📚 Mes recettes</h2>
 <p class="mr-sub">Recettes importées via NutriCoach • Cliquez sur un nom pour voir le détail • Cochez + choisissez un jour pour cuisiner</p>
 <div class="mr-search-row" id="mr-search-row" style="display:none">
-  <input type="search" id="mr-search" class="mr-search-input" placeholder="🔍 Rechercher une recette…" oninput="filtrerRecettes()">
+  <input type="search" id="mr-search" class="mr-search-input" placeholder="🔍 Rechercher une recette…" oninput="filtrerRecettes()" onkeyup="filtrerRecettes()">
 </div>
 <div class="mr-filtres" id="mr-filtres" style="display:none">
   <button class="btn-fav-filter" id="btn-filtre-fav"
@@ -2928,7 +2928,7 @@ function filtrerRecettes() {
       if (!match) show = false;
     }
     if (show && q) {
-      var hay = (r ? (r.nom + ' ' + (r.description||'')) : '').toLowerCase();
+      var hay = (r ? r.nom : '').toLowerCase();
       if (!hay.includes(q)) show = false;
     }
     card.style.display = show ? '' : 'none';
