@@ -1820,6 +1820,14 @@ function afficherRecettesPerso(liste) {
   if (filtresEl) filtresEl.style.display = show ? 'flex' : 'none';
   buildTagFilterPanel();
 
+  // Si une recherche est active et les cartes sont déjà dans le DOM, ne pas reconstruire
+  var inp = document.getElementById('mr-search');
+  var qActif = inp ? inp.value.trim() : '';
+  if (qActif && el.querySelectorAll('.recette-card').length > 0) {
+    filtrerRecettes();
+    return;
+  }
+
   var srcList = liste !== undefined ? liste : recettesPerso;
   var countEl = document.getElementById('mr-count');
   if (countEl) countEl.textContent = srcList.length + '/' + recettesPerso.length + ' recette' + (recettesPerso.length > 1 ? 's' : '');
