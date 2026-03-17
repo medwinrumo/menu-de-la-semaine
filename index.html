@@ -3608,7 +3608,13 @@ db.ref('/').on('value',function(snapshot){
 afficherSourcesDefaut();
 
 // ===== PHASE 9 — TOUS MES PRODUITS =====
-var TP_RAYON_LABELS={legumes:'🥬 Légumes',fruits:'🍎 Fruits',viandes:'🥩 Viandes & Poissons',laitier:'🥚 Laitier & Œufs',boulangerie:'🍞 Boulangerie',epicerie:'🫙 Épicerie',boissons:'🥤 Boissons',surgeles:'🧊 Surgelés',entretien:'🧹 Entretien',sante:'💊 Santé',corps:'🧴 Corps',divers:'🏷️ Divers'};
+// Construit depuis le DOM de la liste de courses — source unique de vérité
+var TP_RAYON_LABELS={};
+document.querySelectorAll('#liste-principale .scat').forEach(function(scat){
+  var si=scat.querySelector('.si[data-cat]');
+  var h4=scat.querySelector('h4');
+  if(si&&h4)TP_RAYON_LABELS[si.dataset.cat]=h4.textContent.trim();
+});
 var tpTriActif = 'az';
 function setTriTP(tri) {
   tpTriActif = tri;
