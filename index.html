@@ -1433,6 +1433,7 @@ function executerActionChat(action) {
   } else if (action.type === 'ajouter_courses' && action.produits) {
     action.produits.forEach(function(item){
       var c=document.querySelector('.si[data-cat="'+item.rayon+'"]');
+      if(!c)c=document.querySelector('.si[data-cat="divers"]');
       var l=null;
       if(c){
         var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
@@ -3695,6 +3696,8 @@ function envoyerProduitsSelectionnes(){
     var p=produitsHabituels.find(function(x){return x._fbKey===key;});
     if(!p)return;
     var c=document.querySelector('.si[data-cat="'+p.rayon+'"]');
+    if(!c)return;
+    if(!c)c=document.querySelector('.si[data-cat="divers"]');
     if(!c)return;
     var dejaDansDOM=false;
     document.querySelectorAll('.sitem .sn').forEach(function(el){if(el.textContent===p.nom)dejaDansDOM=true;});
