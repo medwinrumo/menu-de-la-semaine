@@ -3673,7 +3673,7 @@ function afficherTousProduits(){
     return '<div class="tp-item">'+
       '<input type="checkbox" class="tp-sel-cb" data-key="'+keyEsc+'"'+(estCoche?' checked':'')+' onchange="tpToggleSel(\''+keyEsc+'\',this.checked)">'+
       '<span class="tp-nom">'+p.nom+'</span>'+
-      '<select class="tp-rsel" onchange="changerRayonProduit(\''+keyEsc+'\',this.value)">'+Object.keys(TP_RAYON_LABELS).map(function(k){return '<option value="'+k+'"'+(k===p.rayon?' selected':'')+'>'+TP_RAYON_LABELS[k]+'</option>';}).join('')+'</select>'+
+      '<span class="tp-rayon-badge" onclick="ouvrirRayonSelect(this,\''+keyEsc+'\',\''+p.rayon+'\')" title="Modifier la catégorie">'+(TP_RAYON_LABELS[p.rayon]||p.rayon)+'</span>'+
       '<button class="tp-btn-del" onclick="supprimerProduitHabitude(\''+keyEsc+'\')" title="Supprimer du catalogue">✕</button>'+
       '</div>';
   }).join('');
@@ -3749,10 +3749,33 @@ function adopterProduit(key){
   afficherTousProduits();
 }
 
-function changerRayonProduit(key,rayon){
-  var p=produitsHabituels.find(function(x){return x._fbKey===key;});
-  if(p)p.rayon=rayon;
-  if(db)db.ref('produits_habituels/'+key).update({rayon:rayon});
+function ouvrirRayonSelect(badge,key,rayonActuel){
+  var opts=Object.keys(TP_RAYON_LABELS).map(function(k){return '<option value="'+k+'"'+(k===rayonActuel?' selected':'')+'>'+TP_RAYON_LABELS[k]+'</option>';}).join('');
+  var sel=document.createElement('select');
+  sel.className='tp-rsel';
+  sel.innerHTML=opts;
+  badge.replaceWith(sel);
+  sel.focus();
+  sel.onchange=function(){
+    var rayon=sel.value;
+    var p=produitsHabituels.find(function(x){return x._fbKey===key;});
+    if(p)p.rayon=rayon;
+    if(db)db.ref('produits_habituels/'+key).update({rayon:rayon});
+    var span=document.createElement('span');
+    span.className='tp-rayon-badge';
+    span.title='Modifier la catégorie';
+    span.textContent=TP_RAYON_LABELS[rayon]||rayon;
+    span.onclick=function(){ouvrirRayonSelect(span,key,rayon);};
+    sel.replaceWith(span);
+  };
+  sel.onblur=function(){
+    var span=document.createElement('span');
+    span.className='tp-rayon-badge';
+    span.title='Modifier la catégorie';
+    span.textContent=TP_RAYON_LABELS[rayonActuel]||rayonActuel;
+    span.onclick=function(){ouvrirRayonSelect(span,key,rayonActuel);};
+    sel.replaceWith(span);
+  };
 }
 
 function supprimerProduitHabitude(key){
