@@ -3688,27 +3688,29 @@ function tpToggleSel(key,checked){
 }
 
 function envoyerProduitsSelectionnes(){
-  var count=0;
+  // Phase 1 : collecter tous les produits à ajouter sans toucher au DOM
+  var aAjouter=[];
   Object.keys(tpSelectionnes).forEach(function(key){
     var p=produitsHabituels.find(function(x){return x._fbKey===key;});
     if(!p)return;
     var c=document.querySelector('.si[data-cat="'+p.rayon+'"]');
     if(!c)return;
-    var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
     var dejaDansDOM=false;
     document.querySelectorAll('.sitem .sn').forEach(function(el){if(el.textContent===p.nom)dejaDansDOM=true;});
-    if(!dejaDansDOM){
-      var l=document.createElement('label');l.className='sitem';
-      l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+p.nom+'</span><span class="sr">Mes produits</span>';
-      c.appendChild(l);
-      if(db){var aRef=db.ref('courses/ajoutes').push({nom:p.nom,rayon:p.rayon});l.dataset.ajoutesKey=aRef.key;}
-      count++;
-    }
+    if(!dejaDansDOM)aAjouter.push({p:p,c:c});
+  });
+  // Phase 2 : ajouter tous les produits collectés au DOM + Firebase
+  aAjouter.forEach(function(item){
+    var c=item.c,p=item.p;
+    var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
+    var l=document.createElement('label');l.className='sitem';
+    l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+p.nom+'</span><span class="sr">Mes produits</span>';
+    c.appendChild(l);
+    if(db){var aRef=db.ref('courses/ajoutes').push({nom:p.nom,rayon:p.rayon});l.dataset.ajoutesKey=aRef.key;}
   });
   tpSelectionnes={};
   afficherTousProduits();
   mC();
-  if(count>0){var tab=document.querySelectorAll('.tabs button')[2];if(tab)tab.click();}
 }
 
 function selFiltreTP(btn){
