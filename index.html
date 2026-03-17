@@ -1820,7 +1820,24 @@ function afficherRecettesPerso(liste) {
   if (filtresEl) filtresEl.style.display = show ? 'flex' : 'none';
   buildTagFilterPanel();
 
-  var srcList = liste !== undefined ? liste : recettesPerso;
+  if (liste === undefined) {
+    var q = document.getElementById('mr-search') ? document.getElementById('mr-search').value.trim().toLowerCase() : '';
+    liste = recettesPerso.filter(function(r) {
+      if (filtreFavoris && !r.favoris) return false;
+      if (filtresTags.size > 0) {
+        var rt = r.tags || [];
+        var match = false;
+        filtresTags.forEach(function(t){ if (rt.includes(t)) match = true; });
+        if (!match) return false;
+      }
+      if (q) {
+        var hay = (r.nom + ' ' + (r.description||'')).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+  var srcList = liste;
   var countEl = document.getElementById('mr-count');
   if (countEl) countEl.textContent = srcList.length + '/' + recettesPerso.length + ' recette' + (recettesPerso.length > 1 ? 's' : '');
 
