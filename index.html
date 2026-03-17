@@ -1820,24 +1820,7 @@ function afficherRecettesPerso(liste) {
   if (filtresEl) filtresEl.style.display = show ? 'flex' : 'none';
   buildTagFilterPanel();
 
-  if (liste === undefined) {
-    var q = document.getElementById('mr-search') ? document.getElementById('mr-search').value.trim().toLowerCase() : '';
-    liste = recettesPerso.filter(function(r) {
-      if (filtreFavoris && !r.favoris) return false;
-      if (filtresTags.size > 0) {
-        var rt = r.tags || [];
-        var match = false;
-        filtresTags.forEach(function(t){ if (rt.includes(t)) match = true; });
-        if (!match) return false;
-      }
-      if (q) {
-        var hay = (r.nom + ' ' + (r.description||'')).toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      return true;
-    });
-  }
-  var srcList = liste;
+  var srcList = liste !== undefined ? liste : recettesPerso;
   var countEl = document.getElementById('mr-count');
   if (countEl) countEl.textContent = srcList.length + '/' + recettesPerso.length + ' recette' + (recettesPerso.length > 1 ? 's' : '');
 
@@ -1904,6 +1887,7 @@ function afficherRecettesPerso(liste) {
       '</div>' +
       '</div>';
   }).join('');
+  filtrerRecettes();
 }
 
 function supprimerRecettePerso(k) {
@@ -2930,22 +2914,37 @@ function toggleFiltreTag(tag) {
 }
 
 function filtrerRecettes() {
-  var q = (document.getElementById('mr-search') ? document.getElementById('mr-search').value.trim().toLowerCase() : '');
-  var visible = recettesPerso.filter(function(r) {
-    if (filtreFavoris && !r.favoris) return false;
-    if (filtresTags.size > 0) {
-      var rt = r.tags || [];
+  var q = document.getElementById('mr-search') ? document.getElementById('mr-search').value.trim().toLowerCase() : '';
+  var anyVisible = 0;
+  document.querySelectorAll('#mes-recettes-liste .recette-card').forEach(function(card) {
+    var k = card.id.replace('rcard-', '');
+    var r = recettesPersoMap[k];
+    var show = true;
+    if (filtreFavoris && (!r || !r.favoris)) show = false;
+    if (show && filtresTags.size > 0) {
+      var rt = r ? (r.tags || []) : [];
       var match = false;
       filtresTags.forEach(function(t){ if (rt.includes(t)) match = true; });
-      if (!match) return false;
+      if (!match) show = false;
     }
-    if (q) {
-      var hay = (r.nom + ' ' + (r.description||'')).toLowerCase();
-      if (!hay.includes(q)) return false;
+    if (show && q) {
+      var hay = (r ? (r.nom + ' ' + (r.description||'')) : '').toLowerCase();
+      if (!hay.includes(q)) show = false;
     }
-    return true;
+    card.style.display = show ? '' : 'none';
+    if (show) anyVisible++;
   });
-  afficherRecettesPerso(visible);
+  var countEl = document.getElementById('mr-count');
+  if (countEl) countEl.textContent = anyVisible + '/' + recettesPerso.length + ' recette' + (recettesPerso.length > 1 ? 's' : '');
+  var el = document.getElementById('mes-recettes-liste');
+  var emptyEl = document.getElementById('mr-filter-empty');
+  if (anyVisible === 0 && recettesPerso.length > 0) {
+    if (!emptyEl) { emptyEl = document.createElement('p'); emptyEl.id = 'mr-filter-empty'; emptyEl.className = 'mr-empty'; el.appendChild(emptyEl); }
+    emptyEl.textContent = 'Aucune recette ne correspond' + (q ? ' à « '+q+' ».' : ' aux filtres actifs.');
+    emptyEl.style.display = '';
+  } else if (emptyEl) {
+    emptyEl.style.display = 'none';
+  }
 }
 
 var triDropdownOpen = false;
