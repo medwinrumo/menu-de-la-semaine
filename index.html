@@ -423,7 +423,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <h2>📚 Mes recettes</h2>
 <p class="mr-sub">Recettes importées via NutriCoach • Cliquez sur un nom pour voir le détail • Cochez + choisissez un jour pour cuisiner</p>
 <div class="mr-search-row" id="mr-search-row" style="display:none">
-  <input type="search" id="mr-search" class="mr-search-input" placeholder="🔍 Rechercher une recette…" oninput="setTimeout(filtrerRecettes,50)" onkeyup="setTimeout(filtrerRecettes,50)" onsearch="filtrerRecettes()">
+  <input type="search" id="mr-search" class="mr-search-input" placeholder="🔍 Rechercher une recette…" oninput="filtrerRecettes()" onsearch="filtrerRecettes()">
 </div>
 <div class="mr-filtres" id="mr-filtres" style="display:none">
   <button class="btn-fav-filter" id="btn-filtre-fav"
@@ -1819,14 +1819,6 @@ function afficherRecettesPerso(liste) {
   if (searchRow) searchRow.style.display = show ? '' : 'none';
   if (filtresEl) filtresEl.style.display = show ? 'flex' : 'none';
   buildTagFilterPanel();
-
-  // Si une recherche est active et les cartes sont déjà dans le DOM, ne pas reconstruire
-  var inp = document.getElementById('mr-search');
-  var qActif = inp ? inp.value.trim() : '';
-  if (qActif && el.querySelectorAll('.recette-card').length > 0) {
-    filtrerRecettes();
-    return;
-  }
 
   var srcList = liste !== undefined ? liste : recettesPerso;
   var countEl = document.getElementById('mr-count');
