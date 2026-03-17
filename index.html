@@ -315,6 +315,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .rayon-mgr-label{flex:1;font-size:.88rem}
 .rayon-mgr-del{background:none;border:none;cursor:pointer;color:var(--txt2);opacity:.45;font-size:.85rem;padding:2px 6px;border-radius:4px;transition:.1s}
 .rayon-mgr-del:hover{opacity:1;color:#e55;background:rgba(229,85,85,.08)}
+.rayon-mgr-edit{background:none;border:none;cursor:pointer;color:var(--txt2);opacity:.45;font-size:.85rem;padding:2px 6px;border-radius:4px;transition:.1s}
+.rayon-mgr-edit:hover{opacity:1;color:var(--acc)}
 .tag-mgr-del-cat{background:none;border:none;cursor:pointer;color:var(--txt2);font-size:.65rem;opacity:.5;padding:0}
 .tag-mgr-del-cat:hover{opacity:1;color:#ef4444}
 .mr-count{font-size:.78rem;color:var(--txt2);white-space:nowrap;margin-left:auto}
@@ -490,18 +492,18 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 
 <div class="toggle-rayons" onclick="document.getElementById('rnav').classList.toggle('open')">📍 Navigation par rayon ▾</div>
 <div class="rayon-nav" id="rnav">
-<span onclick="sTo('cat-legumes')">🥬 Légumes</span>
-<span onclick="sTo('cat-fruits')">🍎 Fruits</span>
-<span onclick="sTo('cat-viandes')">🥩 Viandes & Poissons</span>
-<span onclick="sTo('cat-laitier')">🥚 Laitier</span>
-<span onclick="sTo('cat-boulangerie')">🍞 Boulangerie</span>
-<span onclick="sTo('cat-epicerie')">🫙 Épicerie</span>
-<span onclick="sTo('cat-boissons')">🥤 Boissons</span>
-<span onclick="sTo('cat-surgeles')">🧊 Surgelés</span>
-<span onclick="sTo('cat-entretien')">🧹 Entretien</span>
-<span onclick="sTo('cat-sante')">💊 Santé</span>
-<span onclick="sTo('cat-corps')">🧴 Corps</span>
-<span onclick="sTo('cat-divers')">🏷️ Divers</span>
+<span id="rnav-cat-legumes" onclick="sTo('cat-legumes')">🥬 Légumes</span>
+<span id="rnav-cat-fruits" onclick="sTo('cat-fruits')">🍎 Fruits</span>
+<span id="rnav-cat-viandes" onclick="sTo('cat-viandes')">🥩 Viandes & Poissons</span>
+<span id="rnav-cat-laitier" onclick="sTo('cat-laitier')">🥚 Laitier</span>
+<span id="rnav-cat-boulangerie" onclick="sTo('cat-boulangerie')">🍞 Boulangerie</span>
+<span id="rnav-cat-epicerie" onclick="sTo('cat-epicerie')">🫙 Épicerie</span>
+<span id="rnav-cat-boissons" onclick="sTo('cat-boissons')">🥤 Boissons</span>
+<span id="rnav-cat-surgeles" onclick="sTo('cat-surgeles')">🧊 Surgelés</span>
+<span id="rnav-cat-entretien" onclick="sTo('cat-entretien')">🧹 Entretien</span>
+<span id="rnav-cat-sante" onclick="sTo('cat-sante')">💊 Santé</span>
+<span id="rnav-cat-corps" onclick="sTo('cat-corps')">🧴 Corps</span>
+<span id="rnav-cat-divers" onclick="sTo('cat-divers')">🏷️ Divers</span>
 <span id="rnav-gerer" onclick="ouvrirGestionRayons()" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px;width:100%;text-align:center;color:var(--acc);font-weight:600">⚙️ Gérer les rayons</span>
 </div>
 
@@ -3293,12 +3295,55 @@ function renderGestionRayons() {
   if (!el) return;
   var allRayons = RAYONS_BASE.concat(rayonsCustom);
   el.innerHTML = allRayons.map(function(r) {
-    return '<div class="rayon-mgr-item">' +
+    var key = (r._fbKey||r.id);
+    var type = r.deletable !== false ? 'custom' : 'base';
+    var keyEsc = key.replace(/'/g,"\\'");
+    return '<div class="rayon-mgr-item" id="ritem-'+key+'">' +
       '<span style="font-size:1.1rem">' + r.emoji + '</span>' +
       '<span class="rayon-mgr-label">' + r.nom + '</span>' +
-      (r.deletable !== false ? '<button class="rayon-mgr-del" onclick="supprimerRayonCustom(\'' + (r._fbKey||r.id) + '\')" title="Supprimer">🗑</button>' : '<span style="font-size:.65rem;color:var(--txt2);opacity:.5">défaut</span>') +
+      '<button class="rayon-mgr-edit" onclick="editerRayon(\''+keyEsc+'\',\''+type+'\')" title="Renommer">✏️</button>' +
+      (r.deletable !== false ? '<button class="rayon-mgr-del" onclick="supprimerRayonCustom(\''+keyEsc+'\')" title="Supprimer">🗑</button>' : '') +
       '</div>';
   }).join('');
+}
+function editerRayon(key, type) {
+  var r = type === 'custom'
+    ? rayonsCustom.find(function(x){ return x._fbKey===key||x.id===key; })
+    : RAYONS_BASE.find(function(x){ return x.id===key; });
+  if (!r) return;
+  var itemEl = document.getElementById('ritem-'+key);
+  if (!itemEl) return;
+  var keyEsc = key.replace(/'/g,"\\'");
+  itemEl.innerHTML =
+    '<input id="edit-emoji-'+key+'" value="'+r.emoji+'" style="width:38px;text-align:center;font-size:1rem;border:1px solid var(--border);border-radius:var(--r);padding:3px;flex-shrink:0">'+
+    '<input class="tag-mgr-input" id="edit-nom-'+key+'" value="'+r.nom+'" style="flex:1;min-width:0">'+
+    '<button onclick="sauvegarderRayon(\''+keyEsc+'\',\''+type+'\')" style="background:var(--acc);color:#fff;border:none;border-radius:var(--r);padding:5px 11px;cursor:pointer;font-weight:700;flex-shrink:0">✓</button>'+
+    '<button onclick="renderGestionRayons()" style="background:none;border:1px solid var(--border);border-radius:var(--r);padding:5px 10px;cursor:pointer;flex-shrink:0">✕</button>';
+  document.getElementById('edit-nom-'+key).focus();
+}
+function sauvegarderRayon(key, type) {
+  var nom = (document.getElementById('edit-nom-'+key).value||'').trim();
+  var emoji = (document.getElementById('edit-emoji-'+key).value||'').trim()||'🏷️';
+  if (!nom) return;
+  var rid;
+  if (type === 'custom') {
+    var r = rayonsCustom.find(function(x){ return x._fbKey===key||x.id===key; });
+    if (!r) return;
+    r.nom = nom; r.emoji = emoji; rid = r.id;
+    if (r._fbKey && db) db.ref('rayons_custom/'+r._fbKey).update({nom:nom, emoji:emoji});
+  } else {
+    var r = RAYONS_BASE.find(function(x){ return x.id===key; });
+    if (!r) return;
+    r.nom = nom; r.emoji = emoji; rid = key;
+    if (db) db.ref('rayons_override/'+key).set({nom:nom, emoji:emoji});
+  }
+  var scat = document.getElementById('cat-'+rid);
+  if (scat) { var h4=scat.querySelector('h4'); if(h4) h4.textContent = emoji+' '+nom; }
+  var navSpan = document.getElementById('rnav-cat-'+rid);
+  if (navSpan) navSpan.textContent = emoji+' '+nom;
+  TP_RAYON_LABELS[rid] = emoji+' '+nom;
+  renderGestionRayons();
+  afficherTousProduits();
 }
 function ajouterRayonCustom() {
   var nom = document.getElementById('rayon-mgr-nom').value.trim();
@@ -3337,6 +3382,7 @@ function _applyRayonToUI(r) {
   var gererSpan = document.getElementById('rnav-gerer');
   if (rnav && gererSpan) {
     var span = document.createElement('span');
+    span.id = 'rnav-cat-' + r.id;
     span.onclick = (function(rid){ return function(){ sTo('cat-'+rid); }; })(r.id);
     span.textContent = r.emoji + ' ' + r.nom;
     rnav.insertBefore(span, gererSpan);
@@ -3581,6 +3627,20 @@ db.ref('/').on('value',function(snapshot){
   historiqueRecettes = data.historique_recettes
     ? Object.values(data.historique_recettes).filter(Boolean)
     : [];
+  // Sync rayons_override (renommages des rayons de base)
+  if (data.rayons_override) {
+    Object.keys(data.rayons_override).forEach(function(id) {
+      var ov = data.rayons_override[id];
+      var r = RAYONS_BASE.find(function(x){ return x.id===id; });
+      if (!r || !ov || !ov.nom) return;
+      r.nom = ov.nom; r.emoji = ov.emoji || r.emoji;
+      var scat = document.getElementById('cat-'+id);
+      if (scat) { var h4=scat.querySelector('h4'); if(h4) h4.textContent = r.emoji+' '+r.nom; }
+      var navSpan = document.getElementById('rnav-cat-'+id);
+      if (navSpan) navSpan.textContent = r.emoji+' '+r.nom;
+      TP_RAYON_LABELS[id] = r.emoji+' '+r.nom;
+    });
+  }
   // Sync rayons custom
   if (data.rayons_custom) {
     rayonsCustom = [];
