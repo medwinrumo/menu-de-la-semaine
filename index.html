@@ -3668,13 +3668,9 @@ db.ref('/').on('value',function(snapshot){
 afficherSourcesDefaut();
 
 // ===== PHASE 9 — TOUS MES PRODUITS =====
-// Construit depuis le DOM de la liste de courses — source unique de vérité
+// Construit depuis RAYONS_BASE (noms courts) — les rayons custom sont ajoutés via _applyRayonToUI
 var TP_RAYON_LABELS={};
-document.querySelectorAll('#liste-principale .scat').forEach(function(scat){
-  var si=scat.querySelector('.si[data-cat]');
-  var h4=scat.querySelector('h4');
-  if(si&&h4)TP_RAYON_LABELS[si.dataset.cat]=h4.textContent.trim();
-});
+RAYONS_BASE.forEach(function(r){ TP_RAYON_LABELS[r.id]=r.emoji+' '+r.nom; });
 var tpTriActif = 'az';
 function setTriTP(tri) {
   tpTriActif = tri;
@@ -3785,28 +3781,23 @@ function envoyerProduitsSelectionnes(){
 
 function selFiltreTP(btn){
   var rayon=btn.dataset.rayon;
-  document.querySelectorAll('.tp-filtre').forEach(function(b){b.classList.remove('on');});
   if(rayon==='__ajouter__'){
+    document.querySelectorAll('.tp-filtre').forEach(function(b){b.classList.remove('on');});
     tpVueAjouter=true;
     tpFiltresActifs={};
     btn.classList.add('on');
   }else if(rayon===''){
+    document.querySelectorAll('.tp-filtre').forEach(function(b){b.classList.remove('on');});
     tpVueAjouter=false;
     tpFiltresActifs={};
     btn.classList.add('on');
   }else{
     tpVueAjouter=false;
-    if(tpFiltresActifs[rayon]){
-      // déjà actif → on revient à "Tous"
-      tpFiltresActifs={};
-      var btnTous=document.querySelector('.tp-filtre[data-rayon=""]');
-      if(btnTous)btnTous.classList.add('on');
-    }else{
-      // nouveau filtre → remplace le précédent
-      tpFiltresActifs={};
-      tpFiltresActifs[rayon]=true;
-      btn.classList.add('on');
-    }
+    if(tpFiltresActifs[rayon]){delete tpFiltresActifs[rayon];}
+    else{tpFiltresActifs[rayon]=true;}
+    btn.classList.toggle('on',!!tpFiltresActifs[rayon]);
+    var btnTous=document.querySelector('.tp-filtre[data-rayon=""]');
+    if(btnTous)btnTous.classList.toggle('on',Object.keys(tpFiltresActifs).length===0);
   }
   afficherTousProduits();
 }
