@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Planificateur Menus Santé — Fichier de contexte projet
 
 ## Description du projet
@@ -24,6 +28,8 @@ https://github.com/medwinrumo/menu-de-la-semaine
 - `api/recette.js` : remplacement d'une recette individuelle (claude-opus-4-6, max_tokens 1500)
 - `api/menus.js` : génération de la semaine complète (claude-sonnet-4-6, max_tokens 8000)
 - `api/chat.js` : assistant NutriCoach + actions sur les menus (claude-sonnet-4-6, max_tokens 1500)
+- `api/import.js` : import de fichiers recettes (PDF, images, texte/markdown) via Claude vision/document (claude-sonnet-4-6, max_tokens 1500)
+- `api/scrape.js` : import de recettes depuis une URL — extrait JSON-LD schema.org/Recipe en priorité, enrichit avec claude-haiku-4-5 (tags, astuces), fallback claude-sonnet-4-6 si JSON-LD absent
 - `mon profil santé.md` : profil complet utilisateur (âge, activité, habitudes alimentaires)
 - `Schéma nutritionnel personnalisé.md` : schéma nutritionnel détaillé avec stratégies de transition
 - `Compte Rendu analyse sanguine medwin` : résultats sanguins (glycémie, cholestérol LDL/HDL)
@@ -178,13 +184,6 @@ Extensibles via le chat NutriCoach → sauvegardés dans Firebase `sites_ressour
 
 ## Corrections — Backlog
 Règle : codée ≠ validée. Une correction est supprimée de cette liste seulement quand l'utilisateur confirme qu'elle fonctionne.
-
-### 🔵 Codées — en attente de validation
-- **#2** Sélecteur type service (Plat/Entrée/Accomp.) dans zone jour des cartes Mes Recettes
-- **#7** Bouton ✕ service : goRecette() reconstruit le contenu depuis J[] + rW() avant Firebase + migration auto dinerItems
-- **#8a** truncNom coupe sur espace (pas en milieu de mot)
-- **#8b** Pas de "Ajouté manuellement" depuis ingOk (supprimé écriture courses/ajoutes)
-- **#9** Onglet "Tous mes produits" : catalogue permanent filtrable par rayon + recherche + ajout en 1 clic à la liste de courses. ajP() mémorise aussi dans produits_habituels Firebase.
 
 ### 🟡 À faire (priorité basse)
 - **#5** Qualité des recettes générées par Claude → retravailler prompt api/menus.js

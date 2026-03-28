@@ -321,6 +321,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .tag-mgr-del-cat:hover{opacity:1;color:#ef4444}
 .mr-count{font-size:.78rem;color:var(--txt2);white-space:nowrap;margin-left:auto}
 .din-line{display:flex;gap:5px;align-items:baseline;font-size:.88rem}
+.din-nom{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .din-type{font-size:.68rem;color:var(--acc);font-weight:700;min-width:38px;opacity:.85;text-transform:uppercase}
 .btn-del-service{background:none;border:none;color:var(--txt2);font-size:.72rem;cursor:pointer;padding:0 0 0 6px;opacity:.35;transition:.15s;flex-shrink:0;line-height:1;margin-left:auto}
 .btn-del-service:hover{opacity:1;color:#e55}
@@ -635,6 +636,7 @@ var J=[
 {id:0},{id:1},{id:2},{id:3},{id:4},{id:5},{id:6}
 ];
 var SERVICE_ORDER = {'entrée':1,'plat principal':2,'accompagnement':3,'dessert':4,'goûter':5};
+var _gouProtect = {}; // {date: timestamp} — garde contre reset Firebase stale après cuisinerCetteSemaine()
 function sortDI(arr) {
   if (!arr) return arr;
   var a = Array.isArray(arr) ? arr : Object.values(arr).filter(Boolean);
@@ -683,7 +685,7 @@ g.innerHTML+=
 (j.dinerItems && j.dinerItems.length
   ? sortDI(j.dinerItems).map(function(it){
       var lab=it.type==='entrée'?'Entrée':it.type==='dessert'?'Dessert':it.type==='accompagnement'?'Accomp.':it.type==='goûter'?'Goûter':'Plat';
-      return '<div class="din-line"><span class="din-type">'+lab+'</span>'+it.nom+'<button class="btn-del-service" onclick="event.stopPropagation();supprimerService('+i+',\''+it.type+'\')" title="Supprimer ce service">✕</button></div>';
+      return '<div class="din-line"><span class="din-type">'+lab+'</span><span class="din-nom">'+it.nom+'</span><button class="btn-del-service" onclick="event.stopPropagation();supprimerService('+i+',\''+it.type+'\')" title="Supprimer ce service">✕</button></div>';
     }).join('')
   : j.din||'') +
 '</div>' +
@@ -2108,6 +2110,7 @@ function cuisinerCetteSemaine() {
       if (type === 'goûter') {
         J[idx].gou = r.nom;
         J[idx].recetteGou = r;
+        _gouProtect[J[idx].date] = Date.now();
       } else {
         if (!J[idx].dinerItems) J[idx].dinerItems = [];
         var found = false;
@@ -3567,7 +3570,15 @@ db.ref('/').on('value',function(snapshot){
       }
       // Sync goûter
       var newGou=fbM.gou||null;
-      if(J[idx].gou!==newGou){ J[idx].gou=newGou; needRW=true; }
+      if(J[idx].gou!==newGou){
+        var gouAge=_gouProtect[J[idx].date]?Date.now()-_gouProtect[J[idx].date]:Infinity;
+        if(newGou===null&&gouAge<5000){
+          // Firebase snapshot antérieur à l'écriture locale — on ne reset pas
+        } else {
+          J[idx].gou=newGou; needRW=true;
+          if(newGou!==null) delete _gouProtect[J[idx].date];
+        }
+      }
       J[idx].recetteGou=fbM.recetteGou||null;
       // Sync enCourses
       var newEC=fbM.enCourses||false;
