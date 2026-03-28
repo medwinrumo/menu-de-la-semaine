@@ -742,16 +742,16 @@ function addIngredientsJour(idx){
       if(!dit.recette)return;
       var labelDit=abbrev+' — '+truncNom(dit.nom);
       var caa=toArr(dit.recette.coursesAAjouter);
-      var ings=caa.length?caa:toArr(dit.recette.ingredients||[]).map(function(ing){return {nom:ing,rayon:devinerRayon(ing)};});
+      var ings=caa.length?caa.map(rayonFiable):toArr(dit.recette.ingredients||[]).map(function(ing){return {nom:ing,rayon:devinerRayon(ing)};});
       ings.forEach(function(item){if(!estIngredientPlacard(item.nom))addCourseItem(item.nom,item.rayon,labelDit,dit.nom,idx);});
     });
   } else if(j.recette&&j.recette.coursesAAjouter){
     var labelRec=abbrev+' — '+truncNom(j.recette.nom);
-    j.recette.coursesAAjouter.forEach(function(item){if(!estIngredientPlacard(item.nom))addCourseItem(item.nom,item.rayon,labelRec,j.recette.nom,idx);});
+    j.recette.coursesAAjouter.map(rayonFiable).forEach(function(item){if(!estIngredientPlacard(item.nom))addCourseItem(item.nom,item.rayon,labelRec,j.recette.nom,idx);});
   }
   if(j.recetteGou&&j.gou){
     var labelGou=abbrev+' — '+truncNom(j.gou);
-    var gouIngs=j.recetteGou.coursesAAjouter||toArr(j.recetteGou.ingredients||[]).map(function(ing){return {nom:ing,rayon:devinerRayon(ing)};});
+    var gouIngs=j.recetteGou.coursesAAjouter?toArr(j.recetteGou.coursesAAjouter).map(rayonFiable):toArr(j.recetteGou.ingredients||[]).map(function(ing){return {nom:ing,rayon:devinerRayon(ing)};});
     gouIngs.forEach(function(item){if(!estIngredientPlacard(item.nom))addCourseItem(item.nom,item.rayon,labelGou,j.gou,idx);});
   }
   mC();
@@ -1997,25 +1997,31 @@ function rebuilderListeRecettes(menus) {
         if (!dit.recette) return;
         var labelDit = abbrev + ' — ' + truncNom(dit.nom);
         var caa2=toArr(dit.recette.coursesAAjouter);
-        var ings = caa2.length ? caa2 : toArr(dit.recette.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
+        var ings = caa2.length ? caa2.map(rayonFiable) : toArr(dit.recette.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
         ings.forEach(function(item) { if(!estIngredientPlacard(item.nom)) addCourseItem(item.nom, item.rayon, labelDit, dit.nom, idx); });
       });
     } else if (m.recette && m.recette.coursesAAjouter) {
       // Recette API (sans dinerItems)
       var labelRec = abbrev + ' — ' + truncNom(m.recette.nom);
-      m.recette.coursesAAjouter.forEach(function(item) { if(!estIngredientPlacard(item.nom)) addCourseItem(item.nom, item.rayon, labelRec, m.recette.nom, idx); });
+      m.recette.coursesAAjouter.map(rayonFiable).forEach(function(item) { if(!estIngredientPlacard(item.nom)) addCourseItem(item.nom, item.rayon, labelRec, m.recette.nom, idx); });
     }
     // Goûter
     if (m.recetteGou && m.gou) {
       var labelGou = abbrev + ' — ' + truncNom(m.gou);
       var gouIngs = m.recetteGou.coursesAAjouter
-        || toArr(m.recetteGou.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
+        ? toArr(m.recetteGou.coursesAAjouter).map(rayonFiable)
+        : toArr(m.recetteGou.ingredients || []).map(function(ing){ return {nom:ing, rayon:devinerRayon(ing)}; });
       gouIngs.forEach(function(item) { if(!estIngredientPlacard(item.nom)) addCourseItem(item.nom, item.rayon, labelGou, m.gou, idx); });
     }
   });
   mC();
 }
 
+function rayonFiable(item) {
+  // Corrige le rayon IA si devinerRayon trouve une correspondance plus précise
+  var r2 = devinerRayon(item.nom);
+  return { nom: item.nom, rayon: r2 !== 'epicerie' ? r2 : (item.rayon || 'epicerie') };
+}
 function devinerRayon(ing) {
   var s = ing.toLowerCase();
   var map = [
