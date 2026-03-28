@@ -2008,11 +2008,18 @@ function getIngsRecette(recette) {
     var nomLow = (caa.nom || '').toLowerCase().trim();
     if (!rayonHints[nomLow]) rayonHints[nomLow] = fiable.rayon;
   });
-  return toArr(recette.ingredients || []).map(function(ing) {
+  var ings = toArr(recette.ingredients || []);
+  console.log('[courses] getIngsRecette "'+recette.nom+'" → '+ings.length+' ingredients, '+toArr(recette.coursesAAjouter||[]).length+' coursesAAjouter');
+  if (!ings.length) console.warn('[courses] ⚠️ ingredients[] vide pour:', recette.nom, recette);
+  var result = ings.map(function(ing) {
     var cle = cleIng(ing);
     var rayon = rayonHints[cle] || devinerRayon(ing);
-    return { nom: ing, rayon: rayon };
-  }).filter(function(item) { return !estIngredientPlacard(item.nom); });
+    var filtre = estIngredientPlacard(ing);
+    if (filtre) console.log('[courses]   ✗ placard:', ing);
+    return filtre ? null : { nom: ing, rayon: rayon };
+  }).filter(Boolean);
+  console.log('[courses]   → '+result.length+' ingrédients envoyés aux courses');
+  return result;
 }
 // ────────────────────────────────────────────────────────────────────────────
 function addCourseItem(nom, rayon, label, recipeKey, jourIdx) {
