@@ -247,6 +247,8 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .btn-del-recette:hover{opacity:1}
 .btn-photo-recette{background:none;border:none;cursor:pointer;font-size:.9rem;opacity:.35;transition:.15s;padding:2px 5px;flex-shrink:0;line-height:1}
 .btn-photo-recette:hover{opacity:1}
+.recette-card.photo-attente{border-color:var(--acc);box-shadow:0 0 0 2px var(--accL);}
+.recette-card.photo-attente .btn-photo-recette{opacity:1;color:var(--acc);}
 .tag-badge{display:inline-block;font-size:.62rem;padding:2px 7px;border-radius:10px;background:var(--accL);color:var(--acc);margin:2px 2px 0 0;white-space:nowrap;font-weight:500}
 .service-tag-badge{font-size:.58rem;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(234,108,0,.11);color:#c2620a;white-space:nowrap;flex-shrink:0;align-self:center;letter-spacing:.02em}
 .service-tag-badge.lg{font-size:.85rem;padding:3px 12px;border-radius:12px}
@@ -1853,16 +1855,27 @@ function _attribuerPhoto(photoSrc) {
   if (msgEl) msgEl.remove();
 }
 
-function traiterPhotoRecette(k, input) {
-  var file = input.files[0];
-  if (!file) return;
-  input.value = '';
+var _photoTargetKey = null;
+function ajouterPhotoRecette(k) {
+  if (_photoTargetKey === k) { annulerPhotoRecette(); return; }
+  if (_photoTargetKey) annulerPhotoRecette();
+  _photoTargetKey = k;
+  var card = document.getElementById('rcard-'+k);
+  if (card) card.classList.add('photo-attente');
+  toast('📋 Colle l\'image avec Ctrl+V');
+}
+function annulerPhotoRecette() {
+  if (!_photoTargetKey) return;
+  var card = document.getElementById('rcard-'+_photoTargetKey);
+  if (card) card.classList.remove('photo-attente');
+  _photoTargetKey = null;
+}
+function traiterImageBlob(k, blob) {
   var reader = new FileReader();
   reader.onload = function(e) {
     var img = new Image();
     img.onload = function() {
-      var MAX = 800;
-      var w = img.width, h = img.height;
+      var MAX = 800, w = img.width, h = img.height;
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
         else { w = Math.round(w * MAX / h); h = MAX; }
@@ -1876,18 +1889,32 @@ function traiterPhotoRecette(k, input) {
       r.image = compressed;
       if (r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/image').set(compressed);
       var imgWrap = document.getElementById('imgwrap-'+k);
-      if (imgWrap) {
-        var existImg = document.getElementById('rimg-'+k);
-        if (existImg) { existImg.src = compressed; }
-      } else {
-        afficherRecettesPerso();
-      }
+      if (imgWrap) { var ei = document.getElementById('rimg-'+k); if (ei) ei.src = compressed; }
+      else afficherRecettesPerso();
       toast('📷 Photo ajoutée !');
     };
     img.src = e.target.result;
   };
-  reader.readAsDataURL(file);
+  reader.readAsDataURL(blob);
 }
+document.addEventListener('paste', function(e) {
+  if (!_photoTargetKey) return;
+  var items = (e.clipboardData || window.clipboardData || {}).items || [];
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].kind === 'file' && items[i].type.match(/^image\//)) {
+      var k = _photoTargetKey;
+      annulerPhotoRecette();
+      traiterImageBlob(k, items[i].getAsFile());
+      e.preventDefault();
+      return;
+    }
+  }
+  toast('⚠️ Aucune image dans le presse-papier');
+});
+document.addEventListener('click', function(e) {
+  if (!_photoTargetKey) return;
+  if (!e.target.closest('#rcard-'+_photoTargetKey)) annulerPhotoRecette();
+});
 function afficherRecettesPerso(liste) {
   recettesPersoMap = {};
   recettesPerso.forEach(function(r) {
@@ -1947,7 +1974,6 @@ function afficherRecettesPerso(liste) {
     var tags = rtags.filter(function(t){ return !serviceTagsList.includes(t); })
                     .map(function(t){ return '<span class="tag-badge">'+t+'</span>'; }).join('');
     return '<div class="recette-card" id="rcard-'+k+'">' +
-      '<input type="file" id="photo-file-'+k+'" accept="image/*" style="display:none" onchange="traiterPhotoRecette(\''+k+'\',this)">' +
       (r.image ? '<div class="recette-card-img-wrap" id="imgwrap-'+k+'" title="Glisser pour repositionner la photo" onmousedown="imgDragStart(event,\''+k+'\')"><img class="recette-card-img" id="rimg-'+k+'" src="'+r.image+'" alt="'+r.nom+'" style="object-position:'+(r.imagePosition||'50% 50%')+'" onerror="this.parentNode.style.display=\'none\'"></div>' : '') +
       '<div class="recette-card-header">' +
         '<input type="checkbox" class="recette-card-check" id="rcheck-'+k+'" onchange="toggleRecetteJour(\''+k+'\')">' +
@@ -1955,7 +1981,7 @@ function afficherRecettesPerso(liste) {
         '<span class="recette-card-emoji">'+(r.emoji||'🥘')+'</span>' +
         '<span class="recette-card-nom" onclick="voirRecettePerso(\''+k+'\')" title="Voir la recette complète">'+(r.nom)+'</span>' +
         '<span style="position:relative"><span class="service-tag-badge" id="rsvc-'+k+'" onclick="toggleSvcDropdown(\''+k+'\')" style="cursor:pointer">'+(serviceTag||'+ type')+' ▾</span></span>' +
-        '<button class="btn-photo-recette" onclick="document.getElementById(\'photo-file-'+k+'\').click()" title="'+(r.image?'Remplacer la photo':'Ajouter une photo')+'">📷</button>' +
+        '<button class="btn-photo-recette" onclick="ajouterPhotoRecette(\''+k+'\')" title="'+(r.image?'Remplacer la photo (coller Ctrl+V)':'Ajouter une photo (coller Ctrl+V)')+'">📷</button>' +
         '<button class="btn-del-recette" onclick="supprimerRecettePerso(\''+k+'\')" title="Supprimer cette recette">🗑</button>' +
       '</div>' +
       (r.description ? '<div class="recette-card-desc">'+(r.description)+'</div>' : '') +
