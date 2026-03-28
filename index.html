@@ -1990,13 +1990,33 @@ function parseIngQty(str) {
   }
   return { qty: null, unit: '', baseNom: s };
 }
+// Ingrédients connus (du plus long au plus court pour éviter les faux positifs)
+var BASES_CONNUS = [
+  'pommes de terre','patates douces','tomates cerises','haricots verts',
+  'petits pois','champignons de paris','pois chiches','lentilles vertes','lentilles corail',
+  'carottes','courgettes','aubergines','poivrons','tomates','oignons','échalotes',
+  'betteraves','poireaux','champignons','épinards','brocolis','navets','fenouils',
+  'artichauts','endives','radis','salsifis','panais','blettes',
+  'lentilles','quinoa','boulgour','semoule',
+  'pommes','citrons','oranges','bananes','poires','kiwis','mangues','avocats',
+  // singuliers (après les pluriels)
+  'pomme de terre','patate douce','tomate cerise','haricot vert',
+  'carotte','courgette','aubergine','poivron','tomate','oignon','échalote',
+  'betterave','poireau','champignon','épinard','brocoli','navet','fenouil',
+  'artichaut','endive','panais','blette',
+  'lentille','pomme','citron','orange','banane','poire','kiwi','mangue','avocat'
+];
 function cleIng(str) {
   var p = parseIngQty(str);
   var s = p.baseNom.toLowerCase().replace(/\s*\([^)]*\)/g,'').replace(/,.*$/,'').replace(/\s+/g,' ').trim();
-  // Supprimer les descripteurs de découpe/préparation en fin de nom
-  // (ne change pas l'ingrédient d'un point de vue achat)
+  // 1. Supprimer les descripteurs de découpe/préparation en fin de nom
   var PREP = /\s+(?:et\s+)?(?:en (?:dés|rondelles|julienne|lamelles|tranches?|morceaux?|quartiers?|lanières?|conserve|boîte|purée)|(?:pelée?|épluchée?|lavée?|rincée?|égouttée?|essorée?|coupée?|émincée?|hachée?|ciselée?|tranchée?|râpée?|concassée?|écrasée?|blanchie?)s?)$/i;
   for (var i = 0; i < 4; i++) { var t = s.replace(PREP, '').trim(); if (!t || t === s) break; s = t; }
+  // 2. Si le résultat commence par un ingrédient connu, utiliser ce nom canonique
+  for (var j = 0; j < BASES_CONNUS.length; j++) {
+    var b = BASES_CONNUS[j];
+    if (s === b || s.indexOf(b + ' ') === 0) return b;
+  }
   return s;
 }
 // Table de conversion : grammes par unité (pièce) pour les légumes/fruits courants.
