@@ -697,21 +697,37 @@ rW();
 
 // Ingrédients toujours présents dans le placard → exclus automatiquement des courses
 var INGREDIENTS_PLACARD = [
-  'huile d\'olive','huile de colza','huile de tournesol','huile de sésame','huile végétale','huile de coco',
-  'vinaigre blanc','vinaigre de cidre','vinaigre balsamique','vinaigre de vin',
-  'moutarde de dijon','moutarde à l\'ancienne',
-  'poivre noir','poivre blanc','poivre moulu','poivre concassé',
-  'sel fin','gros sel','fleur de sel','sel de mer','sel rose',
-  'huile','sel','poivre','vinaigre','moutarde','mayonnaise','sauce soja','sucre','eau'
+  // Huiles
+  'huile d\'olive','huile de colza','huile de tournesol','huile de sésame','huile végétale','huile de coco','huile',
+  // Vinaigres
+  'vinaigre blanc','vinaigre de cidre','vinaigre balsamique','vinaigre de vin','vinaigre',
+  // Moutardes & condiments
+  'moutarde de dijon','moutarde à l\'ancienne','moutarde','mayonnaise','sauce soja','sauce worcestershire','tabasco',
+  // Poivres
+  'poivre noir','poivre blanc','poivre moulu','poivre concassé','poivre',
+  // Sels
+  'sel fin','gros sel','fleur de sel','sel de mer','sel rose','sel',
+  // Sucres
+  'sucre en poudre','sucre glace','sucre vanillé','sucre roux','cassonade','sucre',
+  // Farines basiques (pas les farines spécifiques : sarrasin, épeautre, châtaigne…)
+  'farine de blé','farine blanche','farine t45','farine t55',
+  // Levures & liant
+  'levure chimique','levure de boulanger','bicarbonate de soude','bicarbonate',
+  // Épices du placard
+  'cumin','curcuma','paprika','cannelle','gingembre en poudre','noix de muscade','muscade',
+  'coriandre en poudre','piment d\'espelette','piment en poudre','curry','ras el hanout','mélange cinq épices',
+  // Herbes séchées
+  'thym','laurier','romarin','origan','herbes de provence','persil séché','ciboulette séchée','basilic séché',
+  // Eau
+  'eau'
 ];
 function estIngredientPlacard(nom) {
   var s = (nom || '').toLowerCase().trim();
   return INGREDIENTS_PLACARD.some(function(p) {
-    // Correspondance exacte
     if (s === p) return true;
-    // Le nom contient le mot-clé comme sous-chaîne (ex: "2 cs d'huile d'olive" contient "huile d'olive")
-    if (s.includes(p)) return true;
-    return false;
+    // Correspondance sur mot(s) entier(s) — évite "eau" dans "veau"/"poireaux", "sel" dans "persil", etc.
+    var esc = p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('(?:^|[^a-zàâäéèêëîïôùûüçœæ])' + esc + '(?:[^a-zàâäéèêëîïôùûüçœæ]|$)').test(s);
   });
 }
 
