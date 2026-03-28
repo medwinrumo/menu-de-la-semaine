@@ -860,7 +860,7 @@ var n=document.getElementById('add-nom').value.trim();var r=document.getElementB
 if(!n)return;var c=document.querySelector('.si[data-cat="'+r+'"]');if(!c)return;
 var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
 var l=document.createElement('label');l.className='sitem';
-l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+n+'</span><span class="sr">Ajouté manuellement</span><button class="btn-chg-rayon" onclick="event.stopPropagation();event.preventDefault();toggleRayonPicker(this)" title="Changer de rayon">🛒</button>';
+l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+n+'</span><span class="sr">Ajouté manuellement</span><button class="btn-chg-rayon" onclick="event.stopPropagation();event.preventDefault();toggleRayonPicker(this)" title="Changer de rayon">🛒</button><button class="btn-chg-rayon" onclick="event.stopPropagation();event.preventDefault();ajouterAuxHabituels(this)" title="Mémoriser dans mes produits habituels">📌</button>';
 c.appendChild(l);document.getElementById('add-nom').value='';
 if(db){var aRef=db.ref('courses/ajoutes').push({nom:n,rayon:r});l.dataset.ajoutesKey=aRef.key;}
 // Mémoriser dans "Tous mes produits" si pas déjà présent
@@ -1973,7 +1973,7 @@ function addCourseItem(nom, rayon, label, recipeKey, jourIdx) {
   l.className = 'sitem';
   l.dataset.recipe = recipeKey;
   l.dataset.jourIdx = String(jourIdx);
-  l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nom+'</span><span class="sr">'+label+'</span><button class="btn-chg-rayon" onclick="event.stopPropagation();event.preventDefault();toggleRayonPicker(this)" title="Changer de rayon">🛒</button>';
+  l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nom+'</span><span class="sr">'+label+'</span><button class="btn-chg-rayon" onclick="event.stopPropagation();event.preventDefault();toggleRayonPicker(this)" title="Changer de rayon">🛒</button><button class="btn-chg-rayon" onclick="event.stopPropagation();event.preventDefault();ajouterAuxHabituels(this)" title="Mémoriser dans mes produits habituels">📌</button>';
   c.appendChild(l);
 }
 
@@ -2072,6 +2072,20 @@ function deplacerRayon(item, rayon) {
   if (db) db.ref('courses/rayon_overrides/'+fbKey2).set(rayon);
   // Mettre à jour le rayon Firebase si item "ajoutes"
   if (db && item.dataset.ajoutesKey) db.ref('courses/ajoutes/'+item.dataset.ajoutesKey+'/rayon').set(rayon);
+}
+function ajouterAuxHabituels(btn) {
+  var item = btn.closest('.sitem');
+  var nom = item.querySelector('.sn').textContent.trim();
+  var si = item.closest('.si');
+  var rayon = si ? (si.dataset.cat || 'divers') : 'divers';
+  var dejaPresent = produitsHabituels.some(function(p){ return p.nom.toLowerCase() === nom.toLowerCase(); });
+  if (dejaPresent) {
+    btn.textContent = '✓'; setTimeout(function(){ btn.textContent = '📌'; }, 1500);
+    return;
+  }
+  if (db) db.ref('produits_habituels').push({nom: nom, rayon: rayon, a_ajouter: true});
+  btn.textContent = '✓'; btn.style.opacity = '1';
+  setTimeout(function(){ btn.textContent = '📌'; btn.style.opacity = ''; }, 1500);
 }
 function rayonFiable(item) {
   var nomLow = (item.nom || '').toLowerCase().trim();
@@ -3570,7 +3584,7 @@ function appliquerDepuisFirebase(data, menus){
       var c=document.querySelector('.si[data-cat="'+item.rayon+'"]');
       if(c){var ph=c.closest('.scat').querySelector('.ph');if(ph)ph.remove();
         var l=document.createElement('label');l.className='sitem';l.dataset.ajoutesKey=key;
-        l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">Ajouté manuellement</span><button class="btn-chg-rayon" onclick="event.stopPropagation();event.preventDefault();toggleRayonPicker(this)" title="Changer de rayon">🛒</button>';
+        l.innerHTML='<input type="checkbox" onchange="bascule(this)"><span class="sn">'+item.nom+'</span><span class="sr">Ajouté manuellement</span><button class="btn-chg-rayon" onclick="event.stopPropagation();event.preventDefault();toggleRayonPicker(this)" title="Changer de rayon">🛒</button><button class="btn-chg-rayon" onclick="event.stopPropagation();event.preventDefault();ajouterAuxHabituels(this)" title="Mémoriser dans mes produits habituels">📌</button>';
         c.appendChild(l);}
     }
   });
