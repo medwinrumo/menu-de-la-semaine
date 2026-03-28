@@ -259,6 +259,9 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .mr-search-row{margin-bottom:10px}
 .mr-search-input{width:100%;padding:9px 14px;border:2px solid var(--border);border-radius:20px;font-size:.88rem;background:var(--card);color:var(--txt);box-sizing:border-box;transition:.15s}
 .mr-search-input:focus{outline:none;border-color:var(--acc)}
+.mr-search-mode{display:flex;gap:6px;margin-top:6px}
+.mr-mode-btn{padding:4px 12px;border:1.5px solid var(--border);border-radius:12px;font-size:.78rem;background:var(--card);color:var(--txt2);cursor:pointer;transition:.15s}
+.mr-mode-btn.on{border-color:var(--acc);color:var(--acc);font-weight:600;background:var(--accL)}
 .tp-bar{margin:12px 0 8px}
 .tp-filtres{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:4px}
 .tp-filtres::-webkit-scrollbar{display:none}
@@ -424,7 +427,11 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 <h2>📚 Mes recettes</h2>
 <p class="mr-sub">Recettes importées via NutriCoach • Cliquez sur un nom pour voir le détail • Cochez + choisissez un jour pour cuisiner</p>
 <div class="mr-search-row" id="mr-search-row" style="display:none">
-  <input type="search" id="mr-search" class="mr-search-input" placeholder="🔍 Rechercher une recette…" oninput="filtrerRecettes()" onsearch="filtrerRecettes()">
+  <input type="search" id="mr-search" class="mr-search-input" placeholder="🔍 Rechercher par nom…" oninput="filtrerRecettes()" onsearch="filtrerRecettes()">
+  <div class="mr-search-mode">
+    <button class="mr-mode-btn on" id="mr-mode-nom" onclick="setSearchMode('nom')">📛 Nom</button>
+    <button class="mr-mode-btn" id="mr-mode-ing" onclick="setSearchMode('ing')">🥕 Ingrédients</button>
+  </div>
 </div>
 <div class="mr-filtres" id="mr-filtres" style="display:none">
   <button class="btn-fav-filter" id="btn-filtre-fav"
@@ -637,6 +644,7 @@ var J=[
 ];
 var SERVICE_ORDER = {'entrée':1,'plat principal':2,'accompagnement':3,'dessert':4,'goûter':5};
 var _gouProtect = {}; // {date: timestamp} — garde contre reset Firebase stale après cuisinerCetteSemaine()
+var searchMode = 'nom'; // 'nom' | 'ing'
 function sortDI(arr) {
   if (!arr) return arr;
   var a = Array.isArray(arr) ? arr : Object.values(arr).filter(Boolean);
@@ -2916,9 +2924,24 @@ function toggleFiltreTag(tag) {
   filtrerRecettes();
 }
 
+function setSearchMode(mode) {
+  searchMode = mode;
+  var inp = document.getElementById('mr-search');
+  var btnNom = document.getElementById('mr-mode-nom');
+  var btnIng = document.getElementById('mr-mode-ing');
+  if (btnNom) btnNom.classList.toggle('on', mode === 'nom');
+  if (btnIng) btnIng.classList.toggle('on', mode === 'ing');
+  if (inp) {
+    inp.placeholder = mode === 'ing' ? '🥕 Rechercher par ingrédient…' : '🔍 Rechercher par nom…';
+    inp.value = '';
+  }
+  filtrerRecettes();
+}
+
 function filtrerRecettes() {
   var inp = document.getElementById('mr-search');
   var q = (inp ? inp.value : '').trim().toLowerCase();
+  var mots = q ? q.split(/\s+/).filter(Boolean) : [];
   var anyVisible = 0;
   document.querySelectorAll('#mes-recettes-liste .recette-card').forEach(function(card) {
     var k = card.id.replace('rcard-', '');
@@ -2931,9 +2954,14 @@ function filtrerRecettes() {
       filtresTags.forEach(function(t){ if (rt.includes(t)) match = true; });
       if (!match) show = false;
     }
-    if (show && q) {
-      var hay = (r ? r.nom : '').toLowerCase();
-      if (!hay.includes(q)) show = false;
+    if (show && mots.length) {
+      if (searchMode === 'ing') {
+        var ings = toArr(r ? r.ingredients : []).join(' ').toLowerCase();
+        show = mots.every(function(m){ return ings.includes(m); });
+      } else {
+        var hay = (r ? r.nom : '').toLowerCase();
+        show = mots.every(function(m){ return hay.includes(m); });
+      }
     }
     card.style.display = show ? '' : 'none';
     if (show) anyVisible++;
@@ -2944,7 +2972,7 @@ function filtrerRecettes() {
   var emptyEl = document.getElementById('mr-filter-empty');
   if (anyVisible === 0 && recettesPerso.length > 0) {
     if (!emptyEl) { emptyEl = document.createElement('p'); emptyEl.id = 'mr-filter-empty'; emptyEl.className = 'mr-empty'; el.appendChild(emptyEl); }
-    emptyEl.textContent = 'Aucune recette ne correspond' + (q ? ' à « '+q+' ».' : ' aux filtres actifs.');
+    emptyEl.textContent = 'Aucune recette ne correspond' + (q ? (searchMode === 'ing' ? ' à l\'ingrédient « '+q+' ».' : ' à « '+q+' ».') : ' aux filtres actifs.');
     emptyEl.style.display = '';
   } else if (emptyEl) {
     emptyEl.style.display = 'none';
