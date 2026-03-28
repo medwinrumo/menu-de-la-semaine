@@ -2933,7 +2933,7 @@ function filtrerRecettes() {
       if (!match) show = false;
     }
     if (show && mots.length) {
-      var hay = (r ? r.nom : '').toLowerCase() + ' ' + toArr(r ? r.ingredients : []).join(' ').toLowerCase();
+      var hay = (r ? r.nom : '').toLowerCase() + ' ' + toArr(r ? r.ingredients : []).join(' ').toLowerCase() + ' ' + (r ? (r.tags||[]).join(' ') : '').toLowerCase();
       show = mots.every(function(m){ return hay.includes(m); });
     }
     card.style.display = show ? '' : 'none';
