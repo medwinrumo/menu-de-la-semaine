@@ -765,7 +765,16 @@ function addIngredientsJour(idx){
 function toggleEnCourses(idx,checked){
   J[idx].enCourses=checked;
   if(!checked){
-    document.querySelectorAll('#liste-principale .sitem[data-jourIdx="'+idx+'"]').forEach(function(l){l.remove();});
+    document.querySelectorAll('#liste-principale .sitem[data-ing-cle]').forEach(function(el){
+      var sources = JSON.parse(el.dataset.sources||'[]');
+      var newSrc = sources.filter(function(s){ return s.jourIdx!==idx; });
+      if (!newSrc.length) { el.remove(); return; }
+      if (newSrc.length !== sources.length) {
+        el.dataset.sources = JSON.stringify(newSrc);
+        el.querySelector('.sn').textContent = aggregerSources(newSrc);
+        el.querySelector('.sr').textContent = newSrc.map(function(s){ return s.label; }).join(' • ');
+      }
+    });
     mC();
   } else {
     addIngredientsJour(idx);
@@ -1958,12 +1967,57 @@ function buildRecipeDiv(idx, r) {
 }
 
 // Ajoute un item recette dans la liste de courses (avec data-recipe pour tracking)
+// ── Agrégation ingrédients ──────────────────────────────────────────────────
+function parseIngQty(str) {
+  var s = (str || '').trim();
+  var m = s.match(/^(\d+[\.,]?\d*)\s*(g|kg|cl|dl|l|ml|cs|càs|cc|càc|bouquet[s]?|botte[s]?|tranche[s]?|filet[s]?|morceau[x]?|tête[s]?|branche[s]?|gousse[s]?|verre[s]?|portion[s]?)?\s*(?:de |d')?/i);
+  if (m && m[1]) {
+    var unit = (m[2] || '').toLowerCase().replace(/s$/, '').replace(/x$/, '');
+    return { qty: parseFloat(m[1].replace(',','.')), unit: unit, baseNom: s.slice(m[0].length).trim() || s };
+  }
+  return { qty: null, unit: '', baseNom: s };
+}
+function cleIng(str) {
+  var p = parseIngQty(str);
+  return p.baseNom.toLowerCase().replace(/\s*\([^)]*\)/g,'').replace(/,.*$/,'').replace(/\s+/g,' ').trim();
+}
+function aggregerSources(sources) {
+  if (!sources.length) return '';
+  if (sources.length === 1) return sources[0].nomComplet;
+  var tousQty = sources.every(function(s){ return s.qty !== null; });
+  var memeUnite = sources.every(function(s){ return s.unit === sources[0].unit; });
+  if (tousQty && memeUnite) {
+    var total = sources.reduce(function(acc,s){ return acc+s.qty; }, 0);
+    var totalStr = total%1===0 ? String(total) : String(Math.round(total*10)/10);
+    var unit = sources[0].unit;
+    var maxSrc = sources.reduce(function(mx,s){ return s.qty>mx.qty?s:mx; }, sources[0]);
+    var metricUnits = ['g','kg','cl','dl','l','ml'];
+    var sep = (!unit || metricUnits.indexOf(unit)>=0) ? '' : ' ';
+    return totalStr + sep + unit + ' ' + maxSrc.baseNom;
+  }
+  return sources.map(function(s){
+    return s.qty!==null ? s.qty+(s.unit?s.unit:'')+' '+s.baseNom : s.nomComplet;
+  }).join(' + ');
+}
+// ────────────────────────────────────────────────────────────────────────────
 function addCourseItem(nom, rayon, label, recipeKey, jourIdx) {
-  var existe = false;
-  document.querySelectorAll('#liste-principale .sitem .sn').forEach(function(el) {
-    if (el.textContent.toLowerCase() === nom.toLowerCase()) existe = true;
+  var cle = cleIng(nom);
+  var parsed = parseIngQty(nom);
+  var src = { jourIdx: jourIdx, qty: parsed.qty, unit: parsed.unit, baseNom: parsed.baseNom, nomComplet: nom, label: label };
+  // Chercher un item existant avec la même clé d'ingrédient
+  var existing = null;
+  document.querySelectorAll('#liste-principale .sitem[data-ing-cle]').forEach(function(el){
+    if (!existing && el.dataset.ingCle === cle) existing = el;
   });
-  if (existe) return;
+  if (existing) {
+    var sources = JSON.parse(existing.dataset.sources || '[]');
+    if (sources.some(function(s){ return s.jourIdx===jourIdx && s.label===label; })) return;
+    sources.push(src);
+    existing.dataset.sources = JSON.stringify(sources);
+    existing.querySelector('.sn').textContent = aggregerSources(sources);
+    existing.querySelector('.sr').textContent = sources.map(function(s){ return s.label; }).join(' • ');
+    return;
+  }
   var c = document.querySelector('.si[data-cat="'+rayon+'"]');
   if (!c) c = document.querySelector('.si[data-cat="epicerie"]');
   if (!c) return;
@@ -1972,14 +2026,15 @@ function addCourseItem(nom, rayon, label, recipeKey, jourIdx) {
   var l = document.createElement('label');
   l.className = 'sitem';
   l.dataset.recipe = recipeKey;
-  l.dataset.jourIdx = String(jourIdx);
+  l.dataset.ingCle = cle;
+  l.dataset.sources = JSON.stringify([src]);
   l.innerHTML = '<input type="checkbox" onchange="bascule(this)"><span class="sn">'+nom+'</span><span class="sr">'+label+'</span><button class="btn-chg-rayon" onclick="event.stopPropagation();event.preventDefault();toggleRayonPicker(this)" title="Changer de rayon">🛒</button><button class="btn-chg-rayon" onclick="event.stopPropagation();event.preventDefault();ajouterAuxHabituels(this)" title="Mémoriser dans mes produits habituels">📌</button>';
   c.appendChild(l);
 }
 
 // Reconstruit tous les items recettes dans la liste de courses depuis J[] ou data.menus
 function rebuilderListeRecettes(menus) {
-  document.querySelectorAll('#liste-principale .sitem[data-recipe]').forEach(function(l){ l.remove(); });
+  document.querySelectorAll('#liste-principale .sitem[data-ing-cle]').forEach(function(l){ l.remove(); });
   var entries = Array.isArray(menus)
     ? menus.map(function(m, i){ return {idx:i, m:m}; })
     : Object.keys(menus || {}).map(function(k){
@@ -2059,37 +2114,39 @@ function toggleRayonPicker(btn) {
 }
 function deplacerRayon(item, rayon) {
   var nom = item.querySelector('.sn').textContent;
+  var cle = item.dataset.ingCle || cleIng(nom);
   var c = document.querySelector('.si[data-cat="'+rayon+'"]');
   if (!c) return;
   var ph = c.closest('.scat').querySelector('.ph');
   if (ph) ph.remove();
   c.appendChild(item);
   mC();
-  // Persister la surcharge
-  var nomLow = nom.toLowerCase().trim();
-  rayonOverrides[nomLow] = rayon;
-  var fbKey2 = nomLow.replace(/[.#$[\]/]/g, '_');
+  // Persister la surcharge par clé d'ingrédient
+  rayonOverrides[cle] = rayon;
+  var fbKey2 = cle.replace(/[.#$[\]/]/g, '_');
   if (db) db.ref('courses/rayon_overrides/'+fbKey2).set(rayon);
-  // Mettre à jour le rayon Firebase si item "ajoutes"
   if (db && item.dataset.ajoutesKey) db.ref('courses/ajoutes/'+item.dataset.ajoutesKey+'/rayon').set(rayon);
 }
 function ajouterAuxHabituels(btn) {
   var item = btn.closest('.sitem');
-  var nom = item.querySelector('.sn').textContent.trim();
+  var nomComplet = item.querySelector('.sn').textContent.trim();
+  var nomBase = parseIngQty(nomComplet).baseNom || nomComplet; // sans quantité
   var si = item.closest('.si');
   var rayon = si ? (si.dataset.cat || 'divers') : 'divers';
-  var dejaPresent = produitsHabituels.some(function(p){ return p.nom.toLowerCase() === nom.toLowerCase(); });
+  var dejaPresent = produitsHabituels.some(function(p){ return p.nom.toLowerCase() === nomBase.toLowerCase(); });
   if (dejaPresent) {
     btn.textContent = '✓'; setTimeout(function(){ btn.textContent = '📌'; }, 1500);
     return;
   }
-  if (db) db.ref('produits_habituels').push({nom: nom, rayon: rayon, a_ajouter: true});
+  if (db) db.ref('produits_habituels').push({nom: nomBase, rayon: rayon, a_ajouter: true});
   btn.textContent = '✓'; btn.style.opacity = '1';
   setTimeout(function(){ btn.textContent = '📌'; btn.style.opacity = ''; }, 1500);
 }
 function rayonFiable(item) {
+  var cle = cleIng(item.nom);
+  // 1. Surcharge manuelle (clé normalisée ou nom brut — rétrocompat)
+  if (rayonOverrides[cle]) return { nom: item.nom, rayon: rayonOverrides[cle] };
   var nomLow = (item.nom || '').toLowerCase().trim();
-  // 1. Surcharge manuelle de l'utilisateur (persistée Firebase)
   if (rayonOverrides[nomLow]) return { nom: item.nom, rayon: rayonOverrides[nomLow] };
   // 2. devinerRayon si plus précis que l'IA
   var r2 = devinerRayon(item.nom);
