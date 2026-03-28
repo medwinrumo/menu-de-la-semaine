@@ -774,6 +774,22 @@ function toggleEnCourses(idx,checked){
     });
     mC();
   } else {
+    // Effacer les entrées achetes pour ce jour (l'utilisateur veut racheter ces ingrédients)
+    if (db) {
+      var upd = {};
+      var jj = J[idx];
+      var rawDI2 = jj.dinerItems;
+      var dI2 = rawDI2 ? (Array.isArray(rawDI2) ? rawDI2 : Object.values(rawDI2).filter(Boolean)) : null;
+      var allItems = [];
+      if (dI2 && dI2.length) {
+        dI2.forEach(function(dit) { if (dit.recette) getIngsRecette(dit.recette).forEach(function(it){ allItems.push(it.nom); }); });
+      } else if (jj.recette) {
+        getIngsRecette(jj.recette).forEach(function(it){ allItems.push(it.nom); });
+      }
+      if (jj.recetteGou && jj.gou) getIngsRecette(jj.recetteGou).forEach(function(it){ allItems.push(it.nom); });
+      allItems.forEach(function(nom) { upd['achetes/' + fbKey(nom)] = null; });
+      if (Object.keys(upd).length) db.ref('courses').update(upd);
+    }
     addIngredientsJour(idx);
   }
   if(db)db.ref('menus/'+J[idx].date+'/enCourses').set(checked||null);
@@ -2009,16 +2025,11 @@ function getIngsRecette(recette) {
     if (!rayonHints[nomLow]) rayonHints[nomLow] = fiable.rayon;
   });
   var ings = toArr(recette.ingredients || []);
-  console.log('[courses] getIngsRecette "'+recette.nom+'" → '+ings.length+' ingredients, '+toArr(recette.coursesAAjouter||[]).length+' coursesAAjouter');
-  if (!ings.length) console.warn('[courses] ⚠️ ingredients[] vide pour:', recette.nom, recette);
   var result = ings.map(function(ing) {
     var cle = cleIng(ing);
     var rayon = rayonHints[cle] || devinerRayon(ing);
-    var filtre = estIngredientPlacard(ing);
-    if (filtre) console.log('[courses]   ✗ placard:', ing);
-    return filtre ? null : { nom: ing, rayon: rayon };
+    return estIngredientPlacard(ing) ? null : { nom: ing, rayon: rayon };
   }).filter(Boolean);
-  console.log('[courses]   → '+result.length+' ingrédients envoyés aux courses');
   return result;
 }
 // ────────────────────────────────────────────────────────────────────────────
