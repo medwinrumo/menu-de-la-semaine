@@ -1992,7 +1992,12 @@ function parseIngQty(str) {
 }
 function cleIng(str) {
   var p = parseIngQty(str);
-  return p.baseNom.toLowerCase().replace(/\s*\([^)]*\)/g,'').replace(/,.*$/,'').replace(/\s+/g,' ').trim();
+  var s = p.baseNom.toLowerCase().replace(/\s*\([^)]*\)/g,'').replace(/,.*$/,'').replace(/\s+/g,' ').trim();
+  // Supprimer les descripteurs de découpe/préparation en fin de nom
+  // (ne change pas l'ingrédient d'un point de vue achat)
+  var PREP = /\s+(?:et\s+)?(?:en (?:dés|rondelles|julienne|lamelles|tranches?|morceaux?|quartiers?|lanières?|conserve|boîte|purée)|(?:pelée?|épluchée?|lavée?|rincée?|égouttée?|essorée?|coupée?|émincée?|hachée?|ciselée?|tranchée?|râpée?|concassée?|écrasée?|blanchie?)s?)$/i;
+  for (var i = 0; i < 4; i++) { var t = s.replace(PREP, '').trim(); if (!t || t === s) break; s = t; }
+  return s;
 }
 // Table de conversion : grammes par unité (pièce) pour les légumes/fruits courants.
 // Ordre : les plus spécifiques en premier pour éviter les faux positifs.
