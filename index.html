@@ -1994,6 +1994,26 @@ function cleIng(str) {
   var p = parseIngQty(str);
   return p.baseNom.toLowerCase().replace(/\s*\([^)]*\)/g,'').replace(/,.*$/,'').replace(/\s+/g,' ').trim();
 }
+// Table de conversion : grammes par unité (pièce) pour les légumes/fruits courants.
+// Ordre : les plus spécifiques en premier pour éviter les faux positifs.
+function poidsParUnite(str) {
+  var s = (str || '').toLowerCase();
+  var table = [
+    ['pomme de terre', 150], ['patate douce', 200], ['tomate cerise', 15],
+    ['citron vert', 80],     ['champignon de paris', 15],
+    ['carotte', 100],        ['courgette', 200],  ['aubergine', 300],
+    ['poivron', 150],        ['tomate', 120],      ['oignon', 150],
+    ['échalote', 50],        ['betterave', 200],   ['panais', 100],
+    ['poireau', 150],        ['navet', 150],        ['fenouil', 300],
+    ['artichaut', 300],      ['endive', 100],       ['champignon', 15],
+    ['citron', 100],         ['orange', 180],       ['pomme', 150],
+    ['poire', 150],          ['banane', 120],       ['kiwi', 80],
+  ];
+  for (var i = 0; i < table.length; i++) {
+    if (s.indexOf(table[i][0]) !== -1) return table[i][1];
+  }
+  return null;
+}
 function aggregerSources(sources) {
   if (!sources.length) return '';
   if (sources.length === 1) return sources[0].nomComplet;
@@ -2007,6 +2027,25 @@ function aggregerSources(sources) {
     var metricUnits = ['g','kg','cl','dl','l','ml'];
     var sep = (!unit || metricUnits.indexOf(unit)>=0) ? '' : ' ';
     return totalStr + sep + unit + ' ' + maxSrc.baseNom;
+  }
+  // Conversion g/kg ↔ pièces pour légumes et fruits connus
+  // Ex : 4 carottes + 200g de carottes → 6 carottes
+  if (tousQty) {
+    var gSrc    = sources.filter(function(s){ return s.unit === 'g'; });
+    var kgSrc   = sources.filter(function(s){ return s.unit === 'kg'; });
+    var pieceSrc = sources.filter(function(s){ return !s.unit; });
+    var totalMetric = gSrc.length + kgSrc.length;
+    if (pieceSrc.length > 0 && totalMetric > 0 && pieceSrc.length + totalMetric === sources.length) {
+      var refNom = pieceSrc[0].baseNom;
+      var poids = poidsParUnite(refNom);
+      if (!poids) poids = poidsParUnite(gSrc.length ? gSrc[0].baseNom : kgSrc[0].baseNom);
+      if (poids) {
+        var totalU = pieceSrc.reduce(function(acc,s){ return acc+s.qty; }, 0);
+        gSrc.forEach(function(s){ totalU += s.qty / poids; });
+        kgSrc.forEach(function(s){ totalU += (s.qty * 1000) / poids; });
+        return Math.round(totalU) + ' ' + refNom;
+      }
+    }
   }
   return sources.map(function(s){
     return s.qty!==null ? s.qty+(s.unit?s.unit:'')+' '+s.baseNom : s.nomComplet;
