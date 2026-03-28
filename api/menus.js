@@ -129,7 +129,7 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
           {"nom": "2 cuisses de poulet", "rayon": "viandes"},
           {"nom": "2 poireaux", "rayon": "legumes"},
           {"nom": "200g champignons de Paris", "rayon": "legumes"},
-          {"nom": "crème légère 15%", "rayon": "laitier"}
+          {"nom": "2 cs crème légère 15%", "rayon": "laitier"}
         ]
       }
     }
@@ -137,7 +137,11 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
 }
 
 Génère les 7 jours. Le champ "url" doit être null sauf si tu es certain à 100% que l'URL existe.
-Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers`;
+Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers
+
+RÈGLE coursesAAjouter :
+- N'inclure QUE les ingrédients à acheter — exclure les produits du placard (sel, poivre, huile, sucre, vinaigre, herbes sèches, épices courantes, farine blanche, moutarde, sauce soja...)
+- Le champ "nom" DOIT TOUJOURS inclure la quantité exacte. Ex: "400g de cabillaud", "2 poireaux", "20cl crème légère 15%", "1 bouquet de persil plat". Jamais juste "cabillaud" ou "crème".`;
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',

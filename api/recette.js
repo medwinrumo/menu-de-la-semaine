@@ -51,13 +51,17 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
   "etapes": ["Étape 1...", "Étape 2...", "Étape 3..."],
   "coursesAAjouter": [
     {"nom": "400g filets de cabillaud", "rayon": "viandes"},
-    {"nom": "Aneth frais", "rayon": "herbes"}
+    {"nom": "1 bouquet aneth frais", "rayon": "herbes"}
   ]
 }
 
 Le champ "url" doit pointer vers une recette réelle et accessible sur l'un des sites de référence fournis. Si tu n'as pas d'URL certaine pour cette recette précise, mets null.
 
 Rayons disponibles : legumes, fruits, viandes, laitier, feculents, boulangerie, epicerie, herbes, oleagineux, traiteur, boissons, surgeles, entretien, sante, corps, divers
+
+RÈGLE coursesAAjouter :
+- N'inclure QUE les ingrédients à acheter — exclure les produits du placard (sel, poivre, huile, sucre, vinaigre, herbes sèches, épices courantes, farine blanche, moutarde, sauce soja...)
+- Le champ "nom" DOIT TOUJOURS inclure la quantité exacte. Ex: "400g de cabillaud", "2 poireaux", "20cl crème légère 15%", "1 bouquet de persil plat". Jamais juste "cabillaud" ou "crème".
 
 ${getSitesRessources(sitesExtra)}`;
 
