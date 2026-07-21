@@ -3345,8 +3345,8 @@ function editerNoteRecette(k) {
   el.innerHTML =
     '<textarea class="note-edit-area" id="note-ta-'+k+'" placeholder="Votre note sur cette recette…" onkeydown="if(event.key===\'Escape\')fermerNoteRecette(\''+k+'\')">'+oldNote.replace(/</g,'&lt;')+'</textarea>' +
     '<div style="display:flex;gap:6px">' +
-    '<button class="ing-btn-ok" onclick="sauvegarderNote(\''+k+'\')">✓ Enregistrer</button>' +
-    '<button class="ing-btn-cancel" onclick="fermerNoteRecette(\''+k+'\')">Fermer</button>' +
+    '<button class="ing-btn-ok" onclick="event.stopPropagation();sauvegarderNote(\''+k+'\')">✓ Enregistrer</button>' +
+    '<button class="ing-btn-cancel" onclick="event.stopPropagation();fermerNoteRecette(\''+k+'\')">Fermer</button>' +
     '</div>';
   var ta = document.getElementById('note-ta-'+k);
   if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
