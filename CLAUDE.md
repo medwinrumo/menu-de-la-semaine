@@ -138,6 +138,11 @@ Création du fichier de contexte projet.
   - Fonction `majBtnCuisiner()` appelée par `toggleRecetteJour()` et `tab()`
   - `#mesrecettes.on` a `padding-bottom:70px` pour ne pas masquer la dernière recette
 
+### Fix — 21 juillet 2026 ✅ TERMINÉ
+- **Note recette (Mes Recettes) : boutons Enregistrer/Fermer ne fermaient pas l'éditeur** (iOS + Mac)
+  - Cause : `fermerNoteRecette()` réassigne `el.onclick` (via `renderNoteEl`) pendant le dispatch du clic ; l'event bubblait ensuite jusqu'à `#rnote-k` qui venait de récupérer le nouvel `onclick` (`editerNoteRecette`), rouvrant l'éditeur instantanément
+  - Fix : `event.stopPropagation()` sur les deux boutons (pattern déjà utilisé ligne du bouton ✕ effacer-note), `editerNoteRecette` / `sauvegarderNote` / `fermerNoteRecette`
+
 ---
 
 ---
