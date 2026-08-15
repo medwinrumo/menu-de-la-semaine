@@ -15,10 +15,10 @@ Toutes les instructions doivent être en français, simples et pas à pas.
 https://github.com/medwinrumo/menu-de-la-semaine
 
 ## Hébergement
-- Vercel (connecté au dépôt GitHub, déploiement automatique à chaque push)
-- URL : https://menus.namour.eu
+- Vercel — URL : https://menus.namour.eu
 - DNS géré par Squarespace (domaine Google Workspace)
-- Pour redéployer manuellement : dashboard Vercel → projet → bouton "Redeploy"
+- ⚠️ **Déploiement automatique CASSÉ depuis le 21/07/2026** (constaté le 15/08/2026) : `gh api repos/medwinrumo/menu-de-la-semaine/hooks` renvoie `[]`, aucun webhook GitHub → Vercel. La prod est restée bloquée sur le build du 21/07 pendant 24 jours malgré plusieurs push (fix note recette, photo presse-papier, etc.), aucun n'était live jusqu'au déploiement manuel du 15/08. Reconnexion à faire dans le dashboard Vercel → Settings → Git (OAuth, pas faisable en CLI).
+- **Tant que non reconnecté : redéployer manuellement après chaque push**, via CLI (`vercel --prod`, nécessite `vercel login` puis `vercel link` une fois) ou dashboard Vercel → projet → bouton "Redeploy"
 
 ## Structure des fichiers
 - `index.html` : application complète (HTML + CSS + JS en un seul fichier)
@@ -192,3 +192,5 @@ Règle : codée ≠ validée. Une correction est supprimée de cette liste seule
 
 ### 🟡 À faire (priorité basse)
 - **#5** Qualité des recettes générées par Claude → retravailler prompt api/menus.js
+- **#6** Reconnecter le déploiement automatique GitHub → Vercel (dashboard Vercel → Settings → Git). Voir section Hébergement.
+- **#7** `ANTHROPIC_API_KEY` marquée "Non-sensitive" dans les variables d'environnement Vercel → repasser en "Sensitive" (dashboard Vercel → Settings → Environment Variables). Pas exposée publiquement mais visible en clair dans le dashboard.
