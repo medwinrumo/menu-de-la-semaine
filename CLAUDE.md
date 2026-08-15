@@ -143,6 +143,13 @@ Création du fichier de contexte projet.
   - Cause : `fermerNoteRecette()` réassigne `el.onclick` (via `renderNoteEl`) pendant le dispatch du clic ; l'event bubblait ensuite jusqu'à `#rnote-k` qui venait de récupérer le nouvel `onclick` (`editerNoteRecette`), rouvrant l'éditeur instantanément
   - Fix : `event.stopPropagation()` sur les deux boutons (pattern déjà utilisé ligne du bouton ✕ effacer-note), `editerNoteRecette` / `sauvegarderNote` / `fermerNoteRecette`
 
+### Feat + Fix — 15 août 2026 ✅ TERMINÉ — Photo recette sur tablette/téléphone
+- **Ajout** : sur pointeur "coarse" (`matchMedia('(pointer: coarse)')`), le bouton 📷 d'une carte recette ouvre directement le sélecteur de fichier natif (`#photoRecetteInput`, `accept="image/*"`) au lieu d'attendre un collage Ctrl+V — impossible sans clavier/clic droit sur écran tactile. Desktop inchangé (pointeur fin → collage Ctrl+V).
+  - `ajouterPhotoRecette(k)`, `onPhotoRecetteFileChange(input)`
+- **Fix 1** : `traiterImageBlob()` n'avait aucune gestion d'erreur (ni `FileReader.onerror`, ni `Image.onerror`, ni `try/catch`) — un décodage échoué restait totalement silencieux, aucun toast, aucune trace console.
+- **Fix 2 (cause réelle du bug rapporté)** : `photoRecetteInput.click()` déclenche un clic synthétique qui bulle jusqu'à `document`. Le listener global "clic hors de la carte annule l'attente photo" (ligne ~1941) le captait — l'input caché n'étant pas dans `#rcard-k` — et effaçait `_photoTargetKey` avant même l'ouverture du sélecteur natif. Résultat : "cible perdue, retape sur 📷" à chaque tentative. Fix : le listener ignore désormais les clics dont `target.id === 'photoRecetteInput'`.
+  - Testé et confirmé fonctionnel sur Chrome iPad.
+
 ---
 
 ---
