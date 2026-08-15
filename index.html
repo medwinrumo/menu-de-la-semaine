@@ -1886,26 +1886,37 @@ function annulerPhotoRecette() {
 }
 function traiterImageBlob(k, blob) {
   var reader = new FileReader();
+  reader.onerror = function() {
+    toast('⚠️ Impossible de lire le fichier image');
+  };
   reader.onload = function(e) {
     var img = new Image();
+    img.onerror = function() {
+      toast('⚠️ Format d\'image non pris en charge');
+    };
     img.onload = function() {
-      var MAX = 800, w = img.width, h = img.height;
-      if (w > MAX || h > MAX) {
-        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-        else { w = Math.round(w * MAX / h); h = MAX; }
+      try {
+        var MAX = 800, w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        var compressed = canvas.toDataURL('image/jpeg', 0.72);
+        var r = recettesPersoMap[k];
+        if (!r) return;
+        r.image = compressed;
+        if (r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/image').set(compressed);
+        var imgWrap = document.getElementById('imgwrap-'+k);
+        if (imgWrap) { var ei = document.getElementById('rimg-'+k); if (ei) ei.src = compressed; }
+        else afficherRecettesPerso();
+        toast('📷 Photo ajoutée !');
+      } catch (err) {
+        console.error('traiterImageBlob', err);
+        toast('⚠️ Erreur lors du traitement de l\'image');
       }
-      var canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      var compressed = canvas.toDataURL('image/jpeg', 0.72);
-      var r = recettesPersoMap[k];
-      if (!r) return;
-      r.image = compressed;
-      if (r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/image').set(compressed);
-      var imgWrap = document.getElementById('imgwrap-'+k);
-      if (imgWrap) { var ei = document.getElementById('rimg-'+k); if (ei) ei.src = compressed; }
-      else afficherRecettesPerso();
-      toast('📷 Photo ajoutée !');
     };
     img.src = e.target.result;
   };
