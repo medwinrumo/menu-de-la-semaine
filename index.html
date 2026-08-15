@@ -1873,7 +1873,9 @@ function ajouterPhotoRecette(k) {
 function onPhotoRecetteFileChange(input) {
   var file = input.files[0];
   input.value = '';
-  if (!file || !_photoTargetKey) return;
+  if (!file) { toast('⚠️ Aucun fichier reçu'); return; }
+  if (!_photoTargetKey) { toast('⚠️ Cible perdue, retape sur 📷'); return; }
+  toast('📷 Fichier reçu (' + Math.round(file.size/1024) + ' Ko), traitement…');
   var k = _photoTargetKey;
   annulerPhotoRecette();
   traiterImageBlob(k, file);
