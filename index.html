@@ -1940,6 +1940,7 @@ document.addEventListener('paste', function(e) {
 });
 document.addEventListener('click', function(e) {
   if (!_photoTargetKey) return;
+  if (e.target.id === 'photoRecetteInput') return; // clic synthétique déclenché par ajouterPhotoRecette() elle-même
   if (!e.target.closest('#rcard-'+_photoTargetKey)) annulerPhotoRecette();
 });
 function afficherRecettesPerso(liste) {
