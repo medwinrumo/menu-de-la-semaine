@@ -421,6 +421,7 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
   <div class="chat-input-area">
     <textarea id="chat-input" rows="2" placeholder="Question ou instruction…"></textarea>
     <input type="file" id="fichierImport" accept=".txt,.md,.pdf,.jpg,.jpeg,.png,.webp" style="display:none" onchange="importerFichier(this)">
+    <input type="file" id="photoRecetteInput" accept="image/*" style="display:none" onchange="onPhotoRecetteFileChange(this)">
     <button class="btn-attach" onclick="document.getElementById('fichierImport').click()" title="Importer un fichier (recette, article, photo)">📎</button>
     <button id="btn-chat-send" onclick="envoyerChat()">➤</button>
   </div>
@@ -1860,9 +1861,22 @@ function ajouterPhotoRecette(k) {
   if (_photoTargetKey === k) { annulerPhotoRecette(); return; }
   if (_photoTargetKey) annulerPhotoRecette();
   _photoTargetKey = k;
+  // Tablette/téléphone (pas de clavier ni clic droit) : ouvrir direct le sélecteur natif (photo ou galerie)
+  if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+    document.getElementById('photoRecetteInput').click();
+    return;
+  }
   var card = document.getElementById('rcard-'+k);
   if (card) card.classList.add('photo-attente');
   toast('📋 Colle l\'image avec Ctrl+V');
+}
+function onPhotoRecetteFileChange(input) {
+  var file = input.files[0];
+  input.value = '';
+  if (!file || !_photoTargetKey) return;
+  var k = _photoTargetKey;
+  annulerPhotoRecette();
+  traiterImageBlob(k, file);
 }
 function annulerPhotoRecette() {
   if (!_photoTargetKey) return;
