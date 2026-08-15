@@ -106,7 +106,7 @@ Si le contenu est illisible ou non pertinent :
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
+      max_tokens: 3000,
       system: systemPrompt,
       messages: [{ role: 'user', content: userContent }]
     });
@@ -119,6 +119,7 @@ Si le contenu est illisible ou non pertinent :
       if (!jsonMatch) throw new Error('Pas de JSON dans la réponse');
       result = JSON.parse(jsonMatch[0]);
     } catch (e) {
+      console.error('Réponse Claude non-JSON, stop_reason=' + response.stop_reason + ' :', text);
       result = { type: 'erreur', data: { message: 'Impossible d\'analyser ce fichier.' } };
     }
 
