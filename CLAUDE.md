@@ -28,8 +28,9 @@ https://github.com/medwinrumo/menu-de-la-semaine
 - `api/recette.js` : remplacement d'une recette individuelle (claude-opus-4-6, max_tokens 1500)
 - `api/menus.js` : génération de la semaine complète (claude-sonnet-4-6, max_tokens 8000)
 - `api/chat.js` : assistant NutriCoach + actions sur les menus (claude-sonnet-4-6, max_tokens 1500)
-- `api/import.js` : import de fichiers recettes (PDF, images, texte/markdown) via Claude vision/document (claude-sonnet-4-6, max_tokens 1500)
+- `api/import.js` : import de fichiers recettes (PDF, images, texte/markdown) via Claude vision/document (claude-sonnet-4-6, max_tokens 3000)
 - `api/scrape.js` : import de recettes depuis une URL — extrait JSON-LD schema.org/Recipe en priorité, enrichit avec claude-haiku-4-5 (tags, astuces), fallback claude-sonnet-4-6 si JSON-LD absent
+- `api/preparation.js` : plan de préparation optimisé (bouton 🍳 Détails) — chronologie des étapes, tâches parallélisables (claude-sonnet-4-6)
 - `mon profil santé.md` : profil complet utilisateur (âge, activité, habitudes alimentaires)
 - `Schéma nutritionnel personnalisé.md` : schéma nutritionnel détaillé avec stratégies de transition
 - `Compte Rendu analyse sanguine medwin` : résultats sanguins (glycémie, cholestérol LDL/HDL)
