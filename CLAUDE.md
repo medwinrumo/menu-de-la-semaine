@@ -150,6 +150,12 @@ Création du fichier de contexte projet.
 - **Fix 2 (cause réelle du bug rapporté)** : `photoRecetteInput.click()` déclenche un clic synthétique qui bulle jusqu'à `document`. Le listener global "clic hors de la carte annule l'attente photo" (ligne ~1941) le captait — l'input caché n'étant pas dans `#rcard-k` — et effaçait `_photoTargetKey` avant même l'ouverture du sélecteur natif. Résultat : "cible perdue, retape sur 📷" à chaque tentative. Fix : le listener ignore désormais les clics dont `target.id === 'photoRecetteInput'`.
   - Testé et confirmé fonctionnel sur Chrome iPad.
 
+### Feat — 19 août 2026 — Renommer une recette depuis « Mes Recettes »
+- **Ajout** : bouton ✏️ sur chaque carte de « Mes Recettes » (stock), même comportement que le crayon déjà présent dans la vue semaine (nom cliquable → input inline → Entrée valide, Échap annule).
+  - Nouvelle fonction `editerNomRecettePerso(k, btn)` — `editRecetteTitre()` existant ne pouvait pas être réutilisé tel quel : `_rmpInfo()` ne résout que les clés de la semaine (`r{idx}_main|gou|N}`), pas les clés de `recettesPersoMap`. Écrit `nom` dans `recettes_perso/{fbKey}/nom`.
+  - CSS : nouvelle classe `.recette-card-nom-edit` qui reproduit le `order`/`flex-basis` responsive de `.recette-card-nom` (ligne séparée en mobile, inline dès 600px), pour que le crayon et l'input d'édition restent collés au nom dans les deux dispositions.
+  - Non testé sur appareil au moment du commit.
+
 ---
 
 ---
