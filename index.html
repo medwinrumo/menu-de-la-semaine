@@ -217,9 +217,13 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .recette-card-emoji{font-size:1.4rem;flex-shrink:0}
 .recette-card-nom{order:10;flex-basis:100%;font-weight:600;font-size:.95rem;cursor:pointer;color:var(--txt);margin-top:2px;padding-left:2px}
 .recette-card-nom:hover{text-decoration:underline}
+.recette-card-nom-edit{order:10;margin-top:2px}
+input.recette-card-nom-edit{flex-basis:100%}
 @media(min-width:600px){
   .recette-card-header{flex-wrap:nowrap}
   .recette-card-nom{order:0;flex-basis:auto;flex:1;margin-top:0;padding-left:0}
+  .recette-card-nom-edit{order:0;margin-top:0}
+  input.recette-card-nom-edit{flex-basis:auto;flex:1}
   .recette-card .btn-del-recette{position:absolute;bottom:10px;right:10px}
   .recette-card{padding-bottom:36px}
 }
@@ -2007,7 +2011,8 @@ function afficherRecettesPerso(liste) {
         '<input type="checkbox" class="recette-card-check" id="rcheck-'+k+'" onchange="toggleRecetteJour(\''+k+'\')">' +
         '<button class="btn-fav'+(r.favoris?' active':'')+'" id="rfav-'+k+'" onclick="toggleFavori(\''+k+'\')" title="Favori">'+(r.favoris?'★':'☆')+'</button>' +
         '<span class="recette-card-emoji">'+(r.emoji||'🥘')+'</span>' +
-        '<span class="recette-card-nom" onclick="voirRecettePerso(\''+k+'\')" title="Voir la recette complète">'+(r.nom)+'</span>' +
+        '<span class="recette-card-nom" id="rnom-'+k+'" onclick="voirRecettePerso(\''+k+'\')" title="Voir la recette complète">'+(r.nom)+'</span>' +
+        '<button class="edit-titre-btn recette-card-nom-edit" onclick="event.stopPropagation();editerNomRecettePerso(\''+k+'\',this)" title="Modifier le nom">✏️</button>' +
         '<span style="position:relative"><span class="service-tag-badge" id="rsvc-'+k+'" onclick="toggleSvcDropdown(\''+k+'\')" style="cursor:pointer">'+(serviceTag||'+ type')+' ▾</span></span>' +
         '<button class="btn-photo-recette" onclick="ajouterPhotoRecette(\''+k+'\')" title="'+(r.image?'Remplacer la photo (coller Ctrl+V)':'Ajouter une photo (coller Ctrl+V)')+'">📷</button>' +
         '<button class="btn-del-recette" onclick="supprimerRecettePerso(\''+k+'\')" title="Supprimer cette recette">🗑</button>' +
@@ -2686,6 +2691,33 @@ function editRecetteTitre(rmKey, btn) {
     if (newNom !== oldNom && db) db.ref(info.fbPath + '/nom').set(newNom);
   }
   function cancel() { h3.style.display = ''; btn.style.display = ''; inp.remove(); }
+  inp.onblur = save;
+  inp.onkeydown = function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); inp.onblur = null; save(); }
+    if (e.key === 'Escape') { inp.onblur = null; cancel(); }
+  };
+}
+
+function editerNomRecettePerso(k, btn) {
+  var r = recettesPersoMap[k];
+  if (!r) return;
+  var span = document.getElementById('rnom-'+k);
+  var oldNom = span.textContent;
+  var inp = document.createElement('input');
+  inp.type = 'text'; inp.value = oldNom; inp.className = 'edit-titre-input recette-card-nom-edit';
+  inp.style.fontSize = '.95rem'; inp.style.fontWeight = '600';
+  inp.onclick = function(e) { e.stopPropagation(); };
+  span.style.display = 'none'; btn.style.display = 'none';
+  span.parentElement.insertBefore(inp, span);
+  inp.focus(); inp.select();
+  function save() {
+    var newNom = inp.value.trim() || oldNom;
+    r.nom = newNom;
+    span.textContent = newNom; span.style.display = ''; btn.style.display = '';
+    inp.remove();
+    if (newNom !== oldNom && r._fbKey && db) db.ref('recettes_perso/'+r._fbKey+'/nom').set(newNom);
+  }
+  function cancel() { span.style.display = ''; btn.style.display = ''; inp.remove(); }
   inp.onblur = save;
   inp.onkeydown = function(e) {
     if (e.key === 'Enter') { e.preventDefault(); inp.onblur = null; save(); }
