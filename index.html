@@ -204,6 +204,15 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .modal ol{padding-left:20px}
 .modal ol li{margin-bottom:6px;font-size:.83rem}
 .modal-actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.man-row{display:flex;gap:8px;margin-bottom:4px}
+.man-col{flex:1;min-width:0}
+.man-lbl{display:block;font-size:.74rem;color:var(--txt2);margin:10px 0 4px;font-weight:600}
+.man-input{width:100%;padding:9px 11px;background:var(--bg);color:var(--txt);border:1px solid var(--border);border-radius:var(--r);font-size:.86rem;font-family:inherit}
+.man-input:focus{outline:none;border-color:var(--acc)}
+.man-emoji{width:56px;flex-shrink:0;text-align:center;padding:9px 4px;background:var(--bg);color:var(--txt);border:1px solid var(--border);border-radius:var(--r);font-size:1.1rem;font-family:inherit}
+.man-emoji:focus{outline:none;border-color:var(--acc)}
+.man-ta{resize:vertical;line-height:1.5}
+#manuel-modal{z-index:500}
 .btn-accept{padding:9px 18px;background:var(--acc);color:#fff;border:none;border-radius:var(--r);font-size:.85rem;font-weight:600;cursor:pointer;flex:1}
 .btn-accept:hover{background:var(--acc2)}
 .btn-reject{padding:9px 18px;background:var(--bg);color:var(--txt2);border:1px solid var(--border);border-radius:var(--r);font-size:.85rem;cursor:pointer;flex:1}
@@ -692,6 +701,7 @@ g.innerHTML+=
 '<div class="ml din-ml">🍽️ Dîner' +
 '<span class="din-actions" onclick="event.stopPropagation()">' +
 '<button class="din-btn" onclick="sauvegarderRecetteDiner('+i+')" title="Sauvegarder dans Mes recettes">＋</button>' +
+'<button class="din-btn" onclick="ouvrirRecetteManuelle('+i+')" title="Écrire une recette à la main">✍️</button>' +
 '<button class="din-btn" data-swap-idx="'+i+'" onclick="changerRecette('+i+',this)" title="Autre recette">↺</button>' +
 '<span class="din-handle" onclick="selectSwap('+i+')" title="Intervertir ce dîner">⠿</span>' +
 '</span></div>' +
@@ -2918,6 +2928,79 @@ function sauvegarderRecetteDiner(i) {
   toast('✅ « ' + nom + ' » ajoutée à Mes recettes');
 }
 
+// ===== RECETTE MANUELLE (écrite à la main depuis la vue Semaine) =====
+var recetteManuelleIdx = null;
+
+// Le nom et les lignes saisies sont réinjectés en innerHTML par rW() et
+// buildMultiRecipeDiv() : on retire les chevrons à la saisie plutôt que
+// d'échapper à chaque point d'affichage.
+function nettoyerSaisie(s) {
+  return (s || '').replace(/[<>]/g, '').trim();
+}
+function lignesSaisie(s) {
+  return (s || '').split('\n').map(nettoyerSaisie).filter(function(l){ return l.length; });
+}
+
+function ouvrirRecetteManuelle(idx) {
+  recetteManuelleIdx = idx;
+  var t = document.getElementById('manuel-titre');
+  if (t) t.textContent = '✍️ Écrire une recette — ' + (J[idx] ? J[idx].nom : '');
+  ['manuel-nom','manuel-prep','manuel-cuisson','manuel-ings','manuel-etapes'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('manuel-emoji').value = '';
+  document.getElementById('manuel-type').value = 'plat principal';
+  document.getElementById('manuel-modal').classList.add('on');
+  setTimeout(function(){ var n = document.getElementById('manuel-nom'); if (n) n.focus(); }, 50);
+}
+
+function fermerRecetteManuelle() {
+  document.getElementById('manuel-modal').classList.remove('on');
+  recetteManuelleIdx = null;
+}
+
+function enregistrerRecetteManuelle() {
+  if (recetteManuelleIdx === null) return;
+  var idx = recetteManuelleIdx;
+  var nom = nettoyerSaisie(document.getElementById('manuel-nom').value);
+  if (!nom) { toast('⚠️ Donnez au moins un nom au plat'); return; }
+  var type = document.getElementById('manuel-type').value || 'plat principal';
+  var recette = {
+    nom: nom,
+    emoji: nettoyerSaisie(document.getElementById('manuel-emoji').value) || '🥘',
+    prepTime: nettoyerSaisie(document.getElementById('manuel-prep').value) || '—',
+    cookTime: nettoyerSaisie(document.getElementById('manuel-cuisson').value) || '—',
+    ingredients: lignesSaisie(document.getElementById('manuel-ings').value),
+    etapes: lignesSaisie(document.getElementById('manuel-etapes').value),
+    source: 'Manuelle'
+  };
+  // Un seul item par type de service : supprimerService() et recomputeDin()
+  // supposent cet invariant — on remplace celui du même type s'il existe.
+  if (!J[idx].dinerItems) J[idx].dinerItems = [];
+  var items = Array.isArray(J[idx].dinerItems) ? J[idx].dinerItems : Object.values(J[idx].dinerItems).filter(Boolean);
+  var trouve = false;
+  items = items.map(function(it) {
+    if (it.type === type) { trouve = true; return {type:type, nom:recette.nom, recette:recette}; }
+    return it;
+  });
+  if (!trouve) items.push({type:type, nom:recette.nom, recette:recette});
+  J[idx].dinerItems = items;
+
+  recomputeDin(idx);
+  rW();
+  var recipeDiv = document.getElementById('recipe-'+idx);
+  if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
+  rebuilderListeRecettes(J);
+  if (db) db.ref('menus/'+J[idx].date).set({
+    nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
+    dinerItems: J[idx].dinerItems||null,
+    gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null,
+    enCourses: J[idx].enCourses||null
+  });
+  fermerRecetteManuelle();
+  toast('✅ « ' + nom + ' » ajouté au menu');
+}
+
 // ===== PHASE 4 — AUTRE RECETTE =====
 var recetteEnCours = null;
 var filtresTags = new Set();
@@ -4310,6 +4393,45 @@ function supprimerProduitHabitude(key){
     </div>
     <div id="tag-mgr-content"></div>
   </div>
+</div>
+
+<!-- ===== MODALE RECETTE MANUELLE ===== -->
+<div class="modal-overlay" id="manuel-modal" onclick="if(event.target===this)fermerRecetteManuelle()">
+<div class="modal">
+  <div class="modal-head">
+    <h2 id="manuel-titre">✍️ Écrire une recette</h2>
+    <button class="modal-close" onclick="fermerRecetteManuelle()">✕</button>
+  </div>
+  <div class="man-row">
+    <input id="manuel-emoji" class="man-emoji" maxlength="4" placeholder="🥘" title="Emoji">
+    <input id="manuel-nom" class="man-input" placeholder="Nom du plat — ex. Brochettes &amp; poivrons au BBQ">
+  </div>
+  <label class="man-lbl" for="manuel-type">Service</label>
+  <select id="manuel-type" class="man-input">
+    <option value="entrée">🥗 Entrée</option>
+    <option value="plat principal" selected>🍽️ Plat principal</option>
+    <option value="accompagnement">🥦 Accompagnement</option>
+    <option value="dessert">🍮 Dessert</option>
+  </select>
+  <div class="man-row">
+    <div class="man-col">
+      <label class="man-lbl" for="manuel-prep">Prépa</label>
+      <input id="manuel-prep" class="man-input" placeholder="10 min">
+    </div>
+    <div class="man-col">
+      <label class="man-lbl" for="manuel-cuisson">Cuisson</label>
+      <input id="manuel-cuisson" class="man-input" placeholder="15 min">
+    </div>
+  </div>
+  <label class="man-lbl" for="manuel-ings">Ingrédients — un par ligne (ils partent dans la liste de courses)</label>
+  <textarea id="manuel-ings" class="man-input man-ta" rows="6" placeholder="2 poivrons rouges&#10;4 brochettes de poulet&#10;1 oignon rouge"></textarea>
+  <label class="man-lbl" for="manuel-etapes">Préparation — une étape par ligne (facultatif)</label>
+  <textarea id="manuel-etapes" class="man-input man-ta" rows="5" placeholder="Découper les poivrons en lanières&#10;Faire griller 15 min au barbecue"></textarea>
+  <div class="modal-actions">
+    <button class="btn-accept" onclick="enregistrerRecetteManuelle()">✓ Ajouter au menu</button>
+    <button class="btn-reject" onclick="fermerRecetteManuelle()">Annuler</button>
+  </div>
+</div>
 </div>
 
 </body>
