@@ -206,6 +206,7 @@ Extensibles via le chat NutriCoach → sauvegardés dans Firebase `sites_ressour
 - Anthropic SDK `@anthropic-ai/sdk ^0.39.0`
 - Variable globale `J[]` : tableau de 7 objets (un par jour, index 0=aujourd'hui → 6=aujourd'hui+6)
 - `J[i].date` : clé Firebase au format YYYY-MM-DD (semaine glissante depuis aujourd'hui)
+- **La case à cocher de la carte du jour est le SEUL déclencheur d'envoi vers la liste de courses.** Décision de Medwin, 22/08/2026 : « j'ai déjà un mécanisme pour envoyer dans la liste de courses, je ne veux pas de ton automatisme en plus ». Aucune autre action — écrire une recette, la modifier — ne doit appeler `rebuilderListeRecettes()` pour ajouter. Conséquence acceptée : sur un jour déjà coché, une recette écrite après coup demande de décocher puis recocher. Les suppressions font exception (`supprimerService`, `supprimerRepasSimple`) : elles retirent de la liste ce qui n'existe plus.
 
 ## Profil utilisateur développeur
 - Débutant complet en développement web
@@ -222,6 +223,9 @@ Règle : codée ≠ validée. Une correction est supprimée de cette liste seule
 
 ### 🔴 Sécurité — à traiter en priorité
 - **#10** **La base Firebase est lisible par n'importe qui, sans authentification.** Vérifié le 22/08/2026 : `curl "https://menu-de-la-semaine-9bed7-default-rtdb.europe-west1.firebasedatabase.app/menus.json?shallow=true"` répond `200` avec les données, depuis une machine non connectée au compte. L'URL de la base est en clair dans le source de `menus.namour.eu`, donc publiquement connue. Sont exposés : menus, liste de courses, recettes perso, et le profil santé (`profil/`) — données de santé. **Droit d'écriture non testé** (un test aurait modifié la prod, pas fait sans accord) ; les règles par défaut de Firebase couplent lecture et écriture, donc à considérer comme ouvert en écriture tant que non vérifié. Correction : console Firebase → Realtime Database → Règles. Décision à prendre d'abord — l'app n'a aucune authentification, verrouiller la base impose donc d'en ajouter une (Firebase Anonymous Auth au minimum).
+
+### 🟠 Signalé, non reproduit
+- **#11** Medwin (22/08/2026) : dans une recette écrite à la main « Brochettes de porc » avec `salade verte` en ingrédient, la salade verte n'est pas arrivée dans la liste de courses. **Non reproduit** : en test, une recette avec `salade verte` + `4 brochettes de porc` envoie bien les deux quand la case du jour est cochée, et rien quand elle ne l'est pas. Vérifié aussi que « salade verte » n'est ni filtrée comme produit du placard, ni présente dans `courses/achetes`. Piste restante : il lisait peut-être la colonne source (`Sam — Brochettes de…`), qui affiche la recette d'origine sous chaque ingrédient, et non un produit. **À rouvrir s'il le reconstate après le déploiement du 22/08** — demander alors le rayon où il cherchait et si le jour était coché.
 
 ### 🟡 À faire (priorité basse)
 - **#5** Qualité des recettes générées par Claude → retravailler prompt api/menus.js
