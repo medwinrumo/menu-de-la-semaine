@@ -14,6 +14,22 @@ Toutes les instructions doivent être en français, simples et pas à pas.
 ## Dépôt GitHub
 https://github.com/medwinrumo/menu-de-la-semaine
 
+## Boucle de livraison — ne pas demander d'autorisation
+
+**Une correction demandée par Medwin inclut : commit → push → `vercel --prod --yes` → vérification que `menus.namour.eu` sert bien le nouveau fichier.** Enchaîner les quatre sans poser de question.
+
+Raison : le projet n'a aucun environnement de test. Medwin valide en utilisant l'app sur son iPad et son téléphone, donc sur l'URL de production. Tant que ce n'est pas déployé, il ne peut pas voir si la correction marche, et la règle « codée ≠ validée » du backlog ne peut pas avancer. S'arrêter au fichier modifié sur disque, c'est ne rien livrer.
+
+Le déploiement manuel reste nécessaire tant que le webhook n'est pas reconnecté (backlog #6).
+
+Vérifier le déploiement en comparant les empreintes, pas en se fiant au « READY » de la CLI :
+```
+curl -sS -o /tmp/prod.html "https://menus.namour.eu/?nocache=$RANDOM"
+md5 -q /tmp/prod.html ; md5 -q index.html   # doivent être identiques
+```
+
+Restent de vraies questions, et rien d'autre : ce qui est difficile à défaire (réécrire l'historique Git, supprimer des données Firebase), un choix de conception où plusieurs options se valent réellement, ou ce que Medwin seul sait (son intention, ses priorités). Consigné le 22/08/2026 après deux relances de sa part sur la feature « recette manuelle ».
+
 ## Hébergement
 - Vercel — URL : https://menus.namour.eu
 - DNS géré par Squarespace (domaine Google Workspace)
