@@ -2243,7 +2243,11 @@ function getIngsRecette(recette) {
   var ings = toArr(recette.ingredients || []);
   var result = ings.map(function(ing) {
     var cle = cleIng(ing);
-    var rayon = rayonHints[cle] || devinerRayon(ing);
+    // La surcharge manuelle (icône 🛒) prime sur tout le reste. Sans cette ligne,
+    // chaque reconstruction de la liste rappelait devinerRayon() et annulait le
+    // déplacement : le produit revenait dans son rayon d'origine au clic suivant.
+    var nomLow = (ing || '').toLowerCase().trim();
+    var rayon = rayonOverrides[cle] || rayonOverrides[nomLow] || rayonHints[cle] || devinerRayon(ing);
     return estIngredientPlacard(ing) ? null : { nom: ing, rayon: rayon };
   }).filter(Boolean);
   return result;
@@ -3057,7 +3061,8 @@ function enregistrerRecetteManuelle() {
     rW();
     var divSimple = document.getElementById('recipe-'+idx);
     if (divSimple) { divSimple.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
-    rebuilderListeRecettes(J);
+    // Pas d'envoi aux courses ici : la case à cocher de la carte est le seul
+    // déclencheur, décision de Medwin le 22/08/2026.
     ecrireJour(idx);
     fermerRecetteManuelle();
     toast('✅ « ' + nom + ' » ajouté au menu');
@@ -3080,7 +3085,7 @@ function enregistrerRecetteManuelle() {
   rW();
   var recipeDiv = document.getElementById('recipe-'+idx);
   if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
-  rebuilderListeRecettes(J);
+  // Pas d'envoi aux courses ici : voir ci-dessus, la case à cocher décide seule.
   ecrireJour(idx);
   fermerRecetteManuelle();
   toast('✅ « ' + nom + ' » ajouté au menu');
