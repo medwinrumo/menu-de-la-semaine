@@ -204,7 +204,15 @@ Extensibles via le chat NutriCoach → sauvegardés dans Firebase `sites_ressour
 ## Corrections — Backlog
 Règle : codée ≠ validée. Une correction est supprimée de cette liste seulement quand l'utilisateur confirme qu'elle fonctionne.
 
+### 🔴 Sécurité — à traiter en priorité
+- **#10** **La base Firebase est lisible par n'importe qui, sans authentification.** Vérifié le 22/08/2026 : `curl "https://menu-de-la-semaine-9bed7-default-rtdb.europe-west1.firebasedatabase.app/menus.json?shallow=true"` répond `200` avec les données, depuis une machine non connectée au compte. L'URL de la base est en clair dans le source de `menus.namour.eu`, donc publiquement connue. Sont exposés : menus, liste de courses, recettes perso, et le profil santé (`profil/`) — données de santé. **Droit d'écriture non testé** (un test aurait modifié la prod, pas fait sans accord) ; les règles par défaut de Firebase couplent lecture et écriture, donc à considérer comme ouvert en écriture tant que non vérifié. Correction : console Firebase → Realtime Database → Règles. Décision à prendre d'abord — l'app n'a aucune authentification, verrouiller la base impose donc d'en ajouter une (Firebase Anonymous Auth au minimum).
+
 ### 🟡 À faire (priorité basse)
 - **#5** Qualité des recettes générées par Claude → retravailler prompt api/menus.js
 - **#6** Reconnecter le déploiement automatique GitHub → Vercel (dashboard Vercel → Settings → Git). Voir section Hébergement.
 - **#7** `ANTHROPIC_API_KEY` marquée "Non-sensitive" dans les variables d'environnement Vercel → repasser en "Sensitive" (dashboard Vercel → Settings → Environment Variables). Pas exposée publiquement mais visible en clair dans le dashboard.
+- **#8** `.gen-group` (bouton « 🗓️ Générer la semaine ») porte `z-index:400`, au-dessus de `.modal-overlay` (`z-index:300`) : il s'affiche par-dessus la modale « Autre recette » quand elle n'est pas en mode `fullscreen`. Repéré le 22/08/2026 pendant la feature « recette manuelle ». Contournement local : `#manuel-modal{z-index:500}`. Correction de fond non faite (baisser `.gen-group`, ou remonter `.modal-overlay`) — risque de régression sur `.gen-popup`.
+- **#9** `accepterRecette()` écrit `db.ref('menus/'+date).set({nom,din,dn,recette,dinerItems,enCourses})` sans `gou` ni `recetteGou` : comme c'est un `.set()` et pas un `.update()`, adopter une recette efface le goûter du jour. `supprimerService()` et `enregistrerRecetteManuelle()` écrivent, eux, le jeu de champs complet. Repéré le 22/08/2026, non corrigé.
+
+### 🔵 À valider sur appareil
+- **Recette manuelle depuis la vue Semaine (22/08/2026)** — bouton ✍️ sur chaque carte de jour, modale `#manuel-modal`, `ouvrirRecetteManuelle()` / `enregistrerRecetteManuelle()`. Testé dans Chrome avec Firebase neutralisé (`db = null`) : création, remplacement par type de service, alimentation de la liste de courses, rendu mobile 375 px, relecture d'une recette sans `ingredients`/`etapes` (RTDB ne stocke pas les tableaux vides). **Persistance Firebase réelle et synchro multi-appareils non vérifiées.**
