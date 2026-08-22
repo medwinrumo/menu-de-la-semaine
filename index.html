@@ -30,10 +30,13 @@ header p{color:var(--txt2);font-size:.88rem;margin-top:4px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;margin-bottom:20px}
 .day{background:var(--card);border-radius:var(--r2);padding:16px;box-shadow:var(--sh);border:1px solid var(--border);position:relative}
 .day-cb{position:absolute;top:10px;right:10px;cursor:pointer;width:16px;height:16px;accent-color:var(--acc)}
+.day-write{position:absolute;top:6px;right:32px;background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;padding:3px 5px;opacity:.6;border-radius:6px;transition:.15s}
+.day-write:hover{opacity:1;background:var(--accL)}
+.meal-lien{cursor:pointer;transition:.15s}.meal-lien:hover{background:var(--accL);border-left-color:var(--acc2)}
 .tp-sel-cb{cursor:pointer;accent-color:var(--acc);margin-right:8px;width:15px;height:15px;flex-shrink:0}
 #tp-send-btn{position:fixed;bottom:72px;right:16px;z-index:300;padding:10px 18px;background:var(--acc);color:#fff;border:none;border-radius:20px;font-size:.88rem;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.2)}
 #tp-send-btn:hover{opacity:.85}
-.day h3{color:var(--acc);font-size:.95rem;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid var(--acc)}
+.day h3{color:var(--acc);font-size:.95rem;margin-bottom:10px;padding-bottom:7px;padding-right:58px;border-bottom:2px solid var(--acc)}
 .meal{margin-bottom:8px;padding:8px 10px;background:var(--bg);border-radius:var(--r);border-left:3px solid var(--acc)}
 .ml{font-weight:700;color:var(--acc);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
 .mc{color:var(--txt);font-size:.85rem;line-height:1.45}
@@ -665,6 +668,34 @@ function sortDI(arr) {
   var a = Array.isArray(arr) ? arr : Object.values(arr).filter(Boolean);
   return a.slice().sort(function(a,b){ return (SERVICE_ORDER[a.type]||99)-(SERVICE_ORDER[b.type]||99); });
 }
+// ===== ÉCRITURE D'UN JOUR DANS FIREBASE — POINT UNIQUE =====
+// Toute écriture complète d'un jour passe par ici. Historiquement, sept appels
+// db.ref('menus/'+date).set({…}) listaient les champs à la main ; ceux qui en
+// oubliaient effaçaient silencieusement le reste du jour, .set() remplaçant le
+// nœud entier. executerActionChat() et accepterRecette() supprimaient ainsi le
+// petit-déjeuner, le midi et le goûter. Ajouter un champ au menu se fait
+// désormais ici, et nulle part ailleurs.
+function objetJour(idx) {
+  var j = J[idx] || {};
+  return {
+    nom: j.nom || null,
+    pdj: j.pdj || null,
+    col: j.col || null,
+    din: j.din || null,
+    dn: j.dn || null,
+    recette: j.recette || null,
+    recettePdj: j.recettePdj || null,
+    recetteCol: j.recetteCol || null,
+    dinerItems: j.dinerItems || null,
+    gou: j.gou || null,
+    recetteGou: j.recetteGou || null,
+    enCourses: j.enCourses || null
+  };
+}
+function ecrireJour(idx) {
+  if (!db || !J[idx] || !J[idx].date) return;
+  db.ref('menus/' + J[idx].date).set(objetJour(idx));
+}
 function toDateStr(d){var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+dd;}
 (function() {
   var today = new Date();
@@ -687,21 +718,32 @@ function toDateStr(d){var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,
     sub.textContent = labelSub;
   }
 })();
+// Rend le bloc Petit-déjeuner ou Midi. Quand une recette y est attachée, le bloc
+// devient cliquable (vers l'onglet Recettes) et reçoit une croix de suppression,
+// sur le modèle du goûter. Sans recette, c'est le texte simple d'origine.
+function blocRepasSimple(i, champ, label, texte, recette) {
+  var avecRecette = !!(recette && texte);
+  return '<div class="meal' + (avecRecette ? ' meal-lien' : '') + '"' +
+    (avecRecette ? ' onclick="goRecette(' + i + ')"' : '') + '>' +
+    '<div class="ml">' + label +
+    (avecRecette ? '<button class="btn-del-service" onclick="event.stopPropagation();supprimerRepasSimple(' + i + ',\'' + champ + '\')" title="Supprimer cette recette">✕</button>' : '') +
+    '</div><div class="mc">' + (texte || '') + '</div></div>';
+}
 function rW(){
 var g=document.getElementById('weekgrid');g.innerHTML='';
 J.forEach(function(j,i){
 g.innerHTML+=
 '<div class="day" id="day-'+i+'">' +
+'<button class="day-write" onclick="ouvrirRecetteManuelle('+i+')" title="Écrire une recette à la main (petit-déjeuner, midi, goûter ou dîner)">✍️</button>' +
 '<input type="checkbox" class="day-cb"'+(j.enCourses?' checked':'')+' title="Envoyer les ingrédients dans la liste de courses" onchange="toggleEnCourses('+i+',this.checked)">' +
 '<h3>'+j.nom+'</h3>'+
-'<div class="meal"><div class="ml">☀️ Petit-déjeuner</div><div class="mc">'+(j.pdj||'')+'</div></div>'+
-'<div class="meal"><div class="ml">🥗 Midi</div><div class="mc">'+(j.col||'')+'</div></div>'+
+blocRepasSimple(i,'pdj','☀️ Petit-déjeuner',j.pdj,j.recettePdj)+
+blocRepasSimple(i,'col','🥗 Midi',j.col,j.recetteCol)+
 (j.gou ? '<div class="meal meal-gou"><div class="ml">☕ Goûter<button class="btn-del-service" onclick="event.stopPropagation();supprimerGouteur('+i+')" title="Supprimer le goûter">✕</button></div><div class="mc">'+j.gou+'</div></div>' : '') +
 '<div class="meal meal-din" onclick="goRecette('+i+')">' +
 '<div class="ml din-ml">🍽️ Dîner' +
 '<span class="din-actions" onclick="event.stopPropagation()">' +
 '<button class="din-btn" onclick="sauvegarderRecetteDiner('+i+')" title="Sauvegarder dans Mes recettes">＋</button>' +
-'<button class="din-btn" onclick="ouvrirRecetteManuelle('+i+')" title="Écrire une recette à la main">✍️</button>' +
 '<button class="din-btn" data-swap-idx="'+i+'" onclick="changerRecette('+i+',this)" title="Autre recette">↺</button>' +
 '<span class="din-handle" onclick="selectSwap('+i+')" title="Intervertir ce dîner">⠿</span>' +
 '</span></div>' +
@@ -775,6 +817,11 @@ function addIngredientsJour(idx){
     var labelGou=abbrev+' — '+truncNom(j.gou);
     getIngsRecette(j.recetteGou).forEach(function(item){addCourseItem(item.nom,item.rayon,labelGou,j.gou,idx);});
   }
+  [['recettePdj','pdj'],['recetteCol','col']].forEach(function(paire){
+    if(!j[paire[0]]||!j[paire[1]])return;
+    var lab=abbrev+' — '+truncNom(j[paire[1]]);
+    getIngsRecette(j[paire[0]]).forEach(function(item){addCourseItem(item.nom,item.rayon,lab,j[paire[1]],idx);});
+  });
   mC();
 }
 
@@ -806,6 +853,8 @@ function toggleEnCourses(idx,checked){
         getIngsRecette(jj.recette).forEach(function(it){ allItems.push(it.nom); });
       }
       if (jj.recetteGou && jj.gou) getIngsRecette(jj.recetteGou).forEach(function(it){ allItems.push(it.nom); });
+      if (jj.recettePdj && jj.pdj) getIngsRecette(jj.recettePdj).forEach(function(it){ allItems.push(it.nom); });
+      if (jj.recetteCol && jj.col) getIngsRecette(jj.recetteCol).forEach(function(it){ allItems.push(it.nom); });
       allItems.forEach(function(nom) { upd['achetes/' + fbKey(nom)] = null; });
       if (Object.keys(upd).length) db.ref('courses').update(upd);
     }
@@ -915,12 +964,12 @@ function goRecette(idx){
   tab('recettes',btn);
   var recipeDiv=document.getElementById('recipe-'+idx);
   if(recipeDiv){
-    if(J[idx]&&((J[idx].dinerItems&&J[idx].dinerItems.length>0)||J[idx].recetteGou)){
+    if(J[idx]&&((J[idx].dinerItems&&J[idx].dinerItems.length>0)||J[idx].recetteGou||J[idx].recettePdj||J[idx].recetteCol)){
       recipeDiv.innerHTML=buildMultiRecipeDiv(idx);initIngredients();
     }else if(J[idx]&&J[idx].recette){
       recipeDiv.innerHTML=buildRecipeDiv(idx,J[idx].recette);initIngredients();
     }else{
-      recipeDiv.innerHTML='<button class="btn-back" onclick="goMenu()">← Retour au menu</button><p style="color:var(--txt2);text-align:center;margin:30px 0;font-size:.9rem">Aucun dîner planifié pour ce soir.</p>';
+      recipeDiv.innerHTML='<button class="btn-back" onclick="goMenu()">← Retour au menu</button><p style="color:var(--txt2);text-align:center;margin:30px 0;font-size:.9rem">Aucune recette pour ce jour.</p>';
     }
     if(ingredientsFirebase)appliquerIngredientsFirebase(ingredientsFirebase);
   }
@@ -1089,7 +1138,7 @@ function ingOk(id) {
         caa.forEach(function(item) { if (item.nom === ancien) { item.nom = nouveau; item.rayon = rayon; } });
         if (caa.length) r.coursesAAjouter = caa;
       });
-      db.ref('menus/'+J[dayIdx].date).set({nom:J[dayIdx].nom, pdj:J[dayIdx].pdj||null, col:J[dayIdx].col||null, din:J[dayIdx].din||null, dn:J[dayIdx].dn||null, recette:J[dayIdx].recette||null, dinerItems:J[dayIdx].dinerItems||null, gou:J[dayIdx].gou||null, recetteGou:J[dayIdx].recetteGou||null, enCourses:J[dayIdx].enCourses||null});
+      ecrireJour(dayIdx);
     }
   }
 
@@ -1235,12 +1284,7 @@ function _saveIngChg(rmKey) {
   if (!m) return;
   var dayIdx = parseInt(m[1]);
   if (!J[dayIdx] || !J[dayIdx].date) return;
-  db.ref('menus/'+J[dayIdx].date).set({
-    nom:J[dayIdx].nom, pdj:J[dayIdx].pdj||null, col:J[dayIdx].col||null,
-    din:J[dayIdx].din||null, dn:J[dayIdx].dn||null,
-    recette:J[dayIdx].recette||null, dinerItems:J[dayIdx].dinerItems||null,
-    gou:J[dayIdx].gou||null, recetteGou:J[dayIdx].recetteGou||null, enCourses:J[dayIdx].enCourses||null
-  });
+  ecrireJour(dayIdx);
 }
 
 // ── Persistance : Mes Recettes ────────────────────────────────────────────────
@@ -1485,7 +1529,7 @@ function executerActionChat(action) {
       var recipeDiv = document.getElementById('recipe-'+idx);
       if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
       rebuilderListeRecettes(J);
-      if(db) db.ref('menus/'+J[idx].date).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems, enCourses:J[idx].enCourses||null});
+      if(db) ecrireJour(idx);
       ajouterMsg('bot','✅ Planning mis à jour !','msg-action');
     }
   } else if (action.type === 'generer_semaine') {
@@ -1608,7 +1652,7 @@ function executerActionChat(action) {
       var pRecipeDiv = document.getElementById('recipe-'+pidx);
       if (pRecipeDiv) { pRecipeDiv.innerHTML = buildMultiRecipeDiv(pidx); initIngredients(); }
       rebuilderListeRecettes(J);
-      if (db) db.ref('menus/'+J[pidx].date).set({nom:J[pidx].nom, din:J[pidx].din, dn:J[pidx].dn, recette:J[pidx].recette||null, dinerItems:J[pidx].dinerItems, enCourses:J[pidx].enCourses||null});
+      if (db) ecrireJour(pidx);
     }
     ajouterMsg('bot', '✅ « ' + nr2.nom + ' » créée, ajoutée à Mes Recettes' + (pidx !== undefined ? ' et planifiée !' : ' !'), 'msg-action');
   }
@@ -1714,7 +1758,7 @@ function appliquerNouveauxMenus(data, mode) {
         // Mise à jour partielle : seulement pdj + col
         db.ref('menus/'+J[i].date).update({pdj: jour.pdj||null, col: jour.col||null});
       } else {
-        db.ref('menus/'+J[i].date).set({nom:jour.nom, pdj:jour.pdj, col:jour.col, din:jour.din, dn:jour.dn, recette:jour.recette||null, dinerItems:J[i].dinerItems||null});
+        ecrireJour(i); // J[i] vient d'etre rempli depuis `jour` ; preserve gou/recetteGou/enCourses que l'ancienne liste de champs perdait
       }
     });
     if (!isPdjCol) {
@@ -2269,6 +2313,11 @@ function rebuilderListeRecettes(menus) {
       getIngsRecette(m.recette).forEach(function(item) { addCourseItem(item.nom, item.rayon, labelRec, m.recette.nom, idx); });
     }
     // Goûter
+    [['recettePdj','pdj'],['recetteCol','col']].forEach(function(paire){
+      if (!m[paire[0]] || !m[paire[1]]) return;
+      var lab = abbrev + ' — ' + truncNom(m[paire[1]]);
+      getIngsRecette(m[paire[0]]).forEach(function(item) { addCourseItem(item.nom, item.rayon, lab, m[paire[1]], idx); });
+    });
     if (m.recetteGou && m.gou) {
       var labelGou = abbrev + ' — ' + truncNom(m.gou);
       getIngsRecette(m.recetteGou).forEach(function(item) { addCourseItem(item.nom, item.rayon, labelGou, m.gou, idx); });
@@ -2416,6 +2465,16 @@ function buildMultiRecipeDiv(idx) {
       '<h4>Ingrédients</h4><ul data-rmkey="'+rmKey+'">'+toArr(r.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
       '<h4>Préparation <button class="btn-prep-detail" onclick="event.stopPropagation();chargerDetailPrep(\''+rmKey+'\',this)">🍳 Détails</button></h4><ol>'+toArr(r.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKey+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
   });
+  // Petit-déjeuner et midi, quand ils portent une recette écrite à la main
+  [['recettePdj','pdj','☀️ Petit-déjeuner','🥣'],['recetteCol','col','🥗 Midi','🥗']].forEach(function(cfg){
+    var rs = J[idx][cfg[0]];
+    if (!rs || !J[idx][cfg[1]]) return;
+    var rmKeyS = 'r'+idx+'_'+cfg[1]; _rmp[rmKeyS] = rs;
+    html += '<div style="margin:20px 0 8px"><span class="service-tag-badge lg">'+cfg[2]+'</span></div>' +
+      '<div class="recipe-top"><div class="recipe-titre-wrap"><h3 class="recipe-title-link" onclick="ouvrirRecetteModal(\''+rmKeyS+'\')">'+(rs.nom)+'</h3><button class="edit-titre-btn" onclick="event.stopPropagation();editRecetteTitre(\''+rmKeyS+'\',this)" title="Modifier le titre">✏️</button><button class="btn-copy-recette" onclick="event.stopPropagation();copierRecette(\''+rmKeyS+'\')" title="Copier la recette">📋</button></div><div class="r-ico">'+(rs.emoji||cfg[3])+'</div></div>' +
+      '<h4>Ingrédients</h4><ul data-rmkey="'+rmKeyS+'">'+toArr(rs.ingredients).map(function(ing){return '<li>'+ing+'</li>';}).join('')+'</ul>' +
+      '<h4>Préparation <button class="btn-prep-detail" onclick="event.stopPropagation();chargerDetailPrep(\''+rmKeyS+'\',this)">🍳 Détails</button></h4><ol>'+toArr(rs.etapes).map(function(e,si){return '<li class="etape-item" onclick="editEtape(this,\''+rmKeyS+'\','+si+')">'+e+'</li>';}).join('')+'</ol>';
+  });
   if (J[idx].gou && J[idx].recetteGou) {
     var rg = J[idx].recetteGou;
     var rmKeyG = 'r'+idx+'_gou'; _rmp[rmKeyG] = rg;
@@ -2488,19 +2547,14 @@ function cuisinerCetteSemaine() {
     // Mettre à jour l'onglet Recettes pour ce jour
     var recipeDiv = document.getElementById('recipe-'+idx);
     if (recipeDiv) {
-      if ((J[idx].dinerItems && J[idx].dinerItems.length > 0) || J[idx].recetteGou) {
+      if ((J[idx].dinerItems && J[idx].dinerItems.length > 0) || J[idx].recetteGou || J[idx].recettePdj || J[idx].recetteCol) {
         recipeDiv.innerHTML = buildMultiRecipeDiv(idx);
       } else if (J[idx].recette) {
         recipeDiv.innerHTML = buildRecipeDiv(idx, J[idx].recette);
       }
     }
 
-    if (db) db.ref('menus/'+J[idx].date).set({
-      nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
-      dinerItems: J[idx].dinerItems||null,
-      gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null,
-      enCourses: J[idx].enCourses||null
-    });
+    if (db) ecrireJour(idx);
   });
 
   rebuilderListeRecettes(J);
@@ -2673,6 +2727,12 @@ function _rmpInfo(rmKey) {
   } else if (part === 'gou') {
     r = J[idx] && J[idx].recetteGou;
     fbPath = 'menus/' + dateKey + '/recetteGou';
+  } else if (part === 'pdj') {
+    r = J[idx] && J[idx].recettePdj;
+    fbPath = 'menus/' + dateKey + '/recettePdj';
+  } else if (part === 'col') {
+    r = J[idx] && J[idx].recetteCol;
+    fbPath = 'menus/' + dateKey + '/recetteCol';
   } else {
     var di = parseInt(part);
     r = J[idx] && J[idx].dinerItems && J[idx].dinerItems[di] && J[idx].dinerItems[di].recette;
@@ -2803,8 +2863,8 @@ function selectSwap(i) {
       swapInProgress = true;
       var updates = {};
       // Remplacement complet de l'enregistrement pour éviter les données orphelines (snap-back)
-      updates['menus/'+J[src].date] = {nom:J[src].nom, pdj:J[src].pdj||null, col:J[src].col||null, din:J[src].din||null, dn:J[src].dn||null, recette:J[src].recette||null, dinerItems:J[src].dinerItems||null, gou:J[src].gou||null, recetteGou:J[src].recetteGou||null, enCourses:J[src].enCourses||null};
-      updates['menus/'+J[dst].date] = {nom:J[dst].nom, pdj:J[dst].pdj||null, col:J[dst].col||null, din:J[dst].din||null, dn:J[dst].dn||null, recette:J[dst].recette||null, dinerItems:J[dst].dinerItems||null, gou:J[dst].gou||null, recetteGou:J[dst].recetteGou||null, enCourses:J[dst].enCourses||null};
+      updates['menus/'+J[src].date] = objetJour(src);
+      updates['menus/'+J[dst].date] = objetJour(dst);
       db.ref().update(updates).then(function(){ swapInProgress = false; })
                               .catch(function(){ swapInProgress = false; });
     }
@@ -2950,8 +3010,17 @@ function ouvrirRecetteManuelle(idx) {
   });
   document.getElementById('manuel-emoji').value = '';
   document.getElementById('manuel-type').value = 'plat principal';
+  document.getElementById('manuel-repas').value = 'din';
+  majServiceManuel();
   document.getElementById('manuel-modal').classList.add('on');
   setTimeout(function(){ var n = document.getElementById('manuel-nom'); if (n) n.focus(); }, 50);
+}
+
+// Le sous-choix de service (entrée / plat / accompagnement / dessert) n'a de sens
+// que pour le dîner : les autres repas n'ont qu'un seul contenu par jour.
+function majServiceManuel() {
+  var wrap = document.getElementById('manuel-service-wrap');
+  if (wrap) wrap.style.display = document.getElementById('manuel-repas').value === 'din' ? '' : 'none';
 }
 
 function fermerRecetteManuelle() {
@@ -2964,6 +3033,7 @@ function enregistrerRecetteManuelle() {
   var idx = recetteManuelleIdx;
   var nom = nettoyerSaisie(document.getElementById('manuel-nom').value);
   if (!nom) { toast('⚠️ Donnez au moins un nom au plat'); return; }
+  var repas = document.getElementById('manuel-repas').value || 'din';
   var type = document.getElementById('manuel-type').value || 'plat principal';
   var recette = {
     nom: nom,
@@ -2974,8 +3044,28 @@ function enregistrerRecetteManuelle() {
     etapes: lignesSaisie(document.getElementById('manuel-etapes').value),
     source: 'Manuelle'
   };
-  // Un seul item par type de service : supprimerService() et recomputeDin()
-  // supposent cet invariant — on remplace celui du même type s'il existe.
+  // Petit-déjeuner, midi et goûter : un seul contenu par jour, stocké en deux
+  // champs jumelés — le texte affiché sur la carte et la recette complète.
+  // Les deux doivent être posés ensemble : la liste de courses teste la présence
+  // des deux (voir rebuilderListeRecettes et addIngredientsJour), donc n'en
+  // écrire qu'un ferait disparaître les ingrédients sans le moindre message.
+  var CHAMPS_SIMPLES = {pdj:['pdj','recettePdj'], col:['col','recetteCol'], gou:['gou','recetteGou']};
+  if (CHAMPS_SIMPLES[repas]) {
+    var champTexte = CHAMPS_SIMPLES[repas][0], champRecette = CHAMPS_SIMPLES[repas][1];
+    J[idx][champTexte] = recette.nom;
+    J[idx][champRecette] = recette;
+    rW();
+    var divSimple = document.getElementById('recipe-'+idx);
+    if (divSimple) { divSimple.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
+    rebuilderListeRecettes(J);
+    ecrireJour(idx);
+    fermerRecetteManuelle();
+    toast('✅ « ' + nom + ' » ajouté au menu');
+    return;
+  }
+
+  // Dîner : un seul item par type de service — supprimerService() et
+  // recomputeDin() supposent cet invariant, on remplace celui du même type.
   if (!J[idx].dinerItems) J[idx].dinerItems = [];
   var items = Array.isArray(J[idx].dinerItems) ? J[idx].dinerItems : Object.values(J[idx].dinerItems).filter(Boolean);
   var trouve = false;
@@ -2991,14 +3081,23 @@ function enregistrerRecetteManuelle() {
   var recipeDiv = document.getElementById('recipe-'+idx);
   if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
   rebuilderListeRecettes(J);
-  if (db) db.ref('menus/'+J[idx].date).set({
-    nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
-    dinerItems: J[idx].dinerItems||null,
-    gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null,
-    enCourses: J[idx].enCourses||null
-  });
+  ecrireJour(idx);
   fermerRecetteManuelle();
   toast('✅ « ' + nom + ' » ajouté au menu');
+}
+
+// Retire le contenu d'un repas simple (petit-déjeuner, midi). Les deux champs
+// jumelés partent ensemble, sinon la carte afficherait un texte sans recette.
+function supprimerRepasSimple(idx, champ) {
+  if (!J[idx]) return;
+  var champRecette = champ === 'pdj' ? 'recettePdj' : 'recetteCol';
+  J[idx][champ] = null;
+  J[idx][champRecette] = null;
+  rW();
+  var recipeDiv = document.getElementById('recipe-'+idx);
+  if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
+  rebuilderListeRecettes(J);
+  ecrireJour(idx);
 }
 
 // ===== PHASE 4 — AUTRE RECETTE =====
@@ -3608,35 +3707,25 @@ function supprimerService(idx, type) {
   recomputeDin(idx);
   var recipeDiv = document.getElementById('recipe-'+idx);
   if (recipeDiv) {
-    if (J[idx].dinerItems && J[idx].dinerItems.length > 0) {
+    if ((J[idx].dinerItems && J[idx].dinerItems.length > 0) || J[idx].recettePdj || J[idx].recetteCol || J[idx].recetteGou) {
       recipeDiv.innerHTML = buildMultiRecipeDiv(idx);
     } else if (J[idx].recette) {
       recipeDiv.innerHTML = buildRecipeDiv(idx, J[idx].recette);
     } else {
-      recipeDiv.innerHTML = '<button class="btn-back" onclick="goMenu()">← Retour au menu</button><p style="color:var(--txt2);text-align:center;margin:30px 0;font-size:.9rem">Aucun dîner planifié pour ce soir.</p>';
+      recipeDiv.innerHTML = '<button class="btn-back" onclick="goMenu()">← Retour au menu</button><p style="color:var(--txt2);text-align:center;margin:30px 0;font-size:.9rem">Aucune recette pour ce jour.</p>';
     }
     initIngredients();
   }
   rebuilderListeRecettes(J);
   rW();
-  if (db) db.ref('menus/'+J[idx].date).set({
-    nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
-    dinerItems: J[idx].dinerItems||null,
-    gou: J[idx].gou||null, recetteGou: J[idx].recetteGou||null,
-    enCourses: J[idx].enCourses||null
-  });
+  if (db) ecrireJour(idx);
 }
 
 function supprimerGouteur(idx) {
   if (!J[idx]) return;
   J[idx].gou = null;
   J[idx].recetteGou = null;
-  if (db) db.ref('menus/'+J[idx].date).set({
-    nom: J[idx].nom, din: J[idx].din, dn: J[idx].dn, recette: J[idx].recette||null,
-    dinerItems: J[idx].dinerItems||null,
-    gou: null, recetteGou: null,
-    enCourses: J[idx].enCourses||null
-  });
+  if (db) ecrireJour(idx);
   rW();
 }
 
@@ -3731,7 +3820,7 @@ function accepterRecette() {
   var recipeDiv = document.getElementById('recipe-'+idx);
   if (recipeDiv) { recipeDiv.innerHTML = buildMultiRecipeDiv(idx); initIngredients(); }
   rebuilderListeRecettes(J);
-  if (db) db.ref('menus/'+J[idx].date).set({nom:J[idx].nom, din:J[idx].din, dn:J[idx].dn, recette:J[idx].recette||null, dinerItems:J[idx].dinerItems, enCourses:J[idx].enCourses||null});
+  if (db) ecrireJour(idx);
   fermerModal();
 }
 
@@ -4043,6 +4132,11 @@ db.ref('/').on('value',function(snapshot){
         }
       }
       J[idx].recetteGou=fbM.recetteGou||null;
+      // Meme traitement inconditionnel que le gouter ci-dessus
+      if(J[idx].pdj!==(fbM.pdj||null)){ J[idx].pdj=fbM.pdj||null; needRW=true; }
+      if(J[idx].col!==(fbM.col||null)){ J[idx].col=fbM.col||null; needRW=true; }
+      if(JSON.stringify(J[idx].recettePdj||null)!==JSON.stringify(fbM.recettePdj||null)){ J[idx].recettePdj=fbM.recettePdj||null; needRecipe=true; }
+      if(JSON.stringify(J[idx].recetteCol||null)!==JSON.stringify(fbM.recetteCol||null)){ J[idx].recetteCol=fbM.recetteCol||null; needRecipe=true; }
       // Sync enCourses
       var newEC=fbM.enCourses||false;
       if(J[idx].enCourses!==newEC){ J[idx].enCourses=newEC; needRW=true; }
@@ -4061,12 +4155,12 @@ db.ref('/').on('value',function(snapshot){
       if(needRecipe){
         var recipeDiv=document.getElementById('recipe-'+idx);
         if(recipeDiv){
-          if(J[idx].dinerItems&&J[idx].dinerItems.length){
+          if((J[idx].dinerItems&&J[idx].dinerItems.length)||J[idx].recettePdj||J[idx].recetteCol||J[idx].recetteGou){
             recipeDiv.innerHTML=buildMultiRecipeDiv(idx);
           } else if(J[idx].recette){
             recipeDiv.innerHTML=buildRecipeDiv(idx,J[idx].recette);
           } else {
-            recipeDiv.innerHTML='<button class="btn-back" onclick="goMenu()">← Retour au menu</button><p style="color:var(--txt2);text-align:center;margin:30px 0;font-size:.9rem">Aucun dîner planifié pour ce soir.</p>';
+            recipeDiv.innerHTML='<button class="btn-back" onclick="goMenu()">← Retour au menu</button><p style="color:var(--txt2);text-align:center;margin:30px 0;font-size:.9rem">Aucune recette pour ce jour.</p>';
           }
           initIngredients();
         }
@@ -4406,13 +4500,22 @@ function supprimerProduitHabitude(key){
     <input id="manuel-emoji" class="man-emoji" maxlength="4" placeholder="🥘" title="Emoji">
     <input id="manuel-nom" class="man-input" placeholder="Nom du plat — ex. Brochettes &amp; poivrons au BBQ">
   </div>
-  <label class="man-lbl" for="manuel-type">Service</label>
-  <select id="manuel-type" class="man-input">
-    <option value="entrée">🥗 Entrée</option>
-    <option value="plat principal" selected>🍽️ Plat principal</option>
-    <option value="accompagnement">🥦 Accompagnement</option>
-    <option value="dessert">🍮 Dessert</option>
+  <label class="man-lbl" for="manuel-repas">Repas</label>
+  <select id="manuel-repas" class="man-input" onchange="majServiceManuel()">
+    <option value="pdj">☀️ Petit-déjeuner</option>
+    <option value="col">🥗 Midi</option>
+    <option value="gou">☕ Goûter</option>
+    <option value="din" selected>🍽️ Dîner</option>
   </select>
+  <div id="manuel-service-wrap">
+    <label class="man-lbl" for="manuel-type">Service du dîner</label>
+    <select id="manuel-type" class="man-input">
+      <option value="entrée">🥗 Entrée</option>
+      <option value="plat principal" selected>🍽️ Plat principal</option>
+      <option value="accompagnement">🥦 Accompagnement</option>
+      <option value="dessert">🍮 Dessert</option>
+    </select>
+  </div>
   <div class="man-row">
     <div class="man-col">
       <label class="man-lbl" for="manuel-prep">Prépa</label>
