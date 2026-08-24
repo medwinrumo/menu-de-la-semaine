@@ -39,6 +39,8 @@ Restent de vraies questions, et rien d'autre : ce qui est difficile à défaire 
 ## Structure des fichiers
 - `index.html` : application complète (HTML + CSS + JS en un seul fichier)
 - `CLAUDE.md` : ce fichier de contexte permanent
+- `menu-de-la-semaine.log.md` : journal de bord — déroulé factuel par session (créé le 22/08/2026)
+- `menu-de-la-semaine.peda.md` : journal pédagogique — ce que chaque session a appris, expliqué simplement (créé le 22/08/2026)
 - `package.json` : dépendance `@anthropic-ai/sdk ^0.39.0`
 - `api/_skills.js` : compétences centralisées de NutriCoach (calendrier saisonnier, profil santé, schéma nutritionnel, sites ressources)
 - `api/recette.js` : remplacement d'une recette individuelle (claude-opus-4-6, max_tokens 1500)
