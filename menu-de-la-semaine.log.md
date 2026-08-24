@@ -69,3 +69,15 @@ décisions et du backlog. Ce fichier porte le déroulé, pas les décisions.
   écrire dans les données réelles.
 - Signalement « salade verte absente de la liste de courses » non reproduit
   (backlog #11).
+
+**Constats de clôture — signalés à Medwin, non traités**
+- `~/dev/wiki` porte un commit non poussé, `84e5084 feat(pwa): sur iPhone, l'app
+  web installee ne partage pas sa session avec Safari` (Medwin Rumo, 21/08/2026,
+  4 fichiers). Étranger à cette session, laissé tel quel : c'est son travail, à
+  lui de décider. Vérifier avec `git -C ~/dev/wiki rev-list --count @{u}..HEAD`,
+  publier avec `git -C ~/dev/wiki push` s'il le veut.
+- Le carnet `~/.claude/observations/log.md` compte **39 observations au statut
+  OUVERT** après ajout des n° 114 et 115 de cette session. L'étape 7 de `/maj`
+  demande de les passer en revue avec Medwin ; le stock dépasse ce qu'une fin de
+  session peut absorber. Proposé : une session dédiée au tri. Non planifié à ce
+  jour — à relancer au prochain `/maj` si rien n'a bougé.
