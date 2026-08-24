@@ -71,11 +71,16 @@ décisions et du backlog. Ce fichier porte le déroulé, pas les décisions.
   (backlog #11).
 
 **Constats de clôture — signalés à Medwin, non traités**
-- `~/dev/wiki` porte un commit non poussé, `84e5084 feat(pwa): sur iPhone, l'app
-  web installee ne partage pas sa session avec Safari` (Medwin Rumo, 21/08/2026,
-  4 fichiers). Étranger à cette session, laissé tel quel : c'est son travail, à
-  lui de décider. Vérifier avec `git -C ~/dev/wiki rev-list --count @{u}..HEAD`,
-  publier avec `git -C ~/dev/wiki push` s'il le veut.
+- ~~`~/dev/wiki` porte un commit non poussé~~ — **poussé le 24/08/2026 sur
+  demande de Medwin.** Le push direct a été refusé : trois lints nocturnes
+  (22, 23, 24/08) étaient arrivés sur le distant, et `journal-log.md` était
+  modifié des deux côtés. Résolu par `git pull --rebase` puis fusion manuelle du
+  conflit, les deux contenus conservés — l'entrée `pwa-ios-session` du 21/08
+  replacée avant les lints pour garder l'ordre chronologique du fichier. Commit
+  rejoué en `19ad3ed`, écart avec origin ramené à 0. Lint relancé : 1566
+  problèmes, chiffre identique à celui des trois lints nocturnes, donc rien
+  d'introduit ; 4 axes bloquants, tous antérieurs et déjà couverts par 36 cartes
+  kanban.
 - Le carnet `~/.claude/observations/log.md` compte **39 observations au statut
   OUVERT** après ajout des n° 114 et 115 de cette session. L'étape 7 de `/maj`
   demande de les passer en revue avec Medwin ; le stock dépasse ce qu'une fin de
